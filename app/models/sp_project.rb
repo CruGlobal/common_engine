@@ -26,7 +26,6 @@ class SpProject < ActiveRecord::Base
   
   
   has_many :sp_applications, :dependent => :nullify, :foreign_key => :project_id
-  enforce_schema_rules
 
   validates_presence_of :name, :city, :country, :aoa, :display_location,
                         :primary_partner, :report_stats_to

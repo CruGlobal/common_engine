@@ -54,7 +54,6 @@ class Person < ActiveRecord::Base
   validates_uniqueness_of :fk_ssmUserId, :message => "This username already has a person record!", :allow_nil => true
   # validates_filesize_of :image, :in => 0..2.megabytes
   # 
-  enforce_schema_rules :except => [:image, :personID]
   
   before_save :stamp
   
