@@ -238,6 +238,10 @@ class SpApplication < ActiveRecord::Base
     end
     return nil
   end
+  
+  def waive_fee!
+    self.payments.create!(:status => "Approved", :payment_type => 'Waived')
+  end
 
   def unsubmit_email
     SpApplicationMailer.deliver_unsubmitted(self)
