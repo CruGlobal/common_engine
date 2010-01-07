@@ -46,6 +46,6 @@ protected
 
   def create_apply
     self.dateAppStarted = Time.now
-    self.apply = Apply.create(:sleeve_id => self.sleeve.id, :applicant_id => self.person.personID)
+    self.apply ||= Apply.create(:sleeve_id => self.sleeve.id, :applicant_id => self.person.personID)
   end
 end
