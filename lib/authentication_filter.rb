@@ -60,7 +60,7 @@ class AuthenticationFilter
         controller.session[:user_id] = user.id
       else
         # Session probably expired, send them back to cas
-        controller.send(:redirect_to, "#{CAS::Filter.login_url}?service=#{controller.send(:projects_url)}")
+        controller.send(:redirect_to, "#{CAS::Filter.login_url}?service=#{url_for(params)}")
         return false
       end
       return true
