@@ -236,9 +236,9 @@ class Person < ActiveRecord::Base
   # Find an exact match by email
   def self.find_exact(person, address)
     # try by address first
-    person = Person.find(:first, :conditions => ["email = ?", address.email], :include => :current_address)
+    person = Person.find(:first, :conditions => ["#{Address.table_name}.email = ?", address.email], :include => :current_address)
     # then try by username
-    person ||= Person.find(:first, :conditions => ["username = ?", address.email], :include => :user)
+    person ||= Person.find(:first, :conditions => ["#{User.table_name}.username = ?", address.email], :include => :user)
     return person
   end
 
