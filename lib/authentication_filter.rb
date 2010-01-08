@@ -2,7 +2,7 @@ class AuthenticationFilter
   @logger = RAILS_DEFAULT_LOGGER
 
   def self.filter(controller)
-    unless controller.session[:user]
+    unless controller.session[:user_id]
       receipt = controller.session[:casfilterreceipt]
       if receipt && receipt.user_name
         guid = receipt.attributes[:ssoGuid]
@@ -57,10 +57,10 @@ class AuthenticationFilter
           person.save!
         end
       
-        controller.session[:user] = user
+        controller.session[:user_id] = user.id
       else
         # Session probably expired, send them back to cas
-        controller.send(:redirect_to, "#{CAS::Filter.login_url}?service=#{controller.send(:projects_url)}")
+        controller.send(:redirect_to, "#{CAS::Filter.login_url}?service=#{url_for(params)}")
         return false
       end
       return true

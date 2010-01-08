@@ -26,7 +26,6 @@ class SpProject < ActiveRecord::Base
   
   
   has_many :sp_applications, :dependent => :nullify, :foreign_key => :project_id
-  enforce_schema_rules
 
   validates_presence_of :name, :city, :country, :aoa, :display_location,
                         :primary_partner, :report_stats_to
@@ -45,6 +44,8 @@ class SpProject < ActiveRecord::Base
   validates_inclusion_of :max_student_women_applicants, :in=>0..100, :message => "can't be less than 0 or greater than 100"
   validates_inclusion_of :ideal_staff_men, :in=>1..100, :message => "can't be 0 or greater than 100"
   validates_inclusion_of :ideal_staff_women, :in=>0..100, :message => "can't be less than 0 or greater than 100"
+  
+  validates_uniqueness_of :name
 
   named_scope :with_partner, proc {|partner_scope| {:conditions => partner_scope}}
   named_scope :show_on_website, {:conditions => "show_on_website is true"}
