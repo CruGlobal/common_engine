@@ -213,19 +213,22 @@ class Apply < ActiveRecord::Base
       # existing answer sheets for this applicant
       apply_sheets = self.apply_sheets.find(:all, :include => :sleeve_sheet, :conditions => ["#{SleeveSheet.table_name}.assign_to = ?", 'applicant'])
   
-      if apply_sheets.empty?
-        # check the application sleeve to setup answer sheets
-        sleeve_sheets = self.sleeve.sleeve_sheets.find(:all, :conditions => "assign_to = 'applicant'")
+      if self.sleeve.present?
+        if apply_sheets.empty?
+          # check the application sleeve to setup answer sheets
+        
+          sleeve_sheets = self.sleeve.sleeve_sheets.find(:all, :conditions => "assign_to = 'applicant'")
     
-        sleeve_sheets.each do |sleeve_sheet|
-          answer_sheet = sleeve_sheet.question_sheet.answer_sheets.create
-          # tie the answer_sheet to this visitor and sleeve via apply_sheets
-          self.apply_sheets.create(:sleeve_sheet => sleeve_sheet, :answer_sheet => answer_sheet)
-          answer_sheets << answer_sheet
+          sleeve_sheets.each do |sleeve_sheet|
+            answer_sheet = sleeve_sheet.question_sheet.answer_sheets.create
+            # tie the answer_sheet to this visitor and sleeve via apply_sheets
+            self.apply_sheets.create(:sleeve_sheet => sleeve_sheet, :answer_sheet => answer_sheet)
+            answer_sheets << answer_sheet
+          end
+        else
+          # use what we have
+          answer_sheets = apply_sheets.map {|a| a.answer_sheet}
         end
-      else
-        # use what we have
-        answer_sheets = apply_sheets.map {|a| a.answer_sheet}
       end
     end
     
