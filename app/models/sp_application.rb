@@ -65,6 +65,7 @@ class SpApplication < ActiveRecord::Base
     transitions :to => :submitted, :from => :started
     transitions :to => :submitted, :from => :unsubmitted
     transitions :to => :submitted, :from => :withdrawn
+    transitions :to => :submitted, :from => :completed
   end
 
   event :withdraw do
@@ -80,6 +81,7 @@ class SpApplication < ActiveRecord::Base
   event :unsubmit do
     transitions :to => :unsubmitted, :from => :submitted
     transitions :to => :unsubmitted, :from => :withdrawn
+    transitions :to => :unsubmitted, :from => :completed
   end
 
   event :complete do
