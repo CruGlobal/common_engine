@@ -243,6 +243,7 @@ class SpApplication < ActiveRecord::Base
   
   def waive_fee!
     self.payments.create!(:status => "Approved", :payment_type => 'Waived')
+    self.complete #Check to see if application is complete
   end
 
   def unsubmit_email
@@ -255,8 +256,10 @@ class SpApplication < ActiveRecord::Base
 
   def complete(ref = nil)
     return false unless self.submitted?
-    return false unless
+    if person.lastAttended != "HighSchool"
+      return false unless
                     (self.sp_peer_reference && (self.sp_peer_reference.completed? || self.sp_peer_reference == ref))
+    end
     return false unless
                     (self.sp_spiritual_reference1 && (self.sp_spiritual_reference1.completed? || self.sp_spiritual_reference1 == ref))
     if self.apply_for_leadership?
