@@ -115,6 +115,10 @@ class Person < ActiveRecord::Base
     return gender.to_i == 1
   end
   
+  def is_high_school?
+    return lastAttended == "HighSchool"
+  end
+  
   # "first_name last_name"
   def full_name
     first_name.to_s  + " " + last_name.to_s
