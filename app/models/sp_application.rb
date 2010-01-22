@@ -155,7 +155,7 @@ class SpApplication < ActiveRecord::Base
   end
 
   YEAR = 2010
-
+  
   DEADLINE1 = Time.parse((SpApplication::YEAR - 1).to_s + "/12/10");
   DEADLINE2 = Time.parse(SpApplication::YEAR.to_s + "/01/24");
   DEADLINE3 = Time.parse(SpApplication::YEAR.to_s + "/02/24");
@@ -326,6 +326,10 @@ class SpApplication < ActiveRecord::Base
 
   def continuing_school?
     @continuing_school ||= is_true(get_answer(57)) ? "Yes" : "No"
+  end
+  
+  def has_passport?
+    @has_passport ||= is_true(get_answer(409)) ? "Yes" : "No"
   end
 
   def activities_on_campus
