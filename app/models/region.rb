@@ -9,4 +9,8 @@ class Region < ActiveRecord::Base
   def self.standard_regions
     find(:all, :conditions => [ "region IN (?)", @@standard_region_codes])
   end
+  
+  def sp_phone
+    @sp_phone ||= spPhone.blank? ? phone : spPhone
+  end
 end

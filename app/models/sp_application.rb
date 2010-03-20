@@ -65,6 +65,7 @@ class SpApplication < ActiveRecord::Base
     transitions :to => :submitted, :from => :started
     transitions :to => :submitted, :from => :unsubmitted
     transitions :to => :submitted, :from => :withdrawn
+    transitions :to => :submitted, :from => :completed
   end
 
   event :withdraw do
@@ -80,6 +81,7 @@ class SpApplication < ActiveRecord::Base
   event :unsubmit do
     transitions :to => :unsubmitted, :from => :submitted
     transitions :to => :unsubmitted, :from => :withdrawn
+    transitions :to => :unsubmitted, :from => :completed
   end
 
   event :complete do
@@ -153,7 +155,7 @@ class SpApplication < ActiveRecord::Base
   end
 
   YEAR = 2010
-
+  
   DEADLINE1 = Time.parse((SpApplication::YEAR - 1).to_s + "/12/10");
   DEADLINE2 = Time.parse(SpApplication::YEAR.to_s + "/01/24");
   DEADLINE3 = Time.parse(SpApplication::YEAR.to_s + "/02/24");
@@ -241,6 +243,7 @@ class SpApplication < ActiveRecord::Base
   
   def waive_fee!
     self.payments.create!(:status => "Approved", :payment_type => 'Waived')
+    self.complete #Check to see if application is complete
   end
 
   def unsubmit_email
@@ -253,8 +256,10 @@ class SpApplication < ActiveRecord::Base
 
   def complete(ref = nil)
     return false unless self.submitted?
-    return false unless
+    if person.lastAttended != "HighSchool"
+      return false unless
                     (self.sp_peer_reference && (self.sp_peer_reference.completed? || self.sp_peer_reference == ref))
+    end
     return false unless
                     (self.sp_spiritual_reference1 && (self.sp_spiritual_reference1.completed? || self.sp_spiritual_reference1 == ref))
     if self.apply_for_leadership?
@@ -321,6 +326,10 @@ class SpApplication < ActiveRecord::Base
 
   def continuing_school?
     @continuing_school ||= is_true(get_answer(57)) ? "Yes" : "No"
+  end
+  
+  def has_passport?
+    @has_passport ||= is_true(get_answer(409)) ? "Yes" : "No"
   end
 
   def activities_on_campus

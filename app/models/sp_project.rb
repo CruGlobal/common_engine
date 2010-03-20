@@ -133,7 +133,7 @@ class SpProject < ActiveRecord::Base
 
   def regional_info
     if primary_partner && region = SpProject.get_region(primary_partner)
-      info =  region.name + ' Regional Office: Phone - ' + region.phone
+      info =  region.name + ' Regional Office: Phone - ' + region.sp_phone
       info += ', Email - ' + region.email if region.email && !region.email.empty?
       info
     end
