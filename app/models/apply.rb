@@ -121,7 +121,15 @@ class Apply < ActiveRecord::Base
   def self.post_ready_statuses
     %w(accepted affiliate alumni being_evaluated on_assignment placed re_applied terminated transfer pre_a follow_through)
   end
+  
+  def self.completed_statuses
+    Apply.ready_statuses | Apply.post_ready_statuses | %w(declined)
+  end
 
+  def self.post_submitted_statuses
+    Apply.completed_statuses | Apply.not_ready_statuses
+  end
+  
   def self.statuses
     Apply.unsubmitted_statuses | Apply.not_ready_statuses | Apply.ready_statuses | Apply.post_ready_statuses | Apply.not_going_statuses
   end
