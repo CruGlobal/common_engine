@@ -4,6 +4,8 @@ class Address < ActiveRecord::Base
   set_table_name				"ministry_newaddress"
 	set_primary_key 			"addressID"
 	
+	validates_presence_of :addressType
+	
 	belongs_to :person, :foreign_key => "fk_PersonID"
 	
 	before_save :stamp

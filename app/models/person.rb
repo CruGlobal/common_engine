@@ -52,6 +52,7 @@ class Person < ActiveRecord::Base
                   
   validates_file_format_of :image, :in => ["image/jpeg", "image/gif"]
   validates_uniqueness_of :fk_ssmUserId, :message => "This username already has a person record!", :allow_nil => true
+  validates_presence_of :first_name
   # validates_filesize_of :image, :in => 0..2.megabytes
   # 
   
@@ -112,6 +113,10 @@ class Person < ActiveRecord::Base
   
   def is_male?
     return gender.to_i == 1
+  end
+  
+  def is_high_school?
+    return lastAttended == "HighSchool"
   end
   
   # "first_name last_name"
@@ -224,7 +229,8 @@ class Person < ActiveRecord::Base
     current_address.email if current_address
   end
   
-  def is_secure
+  # This method shouldn't be needed because nightly updater should fill this in
+  def is_secure?
     if staff
       (staff.isSecure == 'T' ? true : false)
     else
