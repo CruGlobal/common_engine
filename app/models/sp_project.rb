@@ -7,12 +7,12 @@ class SpProject < ActiveRecord::Base
   VOLUNTEER = 'Volunteer'
   KID = 'Kid'
 
-  belongs_to :pd, :class_name => "Person", :foreign_key => "pd_id"
-  belongs_to :apd, :class_name => "Person", :foreign_key => "apd_id"
-  belongs_to :opd, :class_name => "Person", :foreign_key => "opd_id"
-  belongs_to :coordinator, :class_name => "Person", :foreign_key => "coordinator_id"
-  belongs_to :created_by, :class_name => "Person", :foreign_key => "created_by_id"
-  belongs_to :updated_by, :class_name => "Person", :foreign_key => "updated_by_id"
+  belongs_to :pd, :class_name => "::Person", :foreign_key => "pd_id"
+  belongs_to :apd, :class_name => "::Person", :foreign_key => "apd_id"
+  belongs_to :opd, :class_name => "::Person", :foreign_key => "opd_id"
+  belongs_to :coordinator, :class_name => "::Person", :foreign_key => "coordinator_id"
+  belongs_to :created_by, :class_name => "::Person", :foreign_key => "created_by_id"
+  belongs_to :updated_by, :class_name => "::Person", :foreign_key => "updated_by_id"
   
   
   has_many   :stats, :class_name => "SpStat", :foreign_key => "project_id"
@@ -47,9 +47,14 @@ class SpProject < ActiveRecord::Base
   
   validates_uniqueness_of :name
 
-  named_scope :with_partner, proc {|partner_scope| {:conditions => partner_scope}}
-  named_scope :show_on_website, {:conditions => "show_on_website is true"}
-  named_scope :current, {:conditions => {:project_status => 'open', :year => SpApplication::YEAR}}
+  scope :with_partner, proc {|partner_scope| {:conditions => partner_scope}}
+  scope :show_on_website, {:conditions => "show_on_website is true"}
+  scope :current, where(:project_status => 'open')
+  
+  default_scope order(:name)
+  
+  before_create :set_to_open
+  before_save :get_coordinates, :calculate_weeks
   
   @@regions = {}
 
@@ -76,13 +81,8 @@ class SpProject < ActiveRecord::Base
     end
   end
 
-  def before_create
+  def set_to_open
     self[:project_status] = 'open'
-  end
-
-  def before_save
-    get_coordinates
-    calculate_weeks
   end
 
   def calculate_weeks

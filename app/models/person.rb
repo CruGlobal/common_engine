@@ -18,8 +18,6 @@ class Person < ActiveRecord::Base
   has_many                :personal_links
   has_many                :group_messages
   has_many                :personal_messages      # not fully implemented
-  has_and_belongs_to_many :friends, :uniq => true, :join_table => "am_friends_people"
-  has_and_belongs_to_many :groups,  :uniq => true, :join_table => "am_groups_people"
 
   # On Campus Now
   has_many                :orders                 
@@ -41,16 +39,16 @@ class Person < ActiveRecord::Base
   attr_accessor           :school
   
   # File Column
-  file_column             :image, :fix_file_extensions => true,
-                          :magick => { :size => '400x400!', :crop => '1:1',
-                            :versions => {
-                              :mini   => {:crop => '1:1', :size => "50x50!"},
-                              :thumb  => {:crop => '1:1', :size => "100x100!"},
-                              :medium => {:crop => '1:1', :size => "200x200!"}
-                            }
-                          }
+  # file_column             :image, :fix_file_extensions => true,
+  #                         :magick => { :size => '400x400!', :crop => '1:1',
+  #                           :versions => {
+  #                             :mini   => {:crop => '1:1', :size => "50x50!"},
+  #                             :thumb  => {:crop => '1:1', :size => "100x100!"},
+  #                             :medium => {:crop => '1:1', :size => "200x200!"}
+  #                           }
+  #                         }
                   
-  validates_file_format_of :image, :in => ["image/jpeg", "image/gif"]
+  # validates_file_format_of :image, :in => ["image/jpeg", "image/gif"]
   validates_uniqueness_of :fk_ssmUserId, :message => "This username already has a person record!", :allow_nil => true
   validates_presence_of :first_name
   # validates_filesize_of :image, :in => 0..2.megabytes
@@ -198,7 +196,7 @@ class Person < ActiveRecord::Base
     self.changedBy = ApplicationController.application_name
   end
   
-  include FileColumnHelper
+  # include FileColumnHelper
   
   # file_column picture
   def pic(size = "mini")
@@ -259,6 +257,10 @@ class Person < ActiveRecord::Base
       result = "0" * pad + acct_no if pad > 0
     end
     result
+  end
+  
+  def to_s
+    informal_full_name
   end
     
 end

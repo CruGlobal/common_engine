@@ -87,7 +87,7 @@ class Apply < ActiveRecord::Base
   has_many :payments
   has_one :hr_si_application
   
-  named_scope :by_region, proc {|region, year| {:include => [:applicant, :references, [:hr_si_application => :sitrack_tracking], :payments],
+  scope :by_region, proc {|region, year| {:include => [:applicant, :references, [:hr_si_application => :sitrack_tracking], :payments],
                                :conditions => ["#{HrSiApplication.table_name}.siYear = ? and (concat_ws('','',#{Person.table_name}.region )= ? or #{SitrackTracking.table_name}.regionOfOrigin = ?)", year, region, region],
                                :order => "#{Person.table_name}.lastName, #{Person.table_name}.firstName"}}
   
