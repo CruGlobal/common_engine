@@ -34,7 +34,7 @@ class Person < ActiveRecord::Base
   # Summer Project
   has_many                :sp_applications
   has_one                 :current_application, :conditions => "year = '#{SpApplication::YEAR}'", :class_name => 'SpApplication'
-    
+  
   # General
   attr_accessor           :school
   
@@ -61,6 +61,10 @@ class Person < ActiveRecord::Base
   end
   def emergency_address=(address)
     self.emergency_address1 = address
+  end
+  
+  def directs_projects
+    @directs_projects ||= SpProject.where("apd_id = ? OR pd_id = ? OR opd_id = ? OR coordinator_id = ?", id, id, id, id)
   end
   
 # This code can cause an infinite recursion 

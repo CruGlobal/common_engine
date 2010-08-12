@@ -232,4 +232,12 @@ class SpProject < ActiveRecord::Base
     end
     string.chomp(", ")
   end
+  
+  def capacity
+    max_accepted_men.to_i + max_accepted_women.to_i
+  end
+  
+  def accepted
+    current_students_men.to_i + current_students_women.to_i
+  end
 end
