@@ -46,19 +46,28 @@ class SpProject < ActiveRecord::Base
   validates_inclusion_of :ideal_staff_women, :in=>0..100, :message => "can't be less than 0 or greater than 100"
   
   validates_uniqueness_of :name
+  validate :validate_partnership
 
   scope :with_partner, proc {|partner_scope| {:conditions => partner_scope}}
   scope :show_on_website, {:conditions => "show_on_website is true"}
   scope :current, where(:project_status => 'open')
+  scope :ascend_by_name, order(:name)
+  scope :descend_by_name, order("name desc")
+  scope :ascend_by_pd, order(Person.table_name + '.lastname, ' + Person.table_name + '.firstname').joins(:pd)
+  scope :descend_by_pd, order(Person.table_name + '.lastname desc, ' + Person.table_name + '.firstname desc').joins(:pd)
+  scope :ascend_by_apd, order(Person.table_name + '.lastname, ' + Person.table_name + '.firstname').joins(:apd)
+  scope :descend_by_apd, order(Person.table_name + '.lastname desc, ' + Person.table_name + '.firstname desc').joins(:apd)
+  scope :ascend_by_opd, order(Person.table_name + '.lastname, ' + Person.table_name + '.firstname').joins(:opd)
+  scope :descend_by_opd, order(Person.table_name + '.lastname desc, ' + Person.table_name + '.firstname desc').joins(:opd)
   
-  default_scope order(:name)
   
   before_create :set_to_open
   before_save :get_coordinates, :calculate_weeks
   
+  
   @@regions = {}
 
-  def validate
+  def validate_partnership
     if partner_region_only && (primary_partner.length != 2 && secondary_partner.length != 2)
       errors.add_to_base("You must choose a regional partnership if you want to accept from Partner Region only.")
     end
@@ -100,7 +109,7 @@ class SpProject < ActiveRecord::Base
   end
   
   def pd_name
-    pd_name_non_secure if (country_status == 'open' && pd && !pd.is_secure)
+    pd_name_non_secure if (country_status == 'open' && pd && !pd.is_secure?)
   end
 
   def apd_name_non_secure
@@ -108,7 +117,7 @@ class SpProject < ActiveRecord::Base
   end
   
   def apd_name
-    apd_name_non_secure if (country_status == 'open' && apd && !apd.is_secure)
+    apd_name_non_secure if (country_status == 'open' && apd && !apd.is_secure?)
   end
 
   def pd_email_non_secure
@@ -116,7 +125,7 @@ class SpProject < ActiveRecord::Base
   end
 
   def pd_email
-    pd_email_non_secure if (country_status == 'open' && pd && !pd.is_secure)
+    pd_email_non_secure if (country_status == 'open' && pd && !pd.is_secure?)
   end
 
   def apd_email_non_secure
@@ -124,7 +133,7 @@ class SpProject < ActiveRecord::Base
   end
 
   def apd_email
-    apd_email_non_secure if (country_status == 'open' && apd && !apd.is_secure)
+    apd_email_non_secure if (country_status == 'open' && apd && !apd.is_secure?)
   end
 
   def primary_focus_name
@@ -180,6 +189,10 @@ class SpProject < ActiveRecord::Base
         end
       end
     end
+  end
+  
+  def to_s
+    name
   end
 
   # This method uses google geocodes to get longitude/latitude coordinates for
