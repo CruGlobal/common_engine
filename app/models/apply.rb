@@ -3,7 +3,7 @@ class Apply < ActiveRecord::Base
   unloadable
   
   acts_as_state_machine :initial => :started, :column => :status
-  set_table_name "#{TABLE_NAME_PREFIX}#{self.table_name}"
+  set_table_name "si_applies"
   
   # State machine stuff
   state :started

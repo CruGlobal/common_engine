@@ -2,7 +2,7 @@
 # think "manilla folder"
 class Sleeve < ActiveRecord::Base
   unloadable
-  set_table_name "#{TABLE_NAME_PREFIX}#{self.table_name}"
+  set_table_name "si_sleeves"
   
   has_many :sleeve_sheets
   has_many :applies
