@@ -60,6 +60,10 @@ class SpProject < ActiveRecord::Base
   scope :ascend_by_opd, order(Person.table_name + '.lastname, ' + Person.table_name + '.firstname').joins(:opd)
   scope :descend_by_opd, order(Person.table_name + '.lastname desc, ' + Person.table_name + '.firstname desc').joins(:opd)
   
+  scope :pd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").joins(:pd)}
+  scope :apd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").joins(:apd)}
+  scope :opd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").joins(:opd)}
+  
   
   before_create :set_to_open
   before_save :get_coordinates, :calculate_weeks
