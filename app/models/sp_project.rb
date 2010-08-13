@@ -84,6 +84,10 @@ class SpProject < ActiveRecord::Base
     update_attribute('project_status', 'open')
     update_attribute('year', SpApplication::YEAR)
   end
+  
+  def closed?
+    project_status == 'closed'
+  end
 
   def url=(val)
     super
