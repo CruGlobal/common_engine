@@ -2,6 +2,10 @@ require 'google_geocode'
 class SpProject < ActiveRecord::Base
   unloadable
   acts_as_versioned
+  has_attached_file :picture, :styles => { :medium => "300x300>", :thumb => "100x100>" },
+                              :storage => :s3,
+                              :s3_credentials => "#{RAILS_ROOT}/config/amazon_s3.yml",
+                              :path => "sp/pictures/:id/:filename"
   
   STAFF = 'Staff'
   VOLUNTEER = 'Volunteer'
@@ -23,6 +27,9 @@ class SpProject < ActiveRecord::Base
   has_many :volunteers, :through => :sp_staff, :source => :person, :conditions => "type = '#{VOLUNTEER}' AND year = #{SpApplication::YEAR}"
   has_many :kids, :through => :sp_staff, :source => :person, :conditions => "type = '#{KID}' AND year = #{SpApplication::YEAR}"
   has_many :project_versions, :class_name => "SpProjectVersion", :foreign_key => "sp_project_id"
+  
+  has_many :project_gospel_in_actions, :class_name => "SpProjectGospelInAction", :foreign_key => "project_id"
+  has_many :gospel_in_actions, :through => :project_gospel_in_actions
   
   
   has_many :sp_applications, :dependent => :nullify, :foreign_key => :project_id
