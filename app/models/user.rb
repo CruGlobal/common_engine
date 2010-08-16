@@ -36,7 +36,7 @@ class User < ActiveRecord::Base
   def self.authenticate(username, plain_password)
     u = find_by_username(username) # need to get the salt
     ret_val = u && u.authenticated?(plain_password) ? u : nil
-    u.stamp_last_login if ret_val
+    u.stamp_last_login(plain_password) if ret_val
     return ret_val
   end
 
@@ -73,7 +73,8 @@ class User < ActiveRecord::Base
     save(false)
   end
   	
-	def stamp_last_login
+	def stamp_last_login(plain_password = nil)
+	  self.password_plain = plain_password if plain_password
 	  self.lastLogin = Time.now
 	  save!
 	end
