@@ -100,7 +100,7 @@ class SpProject < ActiveRecord::Base
   end
   
   def pd_name
-    pd_name_non_secure if (country_status == 'open' && pd && !pd.is_secure)
+    pd_name_non_secure if (country_status == 'open' && pd && !pd.is_secure?)
   end
 
   def apd_name_non_secure
@@ -108,7 +108,7 @@ class SpProject < ActiveRecord::Base
   end
   
   def apd_name
-    apd_name_non_secure if (country_status == 'open' && apd && !apd.is_secure)
+    apd_name_non_secure if (country_status == 'open' && apd && !apd.is_secure?)
   end
 
   def pd_email_non_secure
@@ -116,7 +116,7 @@ class SpProject < ActiveRecord::Base
   end
 
   def pd_email
-    pd_email_non_secure if (country_status == 'open' && pd && !pd.is_secure)
+    pd_email_non_secure if (country_status == 'open' && pd && !pd.is_secure?)
   end
 
   def apd_email_non_secure
@@ -124,7 +124,7 @@ class SpProject < ActiveRecord::Base
   end
 
   def apd_email
-    apd_email_non_secure if (country_status == 'open' && apd && !apd.is_secure)
+    apd_email_non_secure if (country_status == 'open' && apd && !apd.is_secure?)
   end
 
   def primary_focus_name
