@@ -9,9 +9,9 @@ class Person < ActiveRecord::Base
   has_one                 :staff
 
   # Addresses
-  has_one                 :current_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'current'", :class_name => 'Address'
-  has_one                 :permanent_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'permanent'", :class_name => 'Address'
-  has_one                 :emergency_address1, :foreign_key => "fk_PersonID", :conditions => "addressType = 'emergency1'", :class_name => 'Address'
+  has_one                 :current_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'current'", :class_name => '::Address'
+  has_one                 :permanent_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'permanent'", :class_name => '::Address'
+  has_one                 :emergency_address1, :foreign_key => "fk_PersonID", :conditions => "addressType = 'emergency1'", :class_name => '::Address'
   has_many                :addresses, :foreign_key => "fk_PersonID" 
   
   # Cru Commons
@@ -29,11 +29,11 @@ class Person < ActiveRecord::Base
   has_many                :hr_si_applications, :foreign_key => "fk_PersonID"
   has_many                :applies, :foreign_key => "applicant_id"   # applicants applying
   has_many                :apply_sheets    # whoever, filling in a sheet
-  has_one                 :current_si_application, :foreign_key => "fk_PersonID", :conditions => "siYear = '#{HrSiApplication::YEAR}'", :class_name => 'HrSiApplication'
+  has_one                 :current_si_application, :foreign_key => "fk_PersonID", :conditions => "siYear = '#{HrSiApplication::YEAR}'", :class_name => '::HrSiApplication'
   
   # Summer Project
   has_many                :sp_applications
-  has_one                 :current_application, :conditions => "year = '#{SpApplication::YEAR}'", :class_name => 'SpApplication'
+  has_one                 :current_application, :conditions => "year = '#{SpApplication::YEAR}'", :class_name => '::SpApplication'
   
   # General
   attr_accessor           :school

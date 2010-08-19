@@ -10,6 +10,10 @@ class Address < ActiveRecord::Base
 	
 	before_save :stamp
 	
+	def home_phone; homePhone; end
+	def cell_phone; cellPhone; end
+	def work_phone; workPhone; end
+	
   #set dateChanged and changedBy
   def stamp
     self.dateChanged = Time.now
@@ -26,10 +30,21 @@ class Address < ActiveRecord::Base
 		ret_val += '<br/>'+country+',' unless country.nil? || country.empty? || country == 'USA'
 		return ret_val
 	end
+	alias_method :to_s, :display_html
 	
 	def phone_number
     phone = (self.homePhone && !self.homePhone.empty?) ? self.homePhone : self.cellPhone
     phone = (phone && !phone.empty?) ? phone : self.workPhone
     phone
+	end
+	
+	def phone_numbers
+	  unless @phone_numbers 
+	    @phone_numbers = []
+	    @phone_numbers << home_phone + ' (home)' unless home_phone.blank?
+	    @phone_numbers << cell_phone + ' (cell)' unless cell_phone.blank?
+	    @phone_numbers << work_phone + ' (work)' unless work_phone.blank?
+    end
+  	@phone_numbers
 	end
 end
