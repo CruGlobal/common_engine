@@ -104,6 +104,30 @@ class SpProject < ActiveRecord::Base
     @kids[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Kid'}.collect(&:person_id))
   end
   
+  def pd=(person_id, yr = nil)
+    yr ||= year
+    sp_staff.where('sp_staff.year' => yr, 'sp_staff.type' => 'PD').first.try(:destroy)
+    sp_staff.create(:year => yr, :type => 'PD', :person_id => person_id) if person_id
+  end
+  
+  def apd=(person_id, yr = nil)
+    yr ||= year
+    sp_staff.where('sp_staff.year' => yr, 'sp_staff.type' => 'APD').first.try(:destroy)
+    sp_staff.create(:year => yr, :type => 'APD', :person_id => person_id) if person_id
+  end
+  
+  def opd=(person_id, yr = nil)
+    yr ||= year
+    sp_staff.where('sp_staff.year' => yr, 'sp_staff.type' => 'OPD').first.try(:destroy)
+    sp_staff.create(:year => yr, :type => 'OPD', :person_id => person_id) if person_id
+  end
+  
+  def coordinator=(person_id, yr = nil)
+    yr ||= year
+    sp_staff.where('sp_staff.year' => yr, 'sp_staff.type' => 'Coordinator').first.try(:destroy)
+    sp_staff.create(:year => yr, :type => 'Coordinator', :person_id => person_id) if person_id
+  end
+  
   def validate_partnership
     if partner_region_only && (primary_partner.length != 2 && secondary_partner.length != 2)
       errors.add_to_base("You must choose a regional partnership if you want to accept from Partner Region only.")
@@ -293,5 +317,25 @@ class SpProject < ActiveRecord::Base
   
   def accepted_count
     current_students_men.to_i + current_students_women.to_i
+  end
+  
+  def male_applicants_count(yr = nil)
+    yr ||= year
+    yr == year ? current_applicants_men : sp_applications.applicant.male.for_year(yr).count
+  end
+  
+  def female_applicants_count(yr = nil)
+    yr ||= year
+    yr == year ? current_applicants_men : sp_applications.applicant.female.for_year(yr).count
+  end
+  
+  def male_accepted_count(yr = nil)
+    yr ||= year
+    yr == year ? current_applicants_men : sp_applications.accepted.male.for_year(yr).count
+  end
+  
+  def female_accepted_count(yr = nil)
+    yr ||= year
+    yr == year ? current_applicants_men : sp_applications.accepted.female.for_year(yr).count
   end
 end

@@ -214,11 +214,18 @@ class SpApplication < ActiveRecord::Base
   def self.statuses
     SpApplication.unsubmitted_statuses | SpApplication.not_ready_statuses | SpApplication.ready_statuses | SpApplication.accepted_statuses | SpApplication.not_going_statuses
   end
-
+  
+  scope :accepted, where('sp_applications.status' => SpApplication.accepted_statuses)
   scope :accepted_participants, where('sp_applications.status' => 'accepted_as_participant')
   scope :accepted_interns, where('sp_applications.status' => 'accepted_as_intern')
   scope :ready_to_evaluate, where('sp_applications.status' => SpApplication.ready_statuses)
   scope :submitted, where('sp_applications.status' => SpApplication.not_ready_statuses)
+  scope :not_submitted, where('sp_applications.status' => SpApplication.unsubmitted_statuses)
+  scope :not_going, where('sp_applications.status' => SpApplication.not_going_statuses)
+  scope :applicant, where('sp_applications.status' => SpApplication.applied_statuses)
+  
+  scope :male, where('ministry_person.gender = 1').includes(:person)
+  scope :female, where('ministry_person.gender <> 1').includes(:person)
   
   
   def self.cost
