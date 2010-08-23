@@ -144,7 +144,6 @@ class SpApplication < ActiveRecord::Base
   scope :for_year, proc {|year| {:conditions => {:year => year}}}
   scope :preferred_project, proc {|project_id| {:conditions => ["current_project_queue_id = ? OR preference1_id = ?", project_id, project_id], 
                                                       :include => :person }}
-
   before_create :set_su_code
   after_save :complete
 
@@ -215,6 +214,12 @@ class SpApplication < ActiveRecord::Base
   def self.statuses
     SpApplication.unsubmitted_statuses | SpApplication.not_ready_statuses | SpApplication.ready_statuses | SpApplication.accepted_statuses | SpApplication.not_going_statuses
   end
+
+  scope :accepted_participants, where('sp_applications.status' => 'accepted_as_participant')
+  scope :accepted_interns, where('sp_applications.status' => 'accepted_as_intern')
+  scope :ready_to_evaluate, where('sp_applications.status' => SpApplication.ready_statuses)
+  scope :submitted, where('sp_applications.status' => SpApplication.not_ready_statuses)
+  
   
   def self.cost
     if Time.now < payment_deadline

@@ -1,20 +1,11 @@
 require 'google_geocode'
 class SpProject < ActiveRecord::Base
   unloadable
-  versioned
   has_attached_file :picture, :styles => { :medium => "300x300>", :thumb => "100x100>" },
                               :storage => :s3,
                               :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
                               :path => "sp/project/pictures/:id/:filename"
   
-  STAFF = 'Staff'
-  VOLUNTEER = 'Volunteer'
-  KID = 'Kid'
-
-  belongs_to :pd, :class_name => "::Person", :foreign_key => "pd_id"
-  belongs_to :apd, :class_name => "::Person", :foreign_key => "apd_id"
-  belongs_to :opd, :class_name => "::Person", :foreign_key => "opd_id"
-  belongs_to :coordinator, :class_name => "::Person", :foreign_key => "coordinator_id"
   belongs_to :created_by, :class_name => "::Person", :foreign_key => "created_by_id"
   belongs_to :updated_by, :class_name => "::Person", :foreign_key => "updated_by_id"
   
@@ -23,10 +14,6 @@ class SpProject < ActiveRecord::Base
   belongs_to :primary_ministry_focus, :class_name => 'SpMinistryFocus', :foreign_key => :primary_ministry_focus_id
   has_and_belongs_to_many :ministry_focuses, :class_name => 'SpMinistryFocus', :join_table => "sp_ministry_focuses_projects"
   has_many :sp_staff, :class_name => "SpStaff", :foreign_key => "project_id"
-  has_many :staff, :through => :sp_staff, :source => :person, :conditions => "type = '#{STAFF}' AND year = #{SpApplication::YEAR}"
-  has_many :volunteers, :through => :sp_staff, :source => :person, :conditions => "type = '#{VOLUNTEER}' AND year = #{SpApplication::YEAR}"
-  has_many :kids, :through => :sp_staff, :source => :person, :conditions => "type = '#{KID}' AND year = #{SpApplication::YEAR}"
-  has_many :project_versions, :class_name => "SpProjectVersion", :foreign_key => "sp_project_id"
   
   has_many :project_gospel_in_actions, :class_name => "SpProjectGospelInAction", :foreign_key => "project_id", :dependent => :destroy
   has_many :gospel_in_actions, :through => :project_gospel_in_actions
@@ -35,6 +22,7 @@ class SpProject < ActiveRecord::Base
   accepts_nested_attributes_for :student_quotes, :reject_if => lambda { |a| a[:quote].blank? }, :allow_destroy => true
   
   has_many :sp_applications, :dependent => :nullify, :foreign_key => :project_id
+  
 
   validates_presence_of :name, :city, :country, :aoa, :display_location,
                         :primary_partner, :report_stats_to
@@ -80,6 +68,42 @@ class SpProject < ActiveRecord::Base
   
   @@regions = {}
 
+  # Leadership
+  def pd(yr = year)
+    yr ||= year
+    @pd ||= {}
+    @pd[yr] ||= sp_staff.where('sp_staff.year' => yr).detect {|s| s.type == 'PD'}.try(:person)
+  end
+  def apd(yr = year)
+    @apd ||= {}
+    @apd[yr] ||= sp_staff.where('sp_staff.year' => yr).detect {|s| s.type == 'APD'}.try(:person)
+  end
+  def opd(yr = year)
+    yr ||= year
+    @opd ||= {}
+    @opd[yr] ||= sp_staff.where('sp_staff.year' => yr).detect {|s| s.type == 'OPD'}.try(:person)
+  end
+  def coordinator(yr = year)
+    yr ||= year
+    @coordinator ||= {}
+    @coordinator[yr] ||= sp_staff.where('sp_staff.year' => yr).detect {|s| s.type == 'Coordinator'}.try(:person)
+  end
+  def staff(yr = year)
+    yr ||= year
+    @staff ||= {}
+    @staff[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Staff'}.collect(&:person_id))
+  end
+  def volunteers(yr = year)
+    yr ||= year
+    @volunteers ||= {}
+    @volunteers[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Volunteer'}.collect(&:person_id))
+  end
+  def kids(yr = year)
+    yr ||= year
+    @kids ||= {}
+    @kids[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Kid'}.collect(&:person_id))
+  end
+  
   def validate_partnership
     if partner_region_only && (primary_partner.length != 2 && secondary_partner.length != 2)
       errors.add_to_base("You must choose a regional partnership if you want to accept from Partner Region only.")
@@ -267,7 +291,7 @@ class SpProject < ActiveRecord::Base
     max_accepted_men.to_i + max_accepted_women.to_i
   end
   
-  def accepted
+  def accepted_count
     current_students_men.to_i + current_students_women.to_i
   end
 end

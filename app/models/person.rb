@@ -109,7 +109,7 @@ class Person < ActiveRecord::Base
   end
 
   def human_gender
-    return nil if gender.to_s.empty?
+    return '' if gender.to_s.empty?
     return is_male? ? 'Male' : 'Female'
   end
   
@@ -228,7 +228,7 @@ class Person < ActiveRecord::Base
   end
   
   def email_address
-    current_address.email if current_address
+    current_address ? current_address.email : user.try(:username)
   end
   
   # This method shouldn't be needed because nightly updater should fill this in
