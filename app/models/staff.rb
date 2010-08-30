@@ -8,10 +8,8 @@ class Staff < ActiveRecord::Base
     if ssm_id.nil? then raise "nil ssm_id!" end
     ssm_user = User.find(:first, :conditions => ["userID = ?", ssm_id])
     if ssm_user.nil? then raise "ssm_id doesn't exist: #{ssm_id}" end
-    username = ssm_user.username
-    profile = StaffsiteProfile.find(:first, :conditions => ["userName = ?", username])
-    account_no = profile.accountNo
-    staff = Staff.find(:first, :conditions => ["accountNo = ?", account_no])
+    person = ssm_user.person
+    staff = person.staff
   end
   
   # "first_name last_name"
