@@ -66,7 +66,7 @@ class SpProject < ActiveRecord::Base
   
   before_create :set_to_open
   before_save :get_coordinates, :calculate_weeks
-  date_setters :apply_by_date
+  date_setters :apply_by_date, :start_date, :end_date, :date_of_departure, :date_of_return, :staff_start_date, :staff_end_date
   
   
   @@regions = {}
