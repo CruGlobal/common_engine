@@ -12,6 +12,7 @@ class SpApplication < ActiveRecord::Base
                                 logger.info("application #{app.id} submitted")
                                 SpApplicationMailer.deliver_submitted(app)
                                 app.submitted_at = Time.now
+                                app.previous_status = status
                               }
 
   state :completed, :enter => Proc.new {|app|
@@ -20,11 +21,13 @@ class SpApplication < ActiveRecord::Base
                                 app.add_to_project_queue
                                 SpApplicationMailer.deliver_completed(app)
                                 logger.info("Application #{app.id} completed; placed in project #{app.current_project_queue_id}'s queue")
+                                app.previous_status = status
                               }
 
   state :unsubmitted, :enter => Proc.new {|app|
                                 app.unsubmit_email
                                 app.remove_from_project_queue
+                                app.previous_status = status
                               }
 
   state :withdrawn, :enter => Proc.new {|app|
@@ -33,6 +36,7 @@ class SpApplication < ActiveRecord::Base
                                 app.remove_from_project_queue
                                 app.remove_from_project_assignment
                                 app.withdrawn_at = Time.now
+                                app.previous_status = status
                               }
 
   state :accepted_as_intern, :enter => Proc.new {|app|
@@ -42,6 +46,7 @@ class SpApplication < ActiveRecord::Base
                                   app.project_id = app.preference1_id if app.preference1_id
                                   app.project_id = app.current_project_queue_id if app.current_project_queue_id
                                 end
+                                app.previous_status = status
                                 # MpdUser.create(:ssm_id => app.person.fk_ssmUserId)
                              }
 
@@ -52,6 +57,7 @@ class SpApplication < ActiveRecord::Base
                                   app.project_id = app.preference1_id if app.preference1_id
                                   app.project_id = app.current_project_queue_id if app.current_project_queue_id
                                 end
+                                app.previous_status = status
                                 # MpdUser.create(:ssm_id => app.person.fk_ssmUserId)
                              }
 
@@ -59,6 +65,7 @@ class SpApplication < ActiveRecord::Base
                                 logger.info("application #{app.id} declined")
                                 app.remove_from_project_queue
                                 app.remove_from_project_assignment
+                                app.previous_status = status
                              }
 
   event :submit do

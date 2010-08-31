@@ -1,10 +1,12 @@
 require 'google_geocode'
 class SpProject < ActiveRecord::Base
   unloadable
-  has_attached_file :picture, :styles => { :medium => "300x300>", :thumb => "100x100>" },
-                              :storage => :s3,
-                              :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
-                              :path => "sp/project/pictures/:id/:filename"
+  # has_attached_file :picture, :styles => { :medium => "300x300>", :thumb => "100x100>" },
+  #                             :storage => :s3,
+  #                             :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
+  #                             :path => "sp/project/pictures/:id/:filename"
+#  image_accessor :picture
+#  image_accessor :logo
   
   belongs_to :created_by, :class_name => "::Person", :foreign_key => "created_by_id"
   belongs_to :updated_by, :class_name => "::Person", :foreign_key => "updated_by_id"
@@ -57,17 +59,18 @@ class SpProject < ActiveRecord::Base
   scope :ascend_by_opd, order(Person.table_name + '.lastname, ' + Person.table_name + '.firstname').joins(:opd)
   scope :descend_by_opd, order(Person.table_name + '.lastname desc, ' + Person.table_name + '.firstname desc').joins(:opd)
   
-  scope :pd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").joins(:pd)}
-  scope :apd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").joins(:apd)}
-  scope :opd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").joins(:opd)}
+  scope :pd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'PD').joins({:sp_staff => :person})}
+  scope :apd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'APD').joins({:sp_staff => :person})}
+  scope :opd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'OPD').joins(:sp_staff)}
   
   
   before_create :set_to_open
   before_save :get_coordinates, :calculate_weeks
+  date_setters :apply_by_date
   
   
   @@regions = {}
-
+      
   # Leadership
   def pd(yr = year)
     yr ||= year
@@ -91,17 +94,23 @@ class SpProject < ActiveRecord::Base
   def staff(yr = year)
     yr ||= year
     @staff ||= {}
-    @staff[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Staff'}.collect(&:person_id))
+    @staff[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Staff'}.collect(&:person_id)).
+                                    includes(:current_address).
+                                    order('lastName, firstname')
   end
   def volunteers(yr = year)
     yr ||= year
     @volunteers ||= {}
-    @volunteers[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Volunteer'}.collect(&:person_id))
+    @volunteers[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Volunteer'}.collect(&:person_id)).
+                                    includes(:current_address).
+                                    order('lastName, firstname')
   end
   def kids(yr = year)
     yr ||= year
     @kids ||= {}
-    @kids[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Kid'}.collect(&:person_id))
+    @kids[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Kid'}.collect(&:person_id)).
+                                    includes(:current_address).
+                                    order('lastName, firstname')
   end
   
   def pd=(person_id, yr = nil)

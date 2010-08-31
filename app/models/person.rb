@@ -51,6 +51,8 @@ class Person < ActiveRecord::Base
   # validates_file_format_of :image, :in => ["image/jpeg", "image/gif"]
   validates_uniqueness_of :fk_ssmUserId, :message => "This username already has a person record!", :allow_nil => true
   validates_presence_of :first_name
+  
+  accepts_nested_attributes_for :current_address
   # validates_filesize_of :image, :in => 0..2.megabytes
   # 
   
