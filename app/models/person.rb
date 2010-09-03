@@ -34,6 +34,10 @@ class Person < ActiveRecord::Base
   # Summer Project
   has_many                :sp_applications
   has_one                 :current_application, :conditions => "year = '#{SpApplication::YEAR}'", :class_name => '::SpApplication'
+  has_many                :sp_staff, :class_name => "SpStaff", :foreign_key => "person_id"
+  has_many                :sp_directorships, :class_name => "SpStaff", :foreign_key => "person_id", :conditions => {:type => ['PD', 'APD', 'OPD', 'Coordinator']}
+  has_many                :directed_projects, :through => :sp_directorships, :source => :sp_project
+  has_many                :staffed_projects, :through => :sp_staff, :source => :sp_project
   
   # General
   attr_accessor           :school
@@ -49,7 +53,7 @@ class Person < ActiveRecord::Base
   #                         }
                   
   # validates_file_format_of :image, :in => ["image/jpeg", "image/gif"]
-  validates_uniqueness_of :fk_ssmUserId, :message => "This username already has a person record!", :allow_nil => true
+  validates_uniqueness_of :fk_ssmUserId, :message => "This username already has a person record.", :allow_nil => true
   validates_presence_of :first_name
   
   accepts_nested_attributes_for :current_address
@@ -63,10 +67,6 @@ class Person < ActiveRecord::Base
   end
   def emergency_address=(address)
     self.emergency_address1 = address
-  end
-  
-  def directs_projects
-    @directs_projects ||= SpProject.where("apd_id = ? OR pd_id = ? OR opd_id = ? OR coordinator_id = ?", id, id, id, id)
   end
   
 # This code can cause an infinite recursion 
