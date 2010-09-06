@@ -26,16 +26,22 @@ class SpProject < ActiveRecord::Base
   has_many :sp_applications, :dependent => :nullify, :foreign_key => :project_id
   
 
-  validates_presence_of :name, :city, :country, :aoa, :display_location,
+  validates_presence_of :name, :display_location, :start_date, :end_date, :student_cost, :max_accepted_men, :max_accepted_women,
+                        :project_contact_name, :project_contact_role, :project_contact_phone, :project_contact_email, 
+                        :project_contact2_name, :project_contact2_role, :project_contact2_phone, :project_contact2_email, 
+                        :staff_start_date, :staff_end_date,
+                        :city, :country, :aoa, 
                         :primary_partner, :report_stats_to
+                        
+  validates_inclusion_of :use_provided_application, :in => [true, false]
+  validates_inclusion_of :partner_region_only, :in => [true, false]
 
-#  validates_presence_of :start_date, :end_date,
-#                        :primary_ministry_focus_id, :description,
+#  validates_presence_of :primary_ministry_focus_id, :description,
 #                        :operating_business_unit, :operating_operating_unit,
 #                        :operating_department, :operating_designation,
 #                        :scholarship_business_unit, :scholarship_operating_unit,
 #                        :scholarship_department, :scholarship_designation,
-#                        :student_cost
+#                        
   validates_presence_of  :apply_by_date, :if => :use_provided_application
   validates_presence_of  :state, :if => Proc.new { |project| !project.is_wsn? } #:is_wsn?
 
