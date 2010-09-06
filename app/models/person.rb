@@ -35,7 +35,7 @@ class Person < ActiveRecord::Base
   has_many                :sp_applications
   has_one                 :current_application, :conditions => "year = '#{SpApplication::YEAR}'", :class_name => '::SpApplication'
   has_many                :sp_staff, :class_name => "SpStaff", :foreign_key => "person_id"
-  has_many                :sp_directorships, :class_name => "SpStaff", :foreign_key => "person_id", :conditions => {:type => ['PD', 'APD', 'OPD', 'Coordinator']}
+  has_many                :sp_directorships, :class_name => "SpStaff", :foreign_key => "person_id", :conditions => {:type => SpStaff::DIRECTORSHIPS}
   has_many                :directed_projects, :through => :sp_directorships, :source => :sp_project
   has_many                :staffed_projects, :through => :sp_staff, :source => :sp_project
   

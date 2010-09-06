@@ -112,6 +112,14 @@ class SpProject < ActiveRecord::Base
                                     includes(:current_address).
                                     order('lastName, firstname')
   end
+
+  def evaluators(yr = year)
+    yr ||= year
+    @evaluators ||= {}
+    @evaluators[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Evaluator'}.collect(&:person_id)).
+                                    includes(:current_address).
+                                    order('lastName, firstname')
+  end
   
   def pd=(person_id, yr = nil)
     yr ||= year
