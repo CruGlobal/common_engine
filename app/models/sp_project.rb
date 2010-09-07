@@ -76,7 +76,11 @@ class SpProject < ActiveRecord::Base
   
   
   @@regions = {}
-      
+  
+  def gospel_in_aciton_ids=(ids)
+    self.gospel_in_actions = SpGospelInAction.find(ids)
+  end    
+  
   # Leadership
   def pd(yr = year)
     yr ||= year
