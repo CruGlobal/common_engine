@@ -18,7 +18,7 @@ class SpStaff < ActiveRecord::Base
     
     def create_sp_user
       return true if type == 'Kid' # Kids don't need users
-      ssm_id = person.try(:fk_ssmUserId)
+      ssm_id = person.try(:user).try(:id)
       return true unless ssm_id.present?
       
       sp_user = SpUser.find_by_ssm_id(ssm_id)
