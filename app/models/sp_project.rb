@@ -78,40 +78,40 @@ class SpProject < ActiveRecord::Base
   end    
   
   # Leadership
-  def pd(yr = year)
+  def pd(yr = nil)
     yr ||= year
     @pd ||= {}
     @pd[yr] ||= sp_staff.where('sp_staff.year' => yr).detect {|s| s.type == 'PD'}.try(:person)
   end
-  def apd(yr = year)
+  def apd(yr = nil)
     @apd ||= {}
     @apd[yr] ||= sp_staff.where('sp_staff.year' => yr).detect {|s| s.type == 'APD'}.try(:person)
   end
-  def opd(yr = year)
+  def opd(yr = nil)
     yr ||= year
     @opd ||= {}
     @opd[yr] ||= sp_staff.where('sp_staff.year' => yr).detect {|s| s.type == 'OPD'}.try(:person)
   end
-  def coordinator(yr = year)
+  def coordinator(yr = nil)
     yr ||= year
     @coordinator ||= {}
     @coordinator[yr] ||= sp_staff.where('sp_staff.year' => yr).detect {|s| s.type == 'Coordinator'}.try(:person)
   end
-  def staff(yr = year)
+  def staff(yr = nil)
     yr ||= year
     @staff ||= {}
     @staff[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Staff'}.collect(&:person_id)).
                                     includes(:current_address).
                                     order('lastName, firstname')
   end
-  def volunteers(yr = year)
+  def volunteers(yr = nil)
     yr ||= year
     @volunteers ||= {}
     @volunteers[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Volunteer'}.collect(&:person_id)).
                                     includes(:current_address).
                                     order('lastName, firstname')
   end
-  def kids(yr = year)
+  def kids(yr = nil)
     yr ||= year
     @kids ||= {}
     @kids[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Kid'}.collect(&:person_id)).
@@ -119,7 +119,7 @@ class SpProject < ActiveRecord::Base
                                     order('lastName, firstname')
   end
 
-  def evaluators(yr = year)
+  def evaluators(yr = nil)
     yr ||= year
     @evaluators ||= {}
     @evaluators[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Evaluator'}.collect(&:person_id)).
