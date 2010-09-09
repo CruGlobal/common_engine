@@ -1,10 +1,15 @@
 require 'google_geocode'
 class SpProject < ActiveRecord::Base
   unloadable
-  # has_attached_file :picture, :styles => { :medium => "300x300>", :thumb => "100x100>" },
-  #                             :storage => :s3,
-  #                             :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
-  #                             :path => "sp/project/pictures/:id/:filename"
+  has_attached_file :picture, :styles => { :medium => "300x300>", :thumb => "100x100>" },
+                              :storage => :s3,
+                              :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
+                              :path => "sp/project/:attachment/:id/:filename"
+                              
+  has_attached_file :logo, :styles => { :medium => "300x300>", :thumb => "100x100>" },
+                              :storage => :s3,
+                              :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
+                              :path => "sp/project/:attachment/:id/:filename"
 #  image_accessor :picture
 #  image_accessor :logo
   
