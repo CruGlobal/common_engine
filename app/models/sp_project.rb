@@ -197,6 +197,25 @@ class SpProject < ActiveRecord::Base
   end
 
   # helper methods for xml feed
+  def percent_full
+    capacity.to_f > 0 ? (accepted_count.to_f / capacity.to_f) * 100 : 0
+  end
+  
+  def color
+    case true
+    when percent_full < 50
+      'green'
+    when percent_full < 100
+      'yellow'
+    else
+      'red'
+    end
+  end
+  
+  def international
+    country.present? && country != 'United States' ? 'Yes' : 'No'
+  end
+  
   def pd_name_non_secure
     pd.informal_full_name if pd
   end
