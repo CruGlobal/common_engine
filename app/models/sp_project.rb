@@ -89,6 +89,7 @@ class SpProject < ActiveRecord::Base
     @pd[yr] ||= sp_staff.where('sp_staff.year' => yr).detect {|s| s.type == 'PD'}.try(:person)
   end
   def apd(yr = nil)
+    yr ||= year
     @apd ||= {}
     @apd[yr] ||= sp_staff.where('sp_staff.year' => yr).detect {|s| s.type == 'APD'}.try(:person)
   end
