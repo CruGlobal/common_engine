@@ -47,7 +47,7 @@ class AuthenticationFilter
             :dateChanged => Time.now,
             :createdBy => controller.application_name,
             :changedBy => controller.application_name)
-          if attributes["emplid"] && !attributes["emplid"].empty?
+          if attributes["emplid"].present?
             person.accountNo = attributes["emplid"]
             person.staff = Staff.find_by_accountNo(attributes["emplid"])
             person.isStaff = true
