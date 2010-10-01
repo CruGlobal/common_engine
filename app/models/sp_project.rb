@@ -190,7 +190,7 @@ class SpProject < ActiveRecord::Base
 
   def calculate_weeks
     if start_date && end_date
-      self[:weeks] = ((end_date - start_date) / 1.week).round
+      self[:weeks] = ((end_date.to_time - start_date.to_time) / 1.week).round
     end
   end
   def is_wsn?
