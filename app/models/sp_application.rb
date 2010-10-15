@@ -1,5 +1,6 @@
 require 'digest/md5'
-class SpApplication < ActiveRecord::Base
+class SpApplication < AnswerSheet
+  set_table_name 'sp_applications'
   COST_BEFORE_DEADLINE = 25
   COST_AFTER_DEADLINE = 35
   
@@ -141,11 +142,11 @@ class SpApplication < ActiveRecord::Base
   belongs_to :preference4, :class_name => 'SpProject', :foreign_key => :preference4_id
   belongs_to :preference5, :class_name => 'SpProject', :foreign_key => :preference5_id
   belongs_to :current_project_queue, :class_name => 'SpProject', :foreign_key => :current_project_queue_id
-  has_many :answers, :foreign_key => :instance_id  do
-    def by_question_id(q_id)
-      self.detect {|a| a.question_id == q_id}
-    end
-  end
+  # has_many :answers, :foreign_key => :instance_id  do
+  #   def by_question_id(q_id)
+  #     self.detect {|a| a.question_id == q_id}
+  #   end
+  # end
   has_one :evaluation, :class_name => 'SpEvaluation', :foreign_key => :application_id
   
   scope :for_year, proc {|year| {:conditions => {:year => year}}}
