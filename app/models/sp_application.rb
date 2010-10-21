@@ -167,6 +167,14 @@ class SpApplication < AnswerSheet
   DEADLINE2 = Time.parse(SpApplication::YEAR.to_s + "/01/24");
   DEADLINE3 = Time.parse(SpApplication::YEAR.to_s + "/02/24");
 
+  def name
+    person.informal_full_name
+  end
+  
+  def phone
+    person.try(:current_address).try(:homePhone)
+  end
+  
   def deadline_met
     if completed_at
       if completed_at < DEADLINE1 + 1.day
@@ -456,6 +464,7 @@ class SpApplication < AnswerSheet
   def email_address
     person.current_address.email if person && person.current_address
   end
+  alias_method :email, :email_address
 
   def account_balance
     SpDonation.get_balance(designation_number)
