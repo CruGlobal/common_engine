@@ -254,7 +254,7 @@ class SpApplication < AnswerSheet
   
   
   def self.payment_deadline
-    Time.parse('2/25/'+SpApplication::YEAR.to_s+' 3:00')
+    Time.parse("#{SpApplication::YEAR.to_s}-02-25 03:00")
   end
 
   def has_paid?

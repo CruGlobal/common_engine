@@ -1,7 +1,7 @@
 require 'google_geocode'
 class SpProject < ActiveRecord::Base
   unloadable
-  has_attached_file :picture, :styles => { :medium => "300x300>", :thumb => "100x100>" },
+  has_attached_file :picture, :styles => { :medium => "500x300>", :thumb => "100x100>" },
                               :storage => :s3,
                               :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
                               :path => "sp/project/:attachment/:id/:filename"
@@ -18,6 +18,7 @@ class SpProject < ActiveRecord::Base
   
   belongs_to :basic_info_question_sheet, :class_name => "QuestionSheet", :foreign_key => "basic_info_question_sheet_id"
   belongs_to :template_question_sheet, :class_name => "QuestionSheet", :foreign_key => "template_question_sheet_id"
+  belongs_to :project_specific_question_sheet, :class_name => "QuestionSheet", :foreign_key => "project_specific_question_sheet_id"
   
   has_many   :stats, :class_name => "SpStat", :foreign_key => "project_id"
   belongs_to :primary_ministry_focus, :class_name => 'SpMinistryFocus', :foreign_key => :primary_ministry_focus_id
@@ -394,5 +395,15 @@ class SpProject < ActiveRecord::Base
   def female_accepted_count(yr = nil)
     yr ||= year
     yr == year ? current_applicants_men : sp_applications.accepted.female.for_year(yr).count
+  end
+  
+  def initialize_project_specific_question_sheet
+    unless project_specific_question_sheet
+      update_attribute(:project_specific_question_sheet_id, QuestionSheet.create!(:label => 'Project - ' + self.to_s).id)
+    end
+    if project_specific_question_sheet.pages.length == 0
+      project_specific_question_sheet.pages.create!(:label => 'Project Specific Questions', :number => 1)
+    end
+    project_specific_question_sheet
   end
 end
