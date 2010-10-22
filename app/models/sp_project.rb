@@ -16,6 +16,8 @@ class SpProject < ActiveRecord::Base
   belongs_to :created_by, :class_name => "::Person", :foreign_key => "created_by_id"
   belongs_to :updated_by, :class_name => "::Person", :foreign_key => "updated_by_id"
   
+  belongs_to :basic_info_question_sheet, :class_name => "QuestionSheet", :foreign_key => "basic_info_question_sheet_id"
+  belongs_to :template_question_sheet, :class_name => "QuestionSheet", :foreign_key => "template_question_sheet_id"
   
   has_many   :stats, :class_name => "SpStat", :foreign_key => "project_id"
   belongs_to :primary_ministry_focus, :class_name => 'SpMinistryFocus', :foreign_key => :primary_ministry_focus_id
@@ -116,6 +118,13 @@ class SpProject < ActiveRecord::Base
     @volunteers[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Volunteer'}.collect(&:person_id)).
                                     includes(:current_address).
                                     order('lastName, firstname')
+  end
+  def staff_and_volunteers(yr = nil)
+    yr ||= year
+    @volunteers ||= {}
+    @volunteers[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| ['Volunteer', 'Staff'].include?(s.type)}.collect(&:person_id))
+                                    .includes(:current_address)
+                                    .order('lastName, firstname')
   end
   def kids(yr = nil)
     yr ||= year
