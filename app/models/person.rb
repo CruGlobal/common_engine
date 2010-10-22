@@ -8,6 +8,9 @@ class Person < ActiveRecord::Base
 
   has_one                 :staff
 
+  has_many                :ministry_missional_team_members, :foreign_key => "personID"
+  has_many                :ministry_local_levels, :through => :ministry_missional_team_members
+
   # Addresses
   has_one                 :current_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'current'", :class_name => '::Address'
   has_one                 :permanent_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'permanent'", :class_name => '::Address'
@@ -265,6 +268,14 @@ class Person < ActiveRecord::Base
     result
   end
   
+  def team_members(remove_self = false)
+    my_local_level_ids = ministry_local_levels.collect &:id
+    mmtm = MinistryMissionalTeamMember.where(:teamID => my_local_level_ids).joins(:person).order("lastName, firstName ASC")
+    people = mmtm.collect &:person
+    people.delete(self) if remove_self
+    return people
+  end
+
   def to_s
     informal_full_name
   end
