@@ -15,7 +15,7 @@ class HrSiApplication < ActiveRecord::Base
   before_create :create_apply
   before_save :stamp
   
-  YEAR = 2010
+  YEAR = 2011
   APPLICATION_SLEEVE_SLUG = "stint_internship" # this is set when creating a new sleeve
 
   #set dateChanged and changedBy
