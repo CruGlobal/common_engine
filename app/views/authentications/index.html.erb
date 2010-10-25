@@ -1,8 +1,14 @@
-<% if @authentications %>
-  <% unless @authentications.empty? %>
+<% if @authentications || logged_in? %>
+  <% unless @authentications.empty? && current_user.globallyUniqueID.blank?  %>
     <div id="currentservices">
-      <h3>You are signed in with these services:</h3>
+      <h3>You have signed in with these services:</h3>
       <div class="authentications">
+        <% if current_user.globallyUniqueID.present? %>
+          <div class="authentication">
+            <%= image_tag "relay.png", :size => "32x32" %>
+            <div class="provider">Relay</div>
+          </div>
+        <% end %>
         <% for authentication in @authentications %>
           <div class="authentication">
             <%= image_tag "#{authentication.provider}_32.png", :size => "32x32" %>
