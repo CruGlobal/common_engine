@@ -1,0 +1,40 @@
+<h2>Sign up</h2>
+
+<%= form_for(@user) do |f| %>
+  <% if session[:omniauth] && @user.errors[:username].detect {|e| e =~ /is already registered in our system/ } %>
+    <%= error_messages_for :user %>
+    <br/>
+    If you are the owner of the '<%= @user.username %>' account
+    <%= link_to("click here to link your existing account to #{session[:omniauth]['provider'].camelcase}", new_session_path(:username => @user.username)) %>.
+  <% else %>
+    <% if @user.errors[:omniauth].present? %>
+      We need a little more information to link you to your <%= session[:omniauth]['provider'].camelcase %> account.
+    <% else %>
+      <%= error_messages_for :user %>
+    <% end %>
+  <% end %>
+  <% if session[:omniauth] && @user.username.blank? %>
+    <p><%= label_tag :email %><br />
+    <%= text_field_tag :email, @user.username %></p>
+  <% end %>
+  
+  <% unless @person.valid? %>
+    <%= fields_for @person do |pf| %>
+      <p><%= pf.label :firstName %><br />
+      <%= pf.text_field :firstName %></p>
+      <p><%= pf.label :lastName %><br />
+      <%= pf.text_field :lastName %></p>
+    <% end %>
+  <% end %>
+
+  <% if @user.password_required? %>
+    <p><%= f.label :password %><br />
+    <%= f.password_field :password %></p>
+
+    <p><%= f.label :password_confirmation %><br />
+    <%= f.password_field :password_confirmation %></p>
+  <% end %>
+
+  <p><%= f.submit "Sign up" %></p>
+<% end %>
+

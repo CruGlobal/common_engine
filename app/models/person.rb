@@ -279,5 +279,10 @@ class Person < ActiveRecord::Base
   def to_s
     informal_full_name
   end
+  
+  def apply_omniauth(omniauth)
+    self.firstName ||= omniauth['first_name']
+    self.lastName ||= omniauth['last_name']
+  end
     
 end

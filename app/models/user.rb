@@ -7,6 +7,7 @@ class User < ActiveRecord::Base
 
 	# Relationships
 	has_one :person, :foreign_key => 'fk_ssmUserID'	
+	has_many :authentications
 	
   # Virtual attribute for the unencrypted password
   attr_accessor :plain_password
@@ -19,7 +20,6 @@ class User < ActiveRecord::Base
   validates_confirmation_of :plain_password,                   :if => :password_required?
   validates_presence_of     :secret_question,                  :if => :password_required?
   validates_presence_of     :secret_answer,                    :if => :password_required?
-  validates_length_of       :username,    :within => 3..80
   validates_uniqueness_of   :username, :case_sensitive => false, :message => "is already registered in our system.  This may have occurred when you registered for a Campus Crusade related conference; therefore, you do not need to create a new account. If you need help with your password, please click on the appropriate link at the login screen.  If you still need assistance, please send an email to help@campuscrusadeforchrist.com describing your problem."
   
   before_save :encrypt_password
@@ -71,6 +71,13 @@ class User < ActiveRecord::Base
     self.remember_token_expires_at = nil
     self.remember_token            = nil
     save(false)
+  end
+  
+  def apply_omniauth(omniauth)
+    self.username = omniauth['user_info']['email'] if username.blank?
+    unless Authentication.find_by_provider_and_uid(omniauth['provider'], omniauth['uid'])
+      authentications.build(:provider => omniauth['provider'], :uid => omniauth['uid'])
+    end
   end
   	
 	def stamp_last_login
@@ -128,6 +135,29 @@ class User < ActiveRecord::Base
     end
     u
   end
+  	
+  def password_required?
+    (authentications.empty? && password.blank?) || !plain_password.blank?
+  end
+  def remember_me
+    remember_me_for 2.weeks
+  end
+
+  def remember_me_for(time)
+    remember_me_until time.from_now.utc
+  end
+  
+  def refresh_token
+    remember_me_until 1.year.from_now
+  end
+
+  # Useful place to put the login methods
+  def remember_me_until(time)
+    self.lastLogin = ::Time.now
+    self.remember_token_expires_at = time
+    self.remember_token = encrypt("#{username}--#{remember_token_expires_at}")
+    save(:validate => false)
+  end
 	
   protected
     # before filter 
@@ -139,8 +169,4 @@ class User < ActiveRecord::Base
   	def stamp_created_on
   	  self.createdOn = Time.now
   	end
-    
-    def password_required?
-      password.blank? || !plain_password.blank?
-    end
 end
