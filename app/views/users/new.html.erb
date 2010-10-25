@@ -10,30 +10,30 @@
     <% else %>
       <%= error_messages_for :user %>
     <% end %>
-  <% end %>
   
-  <% unless @person.valid? %>
-    <%= fields_for @person do |pf| %>
-      <p><%= pf.label :firstName, 'First Name' %><br />
-      <%= pf.text_field :firstName %></p>
-      <p><%= pf.label :lastName, 'Last Name' %><br />
-      <%= pf.text_field :lastName %></p>
+    <% unless @person.valid? %>
+      <%= fields_for @person do |pf| %>
+        <p><%= pf.label :firstName, 'First Name' %><br />
+        <%= pf.text_field :firstName %></p>
+        <p><%= pf.label :lastName, 'Last Name' %><br />
+        <%= pf.text_field :lastName %></p>
+      <% end %>
     <% end %>
-  <% end %>
 
-  <% if @user.username.blank? %>
-    <p><%= label_tag :email %><br />
-    <%= text_field_tag :email, @user.username %></p>
-  <% end %>
+    <% if @user.username.blank? %>
+      <p><%= label_tag :email %><br />
+      <%= text_field_tag :email, @user.username %></p>
+    <% end %>
   
-  <% if @user.password_required? %>
-    <p><%= f.label :plain_password, 'Password' %><br />
-    <%= f.password_field :plain_password %></p>
+    <% if @user.password_required? %>
+      <p><%= f.label :plain_password, 'Password' %><br />
+      <%= f.password_field :plain_password %></p>
 
-    <p><%= f.label :plain_password_confirmation, 'Password Confirmation' %><br />
-    <%= f.password_field :plain_password_confirmation %></p>
+      <p><%= f.label :plain_password_confirmation, 'Password Confirmation' %><br />
+      <%= f.password_field :plain_password_confirmation %></p>
+    <% end %>
+
+    <p><%= f.submit "Sign up" %></p>
   <% end %>
-
-  <p><%= f.submit "Sign up" %></p>
 <% end %>
 
