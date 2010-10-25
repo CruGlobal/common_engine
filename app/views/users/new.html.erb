@@ -4,6 +4,7 @@
   <% if session[:omniauth] && @user.errors[:username].detect {|e| e =~ /is already registered in our system/ } %>
     We already have an account in our system with this email address. If you are the owner of the '<%= @user.username %>' account
     <%= link_to("click here to link your existing account to #{session[:omniauth]['provider'].camelcase}", new_session_path(:username => @user.username)) %>.
+    If you're typed in someone else's email address by mistake, <%= link_to('click here to go back.', :back) %>
   <% else %>
     <% if @user.errors[:omniauth].present? %>
       We need a little more information to link you to your <%= session[:omniauth]['provider'].camelcase %> account.

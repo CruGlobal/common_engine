@@ -55,21 +55,16 @@
     <p>
       <h3>Don't use these services?</h3>
       
-      
-      <form accept-charset="UTF-8" action="/session" method="post">
+      <%= form_tag session_path do %>
         <p>Sign in with your Summer Project Username and Password or <%= link_to "Sign up", new_user_path %>.</p>
-        <div style="margin:0;padding:0;display:inline">
-          <input name="utf8" type="hidden" value="&#x2713;" />
-          <input name="authenticity_token" type="hidden" value="xSOZGMcGufPTrfYbIL7bI0Arx3w4CFM+HDjg5cDFnpY=" />
-        </div>
         <label for="username">Username or Email</label>
-        <input id="username" name="username" type="text" />
+        <%= text_field_tag :username, params[:username] %>
         <br/>
         <label for="password">Password</label>
-        <input id="password" name="password" type="password" />
+        <%= password_field_tag :password %>
         <br/>
-        <input name="commit" type="submit" value="Log In" />
-      </form>
+        <%= submit_tag 'Log In' %>
+      <% end %>
 
       
       <!-- <%= link_to "sign in", new_session_path %> with a password. -->

@@ -2,7 +2,7 @@
   Enter your username and password to link to your <%= session[:omniauth]['provider'].camelcase %> account.
 <% end %>
 <%= form_tag session_path do %>
-  <label for="username">Username or Email</label>
+  <label for="username">Email Address</label>
   <%= text_field_tag :username, params[:username] %>
   <br/>
   <label for="password">Password</label>
