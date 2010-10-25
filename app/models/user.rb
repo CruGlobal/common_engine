@@ -39,6 +39,63 @@ class User < ActiveRecord::Base
     u.stamp_last_login if ret_val
     return ret_val
   end
+  
+  def self.find_or_create_from_cas(ticket)
+    # Look for a user with this guid
+    receipt = ticket.response
+    atts = receipt.extra_attributes
+    guid = att_from_receipt(atts, 'ssoGuid')
+    first_name = att_from_receipt(atts, 'firstName')
+    last_name = att_from_receipt(atts, 'lastName')
+    email = receipt.user
+    find_or_create_from_guid_or_email(guid, email, first_name, last_name)
+  end
+  
+  def self.find_or_create_from_guid_or_email(guid, email, first_name, last_name, secure = true)
+    if guid
+      u = ::User.where(:globallyUniqueID => guid).first
+    else
+      u = nil
+    end
+
+    # if we have a user by this method, great! update the email address if it doesn't match
+    if u
+      u.username = email
+    else
+      # If we didn't find a user with the guid, do it by email address and stamp the guid
+      u = ::User.where(:username => email).first
+      if u
+        u.guid = guid
+      else
+        # If we still don't have a user in SSM, we need to create one.
+        u = ::User.create!(:username => email, :guid => guid)
+      end
+    end
+    # Update the password to match their gcx password too. This will save a round-trip later
+    # u.plain_password = params[:plain_password]
+    u.save(:validate => false) if secure
+    # make sure we have a person
+    unless u.person
+      # Try to find a person with the same email address.  If multiple people are found, use
+      # the one who's logged in most recently
+      address = ::CurrentAddress.find(:first, 
+                                      :joins => { :person => :user },
+                                      :conditions => {:email => email},
+                                      :order => "lastLogin DESC"
+                                     )
+      person = address.try(:person)
+
+      # Attach the found person to the user, or create a new person
+      u.person = person || ::Person.create!(:user_id => u.id, :first_name => first_name,
+                                          :last_name => last_name)
+
+      # Create a current address record if we don't already have one.
+      u.person.current_address ||= ::CurrentAddress.create!(:person_id => u.person.id, :email => email)
+      u.person.save(false)
+    end
+    u
+  end
+
 
   # Encrypts some data with the salt.
   def self.encrypt(plain_password)
@@ -169,4 +226,9 @@ class User < ActiveRecord::Base
   	def stamp_created_on
   	  self.createdOn = Time.now
   	end
+  	
+    # not sure why but cas sometimes sends the extra attributes as underscored
+    def self.att_from_receipt(atts, key)
+      atts[key] || atts[key.underscore]
+    end
 end

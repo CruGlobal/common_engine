@@ -1,5 +1,10 @@
 class AuthenticationsController < ApplicationController
   def index
+    if params[:ticket].present? 
+      login_from_cas 
+      redirect_to root_path
+      return false
+    end
     @authentications = current_user.authentications if logged_in?
   end
   
