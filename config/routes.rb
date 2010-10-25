@@ -5,5 +5,6 @@ Rails::Application.routes.draw do
   resource :session
   resources :users
   match '/login' => "sessions#new", :as => :login
+  match '/logout' => "sessions#destroy", :as => :logout
   
 end

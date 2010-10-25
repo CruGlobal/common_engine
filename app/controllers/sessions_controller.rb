@@ -29,7 +29,7 @@ class SessionsController < ApplicationController
   
   def destroy
     logout_keeping_session!
-    redirect_to :back
+    redirect_to root_path
   end
   
 end

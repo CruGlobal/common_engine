@@ -13,26 +13,27 @@
       <%= error_messages_for :user %>
     <% end %>
   <% end %>
-  <% if session[:omniauth] && @user.username.blank? %>
-    <p><%= label_tag :email %><br />
-    <%= text_field_tag :email, @user.username %></p>
-  <% end %>
   
   <% unless @person.valid? %>
     <%= fields_for @person do |pf| %>
-      <p><%= pf.label :firstName %><br />
+      <p><%= pf.label :firstName, 'First Name' %><br />
       <%= pf.text_field :firstName %></p>
-      <p><%= pf.label :lastName %><br />
+      <p><%= pf.label :lastName, 'Last Name' %><br />
       <%= pf.text_field :lastName %></p>
     <% end %>
   <% end %>
 
+  <% if @user.username.blank? %>
+    <p><%= label_tag :email %><br />
+    <%= text_field_tag :email, @user.username %></p>
+  <% end %>
+  
   <% if @user.password_required? %>
-    <p><%= f.label :password %><br />
-    <%= f.password_field :password %></p>
+    <p><%= f.label :plain_password, 'Password' %><br />
+    <%= f.password_field :plain_password %></p>
 
-    <p><%= f.label :password_confirmation %><br />
-    <%= f.password_field :password_confirmation %></p>
+    <p><%= f.label :plain_password_confirmation, 'Password Confirmation' %><br />
+    <%= f.password_field :plain_password_confirmation %></p>
   <% end %>
 
   <p><%= f.submit "Sign up" %></p>

@@ -1,9 +1,9 @@
 class UsersController < ApplicationController
   def new
     @user = User.new
+    @person = Person.new
     if session[:omniauth]
       @user.apply_omniauth(session[:omniauth])
-      @person = Person.new
       @person.apply_omniauth(session[:omniauth]["user_info"])
       @user.valid?
       @person.valid?
