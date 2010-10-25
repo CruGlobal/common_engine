@@ -2,9 +2,7 @@
 
 <%= form_for(@user) do |f| %>
   <% if session[:omniauth] && @user.errors[:username].detect {|e| e =~ /is already registered in our system/ } %>
-    <%= error_messages_for :user %>
-    <br/>
-    If you are the owner of the '<%= @user.username %>' account
+    We already have an account in our system with this email address. If you are the owner of the '<%= @user.username %>' account
     <%= link_to("click here to link your existing account to #{session[:omniauth]['provider'].camelcase}", new_session_path(:username => @user.username)) %>.
   <% else %>
     <% if @user.errors[:omniauth].present? %>
