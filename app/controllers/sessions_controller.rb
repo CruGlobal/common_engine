@@ -23,7 +23,7 @@ class SessionsController < ApplicationController
       end
       sign_in_and_redirect(current_user)
     else
-      flash[:error] = "Incorrect Login Details, Please try again."
+      flash.now[:error] = "Incorrect Login Details, Please try again."
       render 'authentications/index' 
     end
   end

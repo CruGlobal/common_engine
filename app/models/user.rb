@@ -18,8 +18,8 @@ class User < ActiveRecord::Base
   validates_length_of       :plain_password, :within => 8..80, :if => :password_required?
   validates_format_of       :plain_password, :message => "isn't secure enough (you must include upper and lower case letters)", :with => /[a-z]+.*[A-Z]+|[A-Z]+.*[a-z]+/, :if => :password_required?
   validates_confirmation_of :plain_password,                   :if => :password_required?
-  validates_presence_of     :secret_question,                  :if => :password_required?
-  validates_presence_of     :secret_answer,                    :if => :password_required?
+  # validates_presence_of     :secret_question,                  :if => :password_required?
+  # validates_presence_of     :secret_answer,                    :if => :password_required?
   validates_uniqueness_of   :username, :case_sensitive => false, :message => "is already registered in our system.  This may have occurred when you registered for a Campus Crusade related conference; therefore, you do not need to create a new account. If you need help with your password, please click on the appropriate link at the login screen.  If you still need assistance, please send an email to help@campuscrusadeforchrist.com describing your problem."
   
   before_save :encrypt_password
