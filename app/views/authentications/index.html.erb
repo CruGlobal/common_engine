@@ -1,7 +1,7 @@
 <% if @authentications || logged_in? %>
   <% unless @authentications.empty? && current_user.globallyUniqueID.blank?  %>
     <div id="currentservices">
-      <h3>You have signed in with these services:</h3>
+      <h3>You are setup for access with these services:</h3>
       <div class="authentications">
         <% if current_user.globallyUniqueID.present? %>
           <div class="authentication">
@@ -56,7 +56,7 @@
       <h3>Don't use these services?</h3>
       
       <%= form_tag session_path do %>
-        <p>Sign in with your Summer Project Username and Password or <strong><%= link_to "Sign up", new_user_path %>.</strong></p>
+        <p>Sign in with your Username and Password or <strong><%= link_to "Sign up", new_user_path %>.</strong></p>
         <p>
           <label for="username">Username or Email</label>
           <%= text_field_tag :username, params[:username] %>
