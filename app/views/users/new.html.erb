@@ -14,27 +14,30 @@
   
     <% unless @person.valid? %>
       <%= fields_for @person do |pf| %>
-        <p><%= pf.label :firstName, 'First Name' %><br />
+        <p><%= pf.label :firstName, 'First Name' %>
         <%= pf.text_field :firstName %></p>
-        <p><%= pf.label :lastName, 'Last Name' %><br />
+        <p><%= pf.label :lastName, 'Last Name' %>
         <%= pf.text_field :lastName %></p>
       <% end %>
     <% end %>
 
     <% if @user.username.blank? %>
-      <p><%= label_tag :email %><br />
+      <p><%= label_tag :email %>
       <%= text_field_tag :email, @user.username %></p>
     <% end %>
   
     <% if @user.password_required? %>
-      <p><%= f.label :plain_password, 'Password' %><br />
+      <p><%= f.label :plain_password, 'Password' %>
       <%= f.password_field :plain_password %></p>
 
-      <p><%= f.label :plain_password_confirmation, 'Password Confirmation' %><br />
+      <p><%= f.label :plain_password_confirmation, 'Password Confirmation' %>
       <%= f.password_field :plain_password_confirmation %></p>
     <% end %>
-
-    <p><%= f.submit "Sign up" %></p>
+    <br/>
+    <button type="submit"><span>Sign up</span></button>
+    &nbsp;&nbsp;
+    <%= link_to("Back to Login Screen", "/") %>
+    
   <% end %>
 <% end %>
 

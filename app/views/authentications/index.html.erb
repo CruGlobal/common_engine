@@ -56,14 +56,15 @@
       <h3>Don't use these services?</h3>
       
       <%= form_tag session_path do %>
-        <p>Sign in with your Summer Project Username and Password or <%= link_to "Sign up", new_user_path %>.</p>
-        <label for="username">Username or Email</label>
-        <%= text_field_tag :username, params[:username] %>
-        <br/>
-        <label for="password">Password</label>
-        <%= password_field_tag :password %>
-        <br/>
-        <%= submit_tag 'Log In' %>
+        <p>Sign in with your Summer Project Username and Password or <strong><%= link_to "Sign up", new_user_path %>.</strong></p>
+        <p>
+          <label for="username">Username or Email</label>
+          <%= text_field_tag :username, params[:username] %>
+          <br/>
+          <label for="password">Password</label>
+          <%= password_field_tag :password %>
+        </p>
+        <button type="submit"><span>Log In</span></button>
       <% end %>
 
       
