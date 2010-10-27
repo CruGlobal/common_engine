@@ -10,6 +10,9 @@ class SpProject < ActiveRecord::Base
                               :storage => :s3,
                               :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
                               :path => "sp/project/:attachment/:id/:filename"
+                              
+  validates_attachment_size :picture, :less_than => 1.megabyte, :message => "can't be more than 1MB"
+  validates_attachment_size :logo, :less_than => 1.megabyte, :message => "can't be more than 1MB"
 #  image_accessor :picture
 #  image_accessor :logo
   
