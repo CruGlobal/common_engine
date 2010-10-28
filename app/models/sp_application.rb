@@ -10,10 +10,9 @@ class SpApplication < AnswerSheet
   # State machine stuff
   state :started
   state :submitted, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} submitted")
-                                SpApplicationMailer.deliver_submitted(app)
+                                # SpApplicationMailer.deliver_submitted(app)
                                 app.submitted_at = Time.now
-                                app.previous_status = status
+                                app.previous_status = app.status
                               }
 
   state :completed, :enter => Proc.new {|app|
@@ -22,13 +21,13 @@ class SpApplication < AnswerSheet
                                 app.add_to_project_queue
                                 SpApplicationMailer.deliver_completed(app)
                                 logger.info("Application #{app.id} completed; placed in project #{app.current_project_queue_id}'s queue")
-                                app.previous_status = status
+                                app.previous_status = app.status
                               }
 
   state :unsubmitted, :enter => Proc.new {|app|
                                 app.unsubmit_email
                                 app.remove_from_project_queue
-                                app.previous_status = status
+                                app.previous_status = app.status
                               }
 
   state :withdrawn, :enter => Proc.new {|app|
@@ -37,7 +36,7 @@ class SpApplication < AnswerSheet
                                 app.remove_from_project_queue
                                 app.remove_from_project_assignment
                                 app.withdrawn_at = Time.now
-                                app.previous_status = status
+                                app.previous_status = app.status
                               }
 
   state :accepted_as_intern, :enter => Proc.new {|app|
@@ -47,7 +46,7 @@ class SpApplication < AnswerSheet
                                   app.project_id = app.preference1_id if app.preference1_id
                                   app.project_id = app.current_project_queue_id if app.current_project_queue_id
                                 end
-                                app.previous_status = status
+                                app.previous_status = app.status
                                 # MpdUser.create(:ssm_id => app.person.fk_ssmUserId)
                              }
 
@@ -58,7 +57,7 @@ class SpApplication < AnswerSheet
                                   app.project_id = app.preference1_id if app.preference1_id
                                   app.project_id = app.current_project_queue_id if app.current_project_queue_id
                                 end
-                                app.previous_status = status
+                                app.previous_status = app.status
                                 # MpdUser.create(:ssm_id => app.person.fk_ssmUserId)
                              }
 
@@ -66,7 +65,7 @@ class SpApplication < AnswerSheet
                                 logger.info("application #{app.id} declined")
                                 app.remove_from_project_queue
                                 app.remove_from_project_assignment
-                                app.previous_status = status
+                                app.previous_status = app.status
                              }
 
   event :submit do
@@ -130,11 +129,11 @@ class SpApplication < AnswerSheet
 
   belongs_to :person
   belongs_to :project, :class_name => 'SpProject', :foreign_key => :project_id
-  has_many :sp_references, :class_name => 'SpReference', :order => "type", :foreign_key => :application_id
-  has_one :sp_peer_reference, :class_name => 'SpPeerReference', :foreign_key => :application_id
-  has_one :sp_spiritual_reference1, :class_name => 'SpSpiritualReference1', :foreign_key => :application_id
-  has_one :sp_spiritual_reference2, :class_name => 'SpSpiritualReference2', :foreign_key => :application_id
-  has_one :sp_parent_reference, :class_name => 'SpParentReference', :foreign_key => :application_id
+  has_many :sp_references, :class_name => 'ReferenceSheet', :foreign_key => :applicant_answer_sheet_id
+  # has_one :sp_peer_reference, :class_name => 'SpPeerReference', :foreign_key => :application_id
+  # has_one :sp_spiritual_reference1, :class_name => 'SpSpiritualReference1', :foreign_key => :application_id
+  # has_one :sp_spiritual_reference2, :class_name => 'SpSpiritualReference2', :foreign_key => :application_id
+  # has_one :sp_parent_reference, :class_name => 'SpParentReference', :foreign_key => :application_id
   has_many :payments, :class_name => "SpPayment", :foreign_key => "application_id"
   belongs_to :preference1, :class_name => 'SpProject', :foreign_key => :preference1_id
   belongs_to :preference2, :class_name => 'SpProject', :foreign_key => :preference2_id
@@ -284,19 +283,11 @@ class SpApplication < AnswerSheet
 
   def complete(ref = nil)
     return false unless self.submitted?
-    if person.lastAttended != "HighSchool"
-      return false unless
-                    (self.sp_peer_reference && (self.sp_peer_reference.completed? || self.sp_peer_reference == ref))
-    end
-    return false unless
-                    (self.sp_spiritual_reference1 && (self.sp_spiritual_reference1.completed? || self.sp_spiritual_reference1 == ref))
-    if self.apply_for_leadership?
-      return false unless
-                    (self.sp_spiritual_reference2 && (self.sp_spiritual_reference2.completed? || self.sp_spiritual_reference2 == ref))
-    end
-    if person.lastAttended == "HighSchool"
-       return false unless
-                    (self.sp_parent_reference && (self.sp_parent_reference.completed? || self.sp_parent_reference == ref))
+    # Make sure all required references are copmleted
+    sp_references.each do |reference|
+      if reference.required?
+        return false  unless reference.completed? || reference == ref
+      end
     end
     return false unless self.has_paid?
     return self.complete!
