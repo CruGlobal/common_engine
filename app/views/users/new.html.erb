@@ -7,7 +7,7 @@
     If you're typed in someone else's email address by mistake, <%= link_to('click here to go back.', :back) %>
   <% else %>
     <% if @user.errors[:omniauth].present? %>
-      We need a little more information to link you to your <%= session[:omniauth]['provider'].camelcase %> account.
+      <p>Your account is almost finished being setup. We need just a little more information to link you to your <span class="servicename"><%= session[:omniauth]['provider'].camelcase %></span> account.</p>
     <% else %>
       <%= error_messages_for :user %>
     <% end %>
