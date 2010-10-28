@@ -1,9 +1,12 @@
 class AuthenticationsController < ApplicationController
+  skip_before_filter :verify_authenticity_token, :only => :create
   def index
     if params[:ticket].present? 
-      login_from_cas 
-      redirect_to root_path
-      return false
+      login_from_cas_ticket
+      if logged_in?
+        redirect_to root_path
+        return false
+      end
     end
     @authentications = current_user.authentications if logged_in?
   end
@@ -46,5 +49,11 @@ class AuthenticationsController < ApplicationController
   def failed
     flash[:alert] = "There was a problem logging you in with that method. Please try again"
     redirect_to authentications_path
+  end
+  
+  protected
+  def login_from_cas_ticket
+    CASClient::Frameworks::Rails::Filter.filter(self)
+    login_from_cas
   end
 end

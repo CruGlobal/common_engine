@@ -68,7 +68,7 @@ class User < ActiveRecord::Base
         u.guid = guid
       else
         # If we still don't have a user in SSM, we need to create one.
-        u = ::User.create!(:username => email, :guid => guid)
+        u = ::User.create!(:username => email, :globallyUniqueID => guid)
       end
     end
     # Update the password to match their gcx password too. This will save a round-trip later
