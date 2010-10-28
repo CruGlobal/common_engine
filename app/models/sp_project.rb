@@ -215,6 +215,10 @@ class SpProject < ActiveRecord::Base
     capacity.to_f > 0 ? (accepted_count.to_f / capacity.to_f) * 100 : 0
   end
   
+  def contact
+    pd || apd || opd || coordinator
+  end
+  
   def color
     case true
     when percent_full < 50
