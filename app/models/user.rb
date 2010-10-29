@@ -86,8 +86,8 @@ class User < ActiveRecord::Base
       person = address.try(:person)
 
       # Attach the found person to the user, or create a new person
-      u.person = person || ::Person.create!(:user_id => u.id, :first_name => first_name,
-                                          :last_name => last_name)
+      u.person = person || ::Person.create!(:fk_ssmUserId => u.id, :firstName => first_name,
+                                          :lastName => last_name)
 
       # Create a current address record if we don't already have one.
       u.person.current_address ||= ::CurrentAddress.create!(:person_id => u.person.id, :email => email)
