@@ -65,7 +65,7 @@ class User < ActiveRecord::Base
       # If we didn't find a user with the guid, do it by email address and stamp the guid
       u = ::User.where(:username => email).first
       if u
-        u.guid = guid
+        u.globallyUniqueID = guid
       else
         # If we still don't have a user in SSM, we need to create one.
         u = ::User.create!(:username => email, :globallyUniqueID => guid)
