@@ -72,6 +72,18 @@ class Person < ActiveRecord::Base
     self.emergency_address1 = address
   end
   
+  def create_emergency_address
+    Address.new(:fk_PersonID => self.id, :addressType => 'emergency1')
+  end
+  
+  def create_current_address
+    Address.new(:fk_PersonID => self.id, :addressType => 'current')
+  end
+  
+  def create_permanent_address
+    Address.new(:fk_PersonID => self.id, :addressType => 'permanent')
+  end
+  
 # This code can cause an infinite recursion 
 #  def region
 #    self.region || self.target_area.region
