@@ -73,15 +73,15 @@ class Person < ActiveRecord::Base
   end
   
   def create_emergency_address
-    Address.new(:fk_PersonID => self.id, :addressType => 'emergency1')
+    Address.create(:fk_PersonID => self.id, :addressType => 'emergency1')
   end
   
   def create_current_address
-    Address.new(:fk_PersonID => self.id, :addressType => 'current')
+    Address.create(:fk_PersonID => self.id, :addressType => 'current')
   end
   
   def create_permanent_address
-    Address.new(:fk_PersonID => self.id, :addressType => 'permanent')
+    Address.create(:fk_PersonID => self.id, :addressType => 'permanent')
   end
   
 # This code can cause an infinite recursion 
