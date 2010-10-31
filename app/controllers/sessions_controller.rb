@@ -31,7 +31,7 @@ class SessionsController < ApplicationController
   def destroy
     logout_keeping_session!
     if session[:cas_user]
-      redirect_to CASClient::Frameworks::Rails::Filter.logout(root_url)
+      CASClient::Frameworks::Rails::Filter.logout(self)
     else
       redirect_to root_path
     end
