@@ -1,4 +1,8 @@
 class SessionsController < ApplicationController
+  def show
+    redirect_to authentications_path
+  end
+  
   def new
     session[:return_to] = params[:return_to] if params[:return_to].present?
     if logged_in?
