@@ -129,12 +129,13 @@ class SpApplication < AnswerSheet
 
   belongs_to :person
   belongs_to :project, :class_name => 'SpProject', :foreign_key => :project_id
-  has_many :sp_references, :class_name => 'ReferenceSheet', :foreign_key => :applicant_answer_sheet_id
+  has_many :sp_references, :class_name => 'ReferenceSheet', :foreign_key => :applicant_answer_sheet_id, :dependent => :destroy
   # has_one :sp_peer_reference, :class_name => 'SpPeerReference', :foreign_key => :application_id
   # has_one :sp_spiritual_reference1, :class_name => 'SpSpiritualReference1', :foreign_key => :application_id
   # has_one :sp_spiritual_reference2, :class_name => 'SpSpiritualReference2', :foreign_key => :application_id
   # has_one :sp_parent_reference, :class_name => 'SpParentReference', :foreign_key => :application_id
   has_many :payments, :class_name => "SpPayment", :foreign_key => "application_id"
+  has_many :answers, :class_name => 'Answer', :foreign_key => 'answer_sheet_id', :dependent => :destroy
   belongs_to :preference1, :class_name => 'SpProject', :foreign_key => :preference1_id
   belongs_to :preference2, :class_name => 'SpProject', :foreign_key => :preference2_id
   belongs_to :preference3, :class_name => 'SpProject', :foreign_key => :preference3_id
