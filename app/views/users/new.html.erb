@@ -11,20 +11,19 @@
     <% else %>
       <%= error_messages_for :user %>
     <% end %>
-  
-    <% unless @person.valid? %>
+    <div style="<%= 'display:none' if @person.valid? %>">
       <%= fields_for @person do |pf| %>
         <p><%= pf.label :firstName, 'First Name' %>
         <%= pf.text_field :firstName %></p>
         <p><%= pf.label :lastName, 'Last Name' %>
         <%= pf.text_field :lastName %></p>
       <% end %>
-    <% end %>
+    </div>
 
-    <% if @user.username.blank? %>
+    <div style="<%= 'display:none' unless @user.username.blank? %>">
       <p><%= label_tag :email %>
       <%= text_field_tag :email, @user.username %></p>
-    <% end %>
+    </div>
   
     <% if @user.password_required? %>
       <p><%= f.label :plain_password, 'Password' %>
