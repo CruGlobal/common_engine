@@ -194,7 +194,7 @@ class User < ActiveRecord::Base
   end
   	
   def password_required?
-    (authentications.empty? && password.blank?) || !plain_password.blank? || globallyUniqueID.blank?
+    (authentications.empty? && password.blank? && globallyUniqueID.blank?) || !plain_password.blank?
   end
   def remember_me
     remember_me_for 2.weeks
