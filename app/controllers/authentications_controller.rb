@@ -12,29 +12,34 @@ class AuthenticationsController < ApplicationController
   
   def create
     omniauth = request.env["omniauth.auth"]
-    authentication = Authentication.find_by_provider_and_uid(omniauth['provider'], omniauth['uid'])
-    if authentication
-      flash[:notice] = "Signed in successfully."
-      sign_in_and_redirect(authentication.user, root_path)
-    elsif logged_in?
-      current_user.authentications.create!(:provider => omniauth['provider'], :uid => omniauth['uid'])
-      flash[:notice] = "Authentication successful."
-      redirect_to authentications_url and return
-    else
-      user = User.new
-      user.apply_omniauth(omniauth)
-      # If we have an email address, we should see if there's an existing account with that email.
-      if user.username.present? && old_user = User.find_by_username(user.username)
-        user = old_user
-        user.apply_omniauth(omniauth)
-      end
-      if user.save
+    if omniauth
+      authentication = Authentication.find_by_provider_and_uid(omniauth['provider'], omniauth['uid']) 
+      if authentication
         flash[:notice] = "Signed in successfully."
-        sign_in_and_redirect(user)
+        sign_in_and_redirect(authentication.user, root_path)
+      elsif logged_in?
+        current_user.authentications.create!(:provider => omniauth['provider'], :uid => omniauth['uid'])
+        flash[:notice] = "Authentication successful."
+        redirect_to authentications_url and return
       else
-        session[:omniauth] = omniauth.except('extra')
-        redirect_to new_user_url and return
+        user = User.new
+        user.apply_omniauth(omniauth)
+        # If we have an email address, we should see if there's an existing account with that email.
+        if user.username.present? && old_user = User.find_by_username(user.username)
+          user = old_user
+          user.apply_omniauth(omniauth)
+        end
+        if user.save
+          flash[:notice] = "Signed in successfully."
+          sign_in_and_redirect(user)
+        else
+          session[:omniauth] = omniauth.except('extra')
+          redirect_to new_user_url and return
+        end
       end
+    else
+      flash[:alert] = "There was a problem logging you in with that method. Please try again"
+      redirect_to :action => 'index'
     end
   end
   

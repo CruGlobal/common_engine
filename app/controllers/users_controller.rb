@@ -1,4 +1,8 @@
 class UsersController < ApplicationController
+  def index
+    redirect_to :action => 'new'
+  end
+  
   def new
     @user = User.new
     @person = Person.new
