@@ -4,8 +4,7 @@ class AuthenticationsController < ApplicationController
     if params[:ticket].present? 
       login_from_cas_ticket
       if logged_in?
-        redirect_to root_path
-        return false
+        redirect_to root_path and return
       end
     end
     @authentications = current_user.authentications if logged_in?
@@ -20,7 +19,7 @@ class AuthenticationsController < ApplicationController
     elsif logged_in?
       current_user.authentications.create!(:provider => omniauth['provider'], :uid => omniauth['uid'])
       flash[:notice] = "Authentication successful."
-      redirect_to authentications_url
+      redirect_to authentications_url and return
     else
       user = User.new
       user.apply_omniauth(omniauth)
@@ -34,7 +33,7 @@ class AuthenticationsController < ApplicationController
         sign_in_and_redirect(user)
       else
         session[:omniauth] = omniauth.except('extra')
-        redirect_to new_user_url
+        redirect_to new_user_url and return
       end
     end
   end
@@ -43,12 +42,12 @@ class AuthenticationsController < ApplicationController
     @authentication = current_user.authentications.find(params[:id])
     @authentication.destroy
     flash[:notice] = "Successfully destroyed authentication."
-    redirect_to authentications_url
+    redirect_to authentications_url and return
   end
   
   def failed
     flash[:alert] = "There was a problem logging you in with that method. Please try again"
-    redirect_to authentications_path
+    redirect_to authentications_path and return
   end
   
   protected
