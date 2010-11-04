@@ -7,6 +7,9 @@
   <br/>
   <label for="password">Password</label>
   <%= password_field_tag :password %>
-  <br/>
-  <%= submit_tag 'Log In' %>
+  <br/><br/>
+  <%= submit_tag 'Log In' %><br/><br/>
+  If you've forgotten your password, <%= link_to('click here and we will send you an email with a link to change your password', send_password_email_session_path(:email => params[:username])) %>
+  <br/><br/>
+  If you don't remember signing up with this email before, it might be because you used the Conference registration system. <br/>
 <% end %>

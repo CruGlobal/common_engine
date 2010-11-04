@@ -41,4 +41,17 @@ class SessionsController < ApplicationController
     end
   end
   
+  def send_password_email
+    if params[:email].present?
+      @user = User.where(:username => params[:email]).first
+      if @user
+        @user.generate_password_key!
+        SessionMailer.password_link(@user).deliver
+        redirect_to login_path(:username => params[:email]), :notice => "Password reset email sent. If you don't see it within 2 minutes, please check your spam folder and add help@campuscrusadeforchrist.com to your spam filter."
+      else
+        redirect_to :back, :error => "Couldn't find a record with that email."
+      end
+      return
+    end
+  end
 end
