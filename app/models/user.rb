@@ -90,7 +90,7 @@ class User < ActiveRecord::Base
                                           :lastName => last_name)
 
       # Create a current address record if we don't already have one.
-      u.person.current_address ||= ::CurrentAddress.create!(:person_id => u.person.id, :email => email)
+      u.person.current_address ||= ::CurrentAddress.create!(:fk_PersonID => u.person.id, :email => email)
       u.person.save(false)
     end
     u
