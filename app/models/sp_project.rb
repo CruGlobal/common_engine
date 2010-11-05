@@ -35,8 +35,6 @@ class SpProject < ActiveRecord::Base
   accepts_nested_attributes_for :student_quotes, :reject_if => lambda { |a| a[:quote].blank? }, :allow_destroy => true
   
   has_many :sp_applications, :dependent => :nullify, :foreign_key => :project_id
-  
-  named_scope :uses_application, where(:use_provided_application => true)
 
   validates_presence_of :name, :display_location, :start_date, :end_date, :student_cost, :max_accepted_men, :max_accepted_women,
                         :project_contact_name, 
@@ -62,7 +60,8 @@ class SpProject < ActiveRecord::Base
   validate :validate_partnership
 
   scope :with_partner, proc {|partner_scope| {:conditions => partner_scope}}
-  scope :show_on_website, {:conditions => "show_on_website is true"}
+  scope :show_on_website, where(:show_on_website => true)
+  scope :uses_application, where(:use_provided_application => true)
   scope :current, where(:project_status => 'open')
   scope :ascend_by_name, order(:name)
   scope :descend_by_name, order("name desc")

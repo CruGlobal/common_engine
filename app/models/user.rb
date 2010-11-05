@@ -59,8 +59,9 @@ class User < ActiveRecord::Base
     end
 
     # if we have a user by this method, great! update the email address if it doesn't match
-    if u
-      u.username = email
+    # We also need to make sure there isn't already another user with this email
+    if u 
+      u.username = email if u.username != email && !User.find_by_username(email)
     else
       # If we didn't find a user with the guid, do it by email address and stamp the guid
       u = ::User.where(:username => email).first
