@@ -36,6 +36,7 @@ class SpProject < ActiveRecord::Base
   
   has_many :sp_applications, :dependent => :nullify, :foreign_key => :project_id
   
+  named_scope :uses_application, where(:use_provided_application => true)
 
   validates_presence_of :name, :display_location, :start_date, :end_date, :student_cost, :max_accepted_men, :max_accepted_women,
                         :project_contact_name, 
