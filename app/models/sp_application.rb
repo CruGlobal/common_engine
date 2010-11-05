@@ -19,7 +19,9 @@ class SpApplication < AnswerSheet
                                 logger.info("application #{app.id} completed")
                                 app.completed_at = Time.now
                                 app.add_to_project_queue
-                                SpApplicationMailer.deliver_completed(app)
+                                Notifier.notification(app.email, # RECIPIENTS
+                                  Questionnaire.from_email, # FROM
+                                  "Application Completed").deliver # LIQUID TEMPLATE NAME
                                 logger.info("Application #{app.id} completed; placed in project #{app.current_project_queue_id}'s queue")
                                 app.previous_status = app.status
                               }
@@ -32,7 +34,7 @@ class SpApplication < AnswerSheet
 
   state :withdrawn, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} withdrawn")
-                                SpApplicationMailer.deliver_withdrawn(app) if app.email_address
+                                SpApplicationMailer.withdrawn(app).deliver if app.email_address
                                 app.remove_from_project_queue
                                 app.remove_from_project_assignment
                                 app.withdrawn_at = Time.now
@@ -403,10 +405,6 @@ class SpApplication < AnswerSheet
   # first preference or the assigned project and increments the 
   # number of men or women that have applied for that project.
   def add_to_project_queue
-    id_to_add_to = self.preference1_id
-    id_to_add_to ||= self.project_id
-    self.current_project_queue_id = id_to_add_to
-    project = self.current_project_queue
     if person.is_male?
       project.current_applicants_men += 1
     else
