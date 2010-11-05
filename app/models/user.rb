@@ -16,7 +16,7 @@ class User < ActiveRecord::Base
   validates_presence_of     :plain_password,                   :if => :password_required?
   validates_presence_of     :plain_password_confirmation,      :if => :password_required?
   validates_length_of       :plain_password, :within => 8..80, :if => :password_required?
-  validates_format_of       :plain_password, :message => "isn't secure enough (you must include upper and lower case letters)", :with => /[a-z]+.*[A-Z]+|[A-Z]+.*[a-z]+/, :if => :password_required?
+  # validates_format_of       :plain_password, :message => "isn't secure enough (you must include upper and lower case letters)", :with => /[a-z]+.*[A-Z]+|[A-Z]+.*[a-z]+/, :if => :password_required?
   validates_confirmation_of :plain_password,                   :if => :password_required?
   # validates_presence_of     :secret_question,                  :if => :password_required?
   # validates_presence_of     :secret_answer,                    :if => :password_required?
@@ -94,6 +94,10 @@ class User < ActiveRecord::Base
       u.person.save(false)
     end
     u
+  end
+  
+  def generate_password_key!
+    self.update_attribute(:password_reset_key, Digest::MD5.hexdigest(username + 'yo mama' + Time.now.to_s) + '_' + username)
   end
 
 
