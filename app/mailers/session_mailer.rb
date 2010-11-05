@@ -1,5 +1,5 @@
 class SessionMailer < ActionMailer::Base
-  default :from => "help@campuscrusadeforchrist.com"
+  default :from => "gosummerproject@uscm.org"
   
   def password_link(user)
     recipients user.username
