@@ -1,4 +1,7 @@
+begin
 require 'google_geocode'
+rescue LoadError
+end
 class SpProject < ActiveRecord::Base
   unloadable
   has_attached_file :picture, :styles => { :medium => "500x300>", :thumb => "100x100>" },
@@ -79,7 +82,10 @@ class SpProject < ActiveRecord::Base
   
   before_create :set_to_open
   before_save :get_coordinates, :calculate_weeks
+  begin
   date_setters :apply_by_date, :start_date, :end_date, :date_of_departure, :date_of_return, :staff_start_date, :staff_end_date
+  rescue NoMethodError
+  end
   
   
   @@regions = {}

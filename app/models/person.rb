@@ -134,6 +134,10 @@ class Person < ActiveRecord::Base
     return gender.to_i == 1
   end
   
+  def is_female?
+    return gender.to_i == 0
+  end
+
   def is_high_school?
     return lastAttended == "HighSchool"
   end
