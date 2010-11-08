@@ -52,7 +52,6 @@
 
 <% unless logged_in? %>
   <div id="railslogin">
-    <p>
       <h3>Don't use these services?</h3>
       
       <%= form_tag session_path do %>
@@ -65,10 +64,9 @@
           <%= password_field_tag :password %>
         </p>
         <button type="submit"><span>Log In</span></button>
-      <% end %>
-
+      <% end %><br/>
+      <%= link_to("Forgot your password? Click here and we will send you an email with a link to change your password", send_password_email_session_path) %>
       
       <!-- <%= link_to "sign in", new_session_path %> with a password. -->
-    </p>
   </div>
 <% end %>
