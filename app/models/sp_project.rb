@@ -1,7 +1,7 @@
 require 'google_geocode'
 class SpProject < ActiveRecord::Base
   unloadable
-  has_attached_file :picture, :styles => { :medium => "300x300>", :thumb => "100x100>" },
+  has_attached_file :picture, :styles => { :medium => "500x300>", :thumb => "100x100>" },
                               :storage => :s3,
                               :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
                               :path => "sp/project/:attachment/:id/:filename"
@@ -10,6 +10,9 @@ class SpProject < ActiveRecord::Base
                               :storage => :s3,
                               :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
                               :path => "sp/project/:attachment/:id/:filename"
+                              
+  validates_attachment_size :picture, :less_than => 1.megabyte, :message => "can't be more than 1MB"
+  validates_attachment_size :logo, :less_than => 1.megabyte, :message => "can't be more than 1MB"
 #  image_accessor :picture
 #  image_accessor :logo
   
@@ -18,6 +21,7 @@ class SpProject < ActiveRecord::Base
   
   belongs_to :basic_info_question_sheet, :class_name => "QuestionSheet", :foreign_key => "basic_info_question_sheet_id"
   belongs_to :template_question_sheet, :class_name => "QuestionSheet", :foreign_key => "template_question_sheet_id"
+  belongs_to :project_specific_question_sheet, :class_name => "QuestionSheet", :foreign_key => "project_specific_question_sheet_id"
   
   has_many   :stats, :class_name => "SpStat", :foreign_key => "project_id"
   belongs_to :primary_ministry_focus, :class_name => 'SpMinistryFocus', :foreign_key => :primary_ministry_focus_id
@@ -31,7 +35,6 @@ class SpProject < ActiveRecord::Base
   accepts_nested_attributes_for :student_quotes, :reject_if => lambda { |a| a[:quote].blank? }, :allow_destroy => true
   
   has_many :sp_applications, :dependent => :nullify, :foreign_key => :project_id
-  
 
   validates_presence_of :name, :display_location, :start_date, :end_date, :student_cost, :max_accepted_men, :max_accepted_women,
                         :project_contact_name, 
@@ -57,7 +60,8 @@ class SpProject < ActiveRecord::Base
   validate :validate_partnership
 
   scope :with_partner, proc {|partner_scope| {:conditions => partner_scope}}
-  scope :show_on_website, {:conditions => "show_on_website is true"}
+  scope :show_on_website, where(:show_on_website => true)
+  scope :uses_application, where(:use_provided_application => true)
   scope :current, where(:project_status => 'open')
   scope :ascend_by_name, order(:name)
   scope :descend_by_name, order("name desc")
@@ -209,6 +213,10 @@ class SpProject < ActiveRecord::Base
   # helper methods for xml feed
   def percent_full
     capacity.to_f > 0 ? (accepted_count.to_f / capacity.to_f) * 100 : 0
+  end
+  
+  def contact
+    pd || apd || opd || coordinator
   end
   
   def color
@@ -394,5 +402,15 @@ class SpProject < ActiveRecord::Base
   def female_accepted_count(yr = nil)
     yr ||= year
     yr == year ? current_applicants_men : sp_applications.accepted.female.for_year(yr).count
+  end
+  
+  def initialize_project_specific_question_sheet
+    unless project_specific_question_sheet
+      update_attribute(:project_specific_question_sheet_id, QuestionSheet.create!(:label => 'Project - ' + self.to_s).id)
+    end
+    if project_specific_question_sheet.pages.length == 0
+      project_specific_question_sheet.pages.create!(:label => 'Project Specific Questions', :number => 1)
+    end
+    project_specific_question_sheet
   end
 end

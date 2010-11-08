@@ -1,0 +1,15 @@
+<% if session[:omniauth].present? %>
+  Enter your username and password to link to your <%= session[:omniauth]['provider'].camelcase %> account.
+<% end %>
+<%= form_tag session_path do %>
+  <label for="username">Email Address</label>
+  <%= text_field_tag :username, params[:username] %>
+  <br/>
+  <label for="password">Password</label>
+  <%= password_field_tag :password %>
+  <br/><br/>
+  <%= submit_tag 'Log In' %><br/><br/>
+  If you've forgotten your password, <%= link_to('click here and we will send you an email with a link to change your password', send_password_email_session_path(:email => params[:username])) %>
+  <br/><br/>
+  If you don't remember signing up with this email before, it might be because you used the Conference registration system. <br/>
+<% end %>

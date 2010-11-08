@@ -72,6 +72,18 @@ class Person < ActiveRecord::Base
     self.emergency_address1 = address
   end
   
+  def create_emergency_address
+    Address.create(:fk_PersonID => self.id, :addressType => 'emergency1')
+  end
+  
+  def create_current_address
+    Address.create(:fk_PersonID => self.id, :addressType => 'current')
+  end
+  
+  def create_permanent_address
+    Address.create(:fk_PersonID => self.id, :addressType => 'permanent')
+  end
+  
 # This code can cause an infinite recursion 
 #  def region
 #    self.region || self.target_area.region
@@ -282,6 +294,11 @@ class Person < ActiveRecord::Base
 
   def to_s
     informal_full_name
+  end
+  
+  def apply_omniauth(omniauth)
+    self.firstName ||= omniauth['first_name']
+    self.lastName ||= omniauth['last_name']
   end
     
 end
