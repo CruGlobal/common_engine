@@ -1,13 +1,13 @@
 class TargetArea < ActiveRecord::Base
   unloadable
   
-  set_table_name				"ministry_TargetArea"
+  set_table_name				"ministry_targetarea"
   set_primary_key   			"targetAreaID"
   
   #override the inheritance column
   self.inheritance_column = "nothing"
   
-  has_many :ministry_activities, :foreign_key => "fk_targetAreaID"
+  has_many :ministry_activities, :class_name => "MinistryActivity", :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID"
   
   def active
     @active = false

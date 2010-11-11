@@ -64,7 +64,7 @@ class Person < ActiveRecord::Base
   # validates_filesize_of :image, :in => 0..2.megabytes
   # 
   
-  before_save :stamp
+  before_save :stamp, :set_region_if_campus_changed
   
   def emergency_address
     emergency_address1
@@ -85,10 +85,10 @@ class Person < ActiveRecord::Base
     Address.create(:fk_PersonID => self.id, :addressType => 'permanent')
   end
   
-# This code can cause an infinite recursion 
-#  def region
-#    self.region || self.target_area.region
-#  end
+  def region
+    self[:region] || self.target_area.region
+  end
+  
   def campus=(campus_name)
     write_attribute("campus", campus_name)
     if target_area
@@ -300,6 +300,12 @@ class Person < ActiveRecord::Base
   def apply_omniauth(omniauth)
     self.firstName ||= omniauth['first_name']
     self.lastName ||= omniauth['last_name']
+  end
+  
+  def set_region_if_campus_changed
+    if target_area && self[:region] != target_area.region
+      self[:region] = target_area.try(:region)
+    end
   end
     
 end
