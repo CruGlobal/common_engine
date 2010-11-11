@@ -4,6 +4,7 @@ Rails::Application.routes.draw do
   resources :authentications
   resource :session do
     get :send_password_email
+    post :send_password_email
   end
   resources :users do
     collection do
