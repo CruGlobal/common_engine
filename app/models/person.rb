@@ -307,5 +307,15 @@ class Person < ActiveRecord::Base
       self[:region] = target_area.try(:region)
     end
   end
+  
+  def phone
+    if current_address
+      return current_address.cellPhone if current_address.cellPhone.present?
+      return current_address.homePhone if current_address.homePhone.present?
+      return current_address.workPhone if current_address.workPhone.present?
+    else
+      ''
+    end
+  end
     
 end
