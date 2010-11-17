@@ -153,6 +153,14 @@ class Person < ActiveRecord::Base
     nickname.to_s  + " " + last_name.to_s
   end
   
+  def name_with_nick
+    name = firstName
+    if preferredName.present? && preferredName.strip != firstName.strip
+      name += " (#{preferredName.strip}) "
+    end
+    name += ' ' + lastName.to_s
+  end
+  
   # "first_name middle_name last_name"
   def long_name
     l = first_name.to_s + " "
