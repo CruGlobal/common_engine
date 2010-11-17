@@ -153,6 +153,14 @@ class Person < ActiveRecord::Base
     nickname.to_s  + " " + last_name.to_s
   end
   
+  def name_with_nick
+    name = firstName
+    if preferredName.present? && preferredName.strip != firstName.strip
+      name += " (#{preferredName.strip}) "
+    end
+    name += ' ' + lastName.to_s
+  end
+  
   # "first_name middle_name last_name"
   def long_name
     l = first_name.to_s + " "
@@ -288,7 +296,7 @@ class Person < ActiveRecord::Base
   def team_members(remove_self = false)
     my_local_level_ids = ministry_local_levels.collect &:id
     mmtm = MinistryMissionalTeamMember.where(:teamID => my_local_level_ids).joins(:person).order("lastName, firstName ASC")
-    people = mmtm.collect &:person
+    people = mmtm.collect(&:person).flatten.uniq
     people.delete(self) if remove_self
     return people
   end
@@ -305,6 +313,16 @@ class Person < ActiveRecord::Base
   def set_region_if_campus_changed
     if target_area && self[:region] != target_area.region
       self[:region] = target_area.try(:region)
+    end
+  end
+  
+  def phone
+    if current_address
+      return current_address.cellPhone if current_address.cellPhone.present?
+      return current_address.homePhone if current_address.homePhone.present?
+      return current_address.workPhone if current_address.workPhone.present?
+    else
+      ''
     end
   end
     
