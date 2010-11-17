@@ -296,7 +296,7 @@ class Person < ActiveRecord::Base
   def team_members(remove_self = false)
     my_local_level_ids = ministry_local_levels.collect &:id
     mmtm = MinistryMissionalTeamMember.where(:teamID => my_local_level_ids).joins(:person).order("lastName, firstName ASC")
-    people = mmtm.collect &:person
+    people = mmtm.collect(&:person).flatten.uniq
     people.delete(self) if remove_self
     return people
   end
