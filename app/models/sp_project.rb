@@ -75,6 +75,8 @@ class SpProject < ActiveRecord::Base
   scope :descend_by_apd, order(Person.table_name + '.lastname desc, ' + Person.table_name + '.firstname desc').where('sp_staff.type' => 'APD').joins({:sp_staff => :person})
   scope :ascend_by_opd, order(Person.table_name + '.lastname, ' + Person.table_name + '.firstname').where('sp_staff.type' => 'OPD').joins({:sp_staff => :person})
   scope :descend_by_opd, order(Person.table_name + '.lastname desc, ' + Person.table_name + '.firstname desc').where('sp_staff.type' => 'OPD').joins({:sp_staff => :person})
+  scope :not_full_men, where("max_accepted_men > current_students_men")
+  scope :not_full_women, where("max_accepted_women > current_students_women")
   
   scope :pd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'PD').joins({:sp_staff => :person})}
   scope :apd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'APD').joins({:sp_staff => :person})}
