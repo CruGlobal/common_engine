@@ -1,5 +1,5 @@
 class SpEvaluation < ActiveRecord::Base
-  belongs_to :sp_application
+  belongs_to :sp_application, :foreign_key => 'application_id', :class_name => 'SpApplication'
   
   # Each of the qualifying facotrs has a weight contributing to a final score.
   # This score is supposed to help in objectively evaluating an applicant.
@@ -45,7 +45,7 @@ class SpEvaluation < ActiveRecord::Base
   end
   
   def total_score
-    spiritual_maturity_score + teachability_score + leadership_score + stability_score +  \
+    spiritual_maturity_score + teachability_score + leadership_score + stability_score +  
     good_evangelism_score + reason_score + social_maturity_score + ccc_involvement_score
   end
 end

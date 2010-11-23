@@ -2,7 +2,7 @@ require 'digest/md5'
 class SpApplication < AnswerSheet
   set_table_name 'sp_applications'
   COST_BEFORE_DEADLINE = 25
-  COST_AFTER_DEADLINE = 35
+  COST_AFTER_DEADLINE = 25
   
   unloadable
   acts_as_state_machine :initial => :started, :column => :status
@@ -11,6 +11,9 @@ class SpApplication < AnswerSheet
   state :started
   state :submitted, :enter => Proc.new {|app|
                                 # SpApplicationMailer.deliver_submitted(app)
+                                Notifier.notification(app.email, # RECIPIENTS
+                                  Questionnaire.from_email, # FROM
+                                  "Application Submitted").deliver # LIQUID TEMPLATE NAME
                                 app.submitted_at = Time.now
                                 app.previous_status = app.status
                               }
@@ -27,14 +30,18 @@ class SpApplication < AnswerSheet
                               }
 
   state :unsubmitted, :enter => Proc.new {|app|
-                                app.unsubmit_email
+                                Notifier.notification(app.email, # RECIPIENTS
+                                  Questionnaire.from_email, # FROM
+                                  "Application Unsubmitted").deliver # LIQUID TEMPLATE NAME
                                 app.remove_from_project_queue
                                 app.previous_status = app.status
                               }
 
   state :withdrawn, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} withdrawn")
-                                SpApplicationMailer.withdrawn(app).deliver if app.email_address
+                                Notifier.notification(app.email, # RECIPIENTS
+                                  Questionnaire.from_email, # FROM
+                                  "Application Withdrawn").deliver if app.email
                                 app.remove_from_project_queue
                                 app.remove_from_project_assignment
                                 app.withdrawn_at = Time.now
@@ -60,7 +67,6 @@ class SpApplication < AnswerSheet
                                   app.project_id = app.current_project_queue_id if app.current_project_queue_id
                                 end
                                 app.previous_status = app.status
-                                # MpdUser.create(:ssm_id => app.person.fk_ssmUserId)
                              }
 
   state :declined, :enter => Proc.new {|app|
@@ -155,7 +161,7 @@ class SpApplication < AnswerSheet
   scope :preferred_project, proc {|project_id| {:conditions => ["current_project_queue_id = ? OR preference1_id = ?", project_id, project_id], 
                                                       :include => :person }}
   before_create :set_su_code
-  after_save :complete
+  after_save :complete, :send_acceptance_email
 
   def validates
     if ((status == 'accepted_as_intern' || status == 'accepted_as_participant') && project_id.nil?)
@@ -274,10 +280,6 @@ class SpApplication < AnswerSheet
   def waive_fee!
     self.payments.create!(:status => "Approved", :payment_type => 'Waived')
     self.complete #Check to see if application is complete
-  end
-
-  def unsubmit_email
-    SpApplicationMailer.deliver_unsubmitted(self)
   end
 
   def self.questionnaire()
@@ -405,13 +407,15 @@ class SpApplication < AnswerSheet
   # first preference or the assigned project and increments the 
   # number of men or women that have applied for that project.
   def add_to_project_queue
-    if person.is_male?
-      project.current_applicants_men += 1
-    else
-      project.current_applicants_women += 1
+    if project
+      if person.is_male?
+        project.current_applicants_men += 1
+      else
+        project.current_applicants_women += 1
+      end
+      project.save(:validate => false)
     end
-    project.save(false)
-    return project
+    project
   end
 
   # When an applicant unsubmits their application this method
@@ -422,31 +426,24 @@ class SpApplication < AnswerSheet
     # We have to check to see if the status is 'completed' because this
     # callback hook will get called when an application is set to 'completed'
     # or 'unsubmitted', and we only want it to run for 'unsubmitted'
-    project = self.current_project_queue
-    self.current_project_queue_id = nil
     if project
       if person.is_male?
         project.increment(:current_applicants_men, -1)
       else
         project.increment(:current_applicants_women, -1)
       end
-      project.save(false)
+      project.save(:validate => false)
     end
-    return project
+    project
   end
 
   # This method removes the applicant from their project queue and
   # project assignment (decrementing counts appropriately).
   def remove_from_project_assignment
-    # We have to check to see if the status is 'completed' because this
-    # callback hook will get called when an application is set to 'completed'
-    # or 'unsubmitted', and we only want it to run for 'unsubmitted'
-    project = self.project
-    self.project_id = nil
     if project
       project.current_students_men -= 1 if person.is_male?
       project.current_students_women -= 1 unless person.is_male?
-    project.save(false)
+      project.save(false)
     end
     return project
   end
@@ -473,4 +470,14 @@ class SpApplication < AnswerSheet
       end
     end
   end
+  
+  def send_acceptance_email
+      if changed.include?('applicant_notified') and applicant_notified? && status.starts_with?("accept")
+        Notifier.notification(email_address, # RECIPIENTS
+                                  Questionnaire.from_email, # FROM
+                                  "Application Accepted", # LIQUID TEMPLATE NAME
+                                  {'project_name' => project.try(:name)}).deliver
+      end
+  end
+  
 end
