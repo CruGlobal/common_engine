@@ -12,6 +12,15 @@ class Region < ActiveRecord::Base
     where(["region IN (?)", @@standard_region_codes])
   end
   
+  def self.full_name(code)
+    region = where("region = ?", code).first
+    if region
+      region.name
+    else
+      ""
+    end
+  end
+  
   def sp_phone
     @sp_phone ||= spPhone.blank? ? phone : spPhone
   end
