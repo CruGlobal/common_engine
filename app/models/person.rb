@@ -229,6 +229,10 @@ class Person < ActiveRecord::Base
     current_address.email if current_address
   end
   
+  def phone
+    current_address.phone_number if current_address
+  end
+  
   # This method shouldn't be needed because nightly updater should fill this in
   def is_secure?
     if staff
@@ -260,5 +264,4 @@ class Person < ActiveRecord::Base
     end
     result
   end
-    
 end
