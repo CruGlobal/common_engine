@@ -144,6 +144,7 @@ class SpApplication < AnswerSheet
   # has_one :sp_parent_reference, :class_name => 'SpParentReference', :foreign_key => :application_id
   has_many :payments, :class_name => "SpPayment", :foreign_key => "application_id"
   has_many :answers, :class_name => 'Answer', :foreign_key => 'answer_sheet_id', :dependent => :destroy
+  has_many :donations, :class_name => "SpDonation", :foreign_key => "designation_number", :primary_key => "designation_number", :order => 'donation_date desc'
   belongs_to :preference1, :class_name => 'SpProject', :foreign_key => :preference1_id
   belongs_to :preference2, :class_name => 'SpProject', :foreign_key => :preference2_id
   belongs_to :preference3, :class_name => 'SpProject', :foreign_key => :preference3_id
