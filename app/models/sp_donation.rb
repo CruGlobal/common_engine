@@ -1,10 +1,26 @@
 class SpDonation < ActiveRecord::Base
-# This may be backed by Peoplesoft/Oracle in the future.  
-# For now, it is backed by a table that is synchronized with Oracle
+  MEDIUMS = {
+    'AE'  => 'American Express',
+    'CCK' => 'Cashiers Check',
+    'CSH' => 'Cash',
+    'EFT' => 'Electronic Funds Transfer',
+    'MC'  => 'MasterCard',
+    'MO'  => 'Money Order',
+    'PCK' => 'Personal Check',
+    'VI'  => 'VISA',
+    'WT'  => 'Wire Transfer',
+    'CC'  => 'Other Credit Card',
+    'DC'  => 'Diner\'s Club',
+    'DS'  => 'Discover',
+    'NCG' => 'Non-Cash Gift',
+    'IGT' => 'Internal Gift Transfer'
+  }
+  # This may be backed by Peoplesoft/Oracle in the future.  
+  # For now, it is backed by a table that is synchronized with Oracle
   def self.get_balance(designation_number)
     return 0 unless designation_number
     (SpDonation.sum(:amount, 
-      :conditions => ["designation_number = ?", designation_number]) || 0)
+                    :conditions => ["designation_number = ?", designation_number]) || 0)
   end
   
   def self.get_balances(designation_numbers)
@@ -30,4 +46,9 @@ class SpDonation < ActiveRecord::Base
     end
     rows.length
   end
+
+	def	medium
+		MEDIUMS[medium_type]
+	end
+
 end
