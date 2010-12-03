@@ -64,7 +64,7 @@ class SpProject < ActiveRecord::Base
   validate :validate_partnership
 
   scope :with_partner, proc {|partner_scope| {:conditions => partner_scope}}
-  scope :show_on_website, where(:show_on_website => true)
+  scope :show_on_website, where(:show_on_website => true, :project_status => 'open')
   scope :uses_application, where(:use_provided_application => true)
   scope :current, where(:project_status => 'open')
   scope :ascend_by_name, order(:name)
@@ -222,6 +222,14 @@ class SpProject < ActiveRecord::Base
   # helper methods for xml feed
   def percent_full
     capacity.to_f > 0 ? (accepted_count.to_f / capacity.to_f) * 100 : 0
+  end
+
+  def percent_full_women
+    max_accepted_women.to_i > 0 ? (current_students_women + current_applicants_women) / max_accepted_women.to_f * 100 : 0
+  end
+
+  def percent_full_men
+    max_accepted_men.to_i > 0 ? (current_students_men + current_applicants_men) / max_accepted_men.to_f * 100 : 0
   end
   
   def contact
@@ -410,7 +418,7 @@ class SpProject < ActiveRecord::Base
   
   def female_accepted_count(yr = nil)
     yr ||= year
-    yr == year ? current_applicants_men : sp_applications.accepted.female.for_year(yr).count
+    yr == year ? current_applicants_women : sp_applications.accepted.female.for_year(yr).count
   end
   
   def initialize_project_specific_question_sheet

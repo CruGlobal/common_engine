@@ -86,7 +86,7 @@ class Person < ActiveRecord::Base
   end
   
   def region
-    self[:region] || self.target_area.region
+    self[:region] || self.target_area.try(:region)
   end
   
   def campus=(campus_name)

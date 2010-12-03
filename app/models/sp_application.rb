@@ -159,7 +159,9 @@ class SpApplication < AnswerSheet
   has_one :evaluation, :class_name => 'SpEvaluation', :foreign_key => :application_id
   
   scope :for_year, proc {|year| {:conditions => {:year => year}}}
-  scope :preferred_project, proc {|project_id| {:conditions => ["current_project_queue_id = ? OR preference1_id = ?", project_id, project_id], 
+  scope :preferrenced_project, proc {|project_id| {:conditions => ["project_id = ? OR preference1_id = ? OR preference2_id = ? OR preference3_id = ?", project_id, project_id, project_id, project_id]}}
+
+  scope :preferred_project, proc {|project_id| {:conditions => ["project_id = ?", project_id], 
                                                       :include => :person }}
   before_create :set_su_code
   after_save :complete, :send_acceptance_email
