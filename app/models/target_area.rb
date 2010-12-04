@@ -8,6 +8,7 @@ class TargetArea < ActiveRecord::Base
   self.inheritance_column = "nothing"
   
   has_many :ministry_activities, :class_name => "MinistryActivity", :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID"
+  has_many :ministry_teams, :through => :ministry_activities, :source => :ministry_local_level
   
   def active
     @active = false

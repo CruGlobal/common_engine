@@ -9,7 +9,14 @@ class SpStaff < ActiveRecord::Base
   validate :only_one_of_each_director
   after_create :create_sp_user
   after_destroy :destroy_sp_user
+
+  scope :pd, where(:type => 'PD')
+  scope :apd, where(:type => 'APD')
+  scope :opd, where(:type => 'OPD')
+  scope :year, proc {|year| where(:year => year)}
   
+  delegate :email, :to => :person
+
   protected 
     def only_one_of_each_director
       return true unless DIRECTORSHIPS.include?(type)

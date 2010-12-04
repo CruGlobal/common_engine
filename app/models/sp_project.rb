@@ -63,7 +63,7 @@ class SpProject < ActiveRecord::Base
   validates_uniqueness_of :name
   validate :validate_partnership
 
-  scope :with_partner, proc {|partner_scope| {:conditions => partner_scope}}
+  scope :with_partner, proc {|partner| {:conditions => ["primary_partner = ? OR secondary_partner = ? OR tertiary_partner = ?", partner, partner, partner]}}
   scope :show_on_website, where(:show_on_website => true, :project_status => 'open')
   scope :uses_application, where(:use_provided_application => true)
   scope :current, where(:project_status => 'open')

@@ -179,7 +179,7 @@ class SpApplication < AnswerSheet
   DEADLINE3 = Time.parse(SpApplication::YEAR.to_s + "/02/24");
 
   def name
-    person.informal_full_name
+    person.try(:informal_full_name)
   end
   
   def phone
@@ -254,7 +254,8 @@ class SpApplication < AnswerSheet
   scope :male, where('ministry_person.gender = 1').includes(:person)
   scope :female, where('ministry_person.gender <> 1').includes(:person)
   
-  
+  delegate :campus, :to => :person
+
   def self.cost
     if Time.now < payment_deadline
       return COST_BEFORE_DEADLINE
@@ -271,6 +272,10 @@ class SpApplication < AnswerSheet
   def has_paid?
     return true if self.payments.detect(&:approved?)
     return false
+  end
+
+  def accepted?
+    SpApplication.accepted_statuses.include?(status)
   end
 
   def paid_at
