@@ -312,7 +312,7 @@ class Person < ActiveRecord::Base
   end
   
   def set_region_if_campus_changed
-    if target_area 
+    if changed.include?('campus') && target_area 
       self[:region] = target_area.region unless self[:region] == target_area.region
       self.universityState = target_area.state 
     end
