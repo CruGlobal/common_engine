@@ -89,12 +89,13 @@ class Person < ActiveRecord::Base
     self[:region] || self.target_area.try(:region)
   end
   
-  def campus=(campus_name)
-    write_attribute("campus", campus_name)
-    if target_area
-      write_attribute("region", self.school.region)
-    end
-  end
+  #def campus=(campus_name)
+    #write_attribute("campus", campus_name)
+    #if target_area
+      #write_attribute("region", self.school.region)
+      #self.univerityState = self.school.state
+    #end
+  #end
   
   def target_area
     if (self.school)
