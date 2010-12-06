@@ -10,6 +10,10 @@ class TargetArea < ActiveRecord::Base
   has_many :ministry_activities, :class_name => "MinistryActivity", :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID"
   has_many :ministry_teams, :through => :ministry_activities, :source => :ministry_local_level
   
+  def is_semester?
+    isSemester ? "Yes" : "No"
+  end
+  
   def active
     @active = false
     ministry_activities.each do |activity|
