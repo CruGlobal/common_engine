@@ -7,8 +7,8 @@ class TargetArea < ActiveRecord::Base
   #override the inheritance column
   self.inheritance_column = "nothing"
   
-  has_many :ministry_activities, :class_name => "MinistryActivity", :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID"
-  has_many :ministry_teams, :through => :ministry_activities, :source => :ministry_local_level
+  has_many :activities, :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID", :conditions => "status != 'IN'"
+  has_many :teams, :through => :activities
   
   def is_semester?
     isSemester ? "Yes" : "No"
