@@ -408,17 +408,17 @@ class SpProject < ActiveRecord::Base
   
   def female_applicants_count(yr = nil)
     yr ||= year
-    yr == year ? current_applicants_men : sp_applications.applicant.female.for_year(yr).count
+    yr == year ? current_applicants_women : sp_applications.applicant.female.for_year(yr).count
   end
   
   def male_accepted_count(yr = nil)
     yr ||= year
-    yr == year ? current_applicants_men : sp_applications.accepted.male.for_year(yr).count
+    yr == year ? current_students_men : sp_applications.accepted.male.for_year(yr).count
   end
   
   def female_accepted_count(yr = nil)
     yr ||= year
-    yr == year ? current_applicants_women : sp_applications.accepted.female.for_year(yr).count
+    yr == year ? current_students_women : sp_applications.accepted.female.for_year(yr).count
   end
   
   def initialize_project_specific_question_sheet
