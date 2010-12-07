@@ -2,7 +2,7 @@ require 'digest/md5'
 class SpApplication < AnswerSheet
   set_table_name 'sp_applications'
   COST_BEFORE_DEADLINE = 25
-  COST_AFTER_DEADLINE = 35
+  COST_AFTER_DEADLINE = 25
   
   unloadable
   acts_as_state_machine :initial => :started, :column => :status
@@ -11,6 +11,9 @@ class SpApplication < AnswerSheet
   state :started
   state :submitted, :enter => Proc.new {|app|
                                 # SpApplicationMailer.deliver_submitted(app)
+                                Notifier.notification(app.email, # RECIPIENTS
+                                  Questionnaire.from_email, # FROM
+                                  "Application Submitted").deliver # LIQUID TEMPLATE NAME
                                 app.submitted_at = Time.now
                                 app.previous_status = app.status
                               }
@@ -18,7 +21,6 @@ class SpApplication < AnswerSheet
   state :completed, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} completed")
                                 app.completed_at = Time.now
-                                app.add_to_project_queue
                                 Notifier.notification(app.email, # RECIPIENTS
                                   Questionnaire.from_email, # FROM
                                   "Application Completed").deliver # LIQUID TEMPLATE NAME
@@ -27,46 +29,35 @@ class SpApplication < AnswerSheet
                               }
 
   state :unsubmitted, :enter => Proc.new {|app|
-                                app.unsubmit_email
-                                app.remove_from_project_queue
+                                Notifier.notification(app.email, # RECIPIENTS
+                                  Questionnaire.from_email, # FROM
+                                  "Application Unsubmitted").deliver # LIQUID TEMPLATE NAME
                                 app.previous_status = app.status
                               }
 
   state :withdrawn, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} withdrawn")
-                                SpApplicationMailer.withdrawn(app).deliver if app.email_address
-                                app.remove_from_project_queue
-                                app.remove_from_project_assignment
+                                Notifier.notification(app.email, # RECIPIENTS
+                                  Questionnaire.from_email, # FROM
+                                  "Application Withdrawn").deliver if app.email
                                 app.withdrawn_at = Time.now
                                 app.previous_status = app.status
                               }
 
-  state :accepted_as_intern, :enter => Proc.new {|app|
+  state :accepted_as_student_staff, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} accepted as intern")
                                 app.accepted_at = Time.now
-                                if app.project_id.nil?
-                                  app.project_id = app.preference1_id if app.preference1_id
-                                  app.project_id = app.current_project_queue_id if app.current_project_queue_id
-                                end
                                 app.previous_status = app.status
-                                # MpdUser.create(:ssm_id => app.person.fk_ssmUserId)
                              }
 
   state :accepted_as_participant, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} accepted as participant")
                                 app.accepted_at = Time.now
-                                if app.project_id.nil?
-                                  app.project_id = app.preference1_id if app.preference1_id
-                                  app.project_id = app.current_project_queue_id if app.current_project_queue_id
-                                end
                                 app.previous_status = app.status
-                                # MpdUser.create(:ssm_id => app.person.fk_ssmUserId)
                              }
 
   state :declined, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} declined")
-                                app.remove_from_project_queue
-                                app.remove_from_project_assignment
                                 app.previous_status = app.status
                              }
 
@@ -83,7 +74,7 @@ class SpApplication < AnswerSheet
     transitions :to => :withdrawn, :from => :completed
     transitions :to => :withdrawn, :from => :unsubmitted
     transitions :to => :withdrawn, :from => :declined
-    transitions :to => :withdrawn, :from => :accepted_as_intern
+    transitions :to => :withdrawn, :from => :accepted_as_student_staff
     transitions :to => :withdrawn, :from => :accepted_as_participant
   end
 
@@ -99,17 +90,17 @@ class SpApplication < AnswerSheet
     transitions :to => :completed, :from => :started
     transitions :to => :completed, :from => :withdrawn
     transitions :to => :completed, :from => :declined
-    transitions :to => :completed, :from => :accepted_as_intern
+    transitions :to => :completed, :from => :accepted_as_student_staff
     transitions :to => :completed, :from => :accepted_as_participant
   end
 
   event :accept_as_intern do
-    transitions :to => :accepted_as_intern, :from => :completed
-    transitions :to => :accepted_as_intern, :from => :started
-    transitions :to => :accepted_as_intern, :from => :withdrawn
-    transitions :to => :accepted_as_intern, :from => :declined
-    transitions :to => :accepted_as_intern, :from => :submitted
-    transitions :to => :accepted_as_intern, :from => :accepted_as_participant
+    transitions :to => :accepted_as_student_staff, :from => :completed
+    transitions :to => :accepted_as_student_staff, :from => :started
+    transitions :to => :accepted_as_student_staff, :from => :withdrawn
+    transitions :to => :accepted_as_student_staff, :from => :declined
+    transitions :to => :accepted_as_student_staff, :from => :submitted
+    transitions :to => :accepted_as_student_staff, :from => :accepted_as_participant
   end
 
   event :accept_as_participant do
@@ -118,14 +109,14 @@ class SpApplication < AnswerSheet
     transitions :to => :accepted_as_participant, :from => :withdrawn
     transitions :to => :accepted_as_participant, :from => :declined
     transitions :to => :accepted_as_participant, :from => :submitted
-    transitions :to => :accepted_as_participant, :from => :accepted_as_intern
+    transitions :to => :accepted_as_participant, :from => :accepted_as_student_staff
   end
 
   event :decline do
     transitions :to => :declined, :from => :started
     transitions :to => :declined, :from => :submitted
     transitions :to => :declined, :from => :completed
-    transitions :to => :declined, :from => :accepted_as_intern
+    transitions :to => :declined, :from => :accepted_as_student_staff
     transitions :to => :declined, :from => :accepted_as_participant
   end
 
@@ -138,6 +129,7 @@ class SpApplication < AnswerSheet
   # has_one :sp_parent_reference, :class_name => 'SpParentReference', :foreign_key => :application_id
   has_many :payments, :class_name => "SpPayment", :foreign_key => "application_id"
   has_many :answers, :class_name => 'Answer', :foreign_key => 'answer_sheet_id', :dependent => :destroy
+  has_many :donations, :class_name => "SpDonation", :foreign_key => "designation_number", :primary_key => "designation_number", :order => 'donation_date desc'
   belongs_to :preference1, :class_name => 'SpProject', :foreign_key => :preference1_id
   belongs_to :preference2, :class_name => 'SpProject', :foreign_key => :preference2_id
   belongs_to :preference3, :class_name => 'SpProject', :foreign_key => :preference3_id
@@ -152,13 +144,15 @@ class SpApplication < AnswerSheet
   has_one :evaluation, :class_name => 'SpEvaluation', :foreign_key => :application_id
   
   scope :for_year, proc {|year| {:conditions => {:year => year}}}
-  scope :preferred_project, proc {|project_id| {:conditions => ["current_project_queue_id = ? OR preference1_id = ?", project_id, project_id], 
+  scope :preferrenced_project, proc {|project_id| {:conditions => ["project_id = ? OR preference1_id = ? OR preference2_id = ? OR preference3_id = ?", project_id, project_id, project_id, project_id]}}
+
+  scope :preferred_project, proc {|project_id| {:conditions => ["project_id = ?", project_id], 
                                                       :include => :person }}
   before_create :set_su_code
-  after_save :complete
+  after_save :complete, :send_acceptance_email, :update_project_counts
 
   def validates
-    if ((status == 'accepted_as_intern' || status == 'accepted_as_participant') && project_id.nil?)
+    if ((status == 'accepted_as_student_staff' || status == 'accepted_as_participant') && project_id.nil?)
       errors.add_to_base("You must specify which project you are accepting this applicant to.")
     end
   end
@@ -170,7 +164,7 @@ class SpApplication < AnswerSheet
   DEADLINE3 = Time.parse(SpApplication::YEAR.to_s + "/02/24");
 
   def name
-    person.informal_full_name
+    person.try(:informal_full_name)
   end
   
   def phone
@@ -217,11 +211,15 @@ class SpApplication < AnswerSheet
   end
   
   def self.accepted_statuses
-    %w(accepted_as_intern accepted_as_participant)
+    %w(accepted_as_student_staff accepted_as_participant)
   end
 
   def self.applied_statuses
     SpApplication.ready_statuses | SpApplication.accepted_statuses
+  end
+  
+  def self.applicant_statuses
+    SpApplication.unsubmitted_statuses | SpApplication.not_ready_statuses | SpApplication.ready_statuses
   end
   
   # The statuses that mean an applicant's application is not completed, but still in progress
@@ -235,7 +233,7 @@ class SpApplication < AnswerSheet
   
   scope :accepted, where('sp_applications.status' => SpApplication.accepted_statuses)
   scope :accepted_participants, where('sp_applications.status' => 'accepted_as_participant')
-  scope :accepted_interns, where('sp_applications.status' => 'accepted_as_intern')
+  scope :accepted_interns, where('sp_applications.status' => 'accepted_as_student_staff')
   scope :ready_to_evaluate, where('sp_applications.status' => SpApplication.ready_statuses)
   scope :submitted, where('sp_applications.status' => SpApplication.not_ready_statuses)
   scope :not_submitted, where('sp_applications.status' => SpApplication.unsubmitted_statuses)
@@ -245,7 +243,8 @@ class SpApplication < AnswerSheet
   scope :male, where('ministry_person.gender = 1').includes(:person)
   scope :female, where('ministry_person.gender <> 1').includes(:person)
   
-  
+  delegate :campus, :to => :person
+
   def self.cost
     if Time.now < payment_deadline
       return COST_BEFORE_DEADLINE
@@ -264,6 +263,10 @@ class SpApplication < AnswerSheet
     return false
   end
 
+  def accepted?
+    SpApplication.accepted_statuses.include?(status)
+  end
+
   def paid_at
     self.payments.each do |payment|
       return payment.updated_at if payment.approved?
@@ -274,10 +277,6 @@ class SpApplication < AnswerSheet
   def waive_fee!
     self.payments.create!(:status => "Approved", :payment_type => 'Waived')
     self.complete #Check to see if application is complete
-  end
-
-  def unsubmit_email
-    SpApplicationMailer.deliver_unsubmitted(self)
   end
 
   def self.questionnaire()
@@ -400,53 +399,35 @@ class SpApplication < AnswerSheet
   end
 
 
-  # When an applicant submits their application this method
-  # assigns an applicant to a project queue corresponding to their
-  # first preference or the assigned project and increments the 
-  # number of men or women that have applied for that project.
-  def add_to_project_queue
-    if person.is_male?
-      project.current_applicants_men += 1
-    else
-      project.current_applicants_women += 1
-    end
-    project.save(false)
-    return project
-  end
-
-  # When an applicant unsubmits their application this method
-  # removes the applicant from their project queue and
-  # decrements the number of men or women that have applied
-  # for that project.
-  def remove_from_project_queue
-    # We have to check to see if the status is 'completed' because this
-    # callback hook will get called when an application is set to 'completed'
-    # or 'unsubmitted', and we only want it to run for 'unsubmitted'
-    project = self.current_project_queue
-    self.current_project_queue_id = nil
-    if project
-      if person.is_male?
-        project.increment(:current_applicants_men, -1)
-      else
-        project.increment(:current_applicants_women, -1)
+  # When an applicant status changes, we need to update the project counts
+  def update_project_counts
+    if changed.include?('status')
+      if person.gender.present?
+        count = SpApplication.connection.select_value("SELECT count(*) from sp_applications a inner join ministry_person p on a.person_id = p.personID where year = #{project.year} AND status IN('#{SpApplication.applicant_statuses.join("','")}') AND p.gender = #{person.gender} AND a.project_id = #{project.id}")
+        if person.is_male?
+          project.current_applicants_men = count
+        else
+          project.current_applicants_women = count
+        end
+        count = SpApplication.connection.select_value("SELECT count(*) from sp_applications a inner join ministry_person p on a.person_id = p.personID where year = #{project.year} AND status IN('#{SpApplication.accepted_statuses.join("','")}') AND p.gender = #{person.gender} AND a.project_id = #{project.id}")
+        if person.is_male?
+          project.current_students_men = count
+        else
+          project.current_students_women = count
+        end
       end
-      project.save(false)
+      project.save(:validate => false)
+      count
     end
-    return project
   end
 
   # This method removes the applicant from their project queue and
   # project assignment (decrementing counts appropriately).
   def remove_from_project_assignment
-    # We have to check to see if the status is 'completed' because this
-    # callback hook will get called when an application is set to 'completed'
-    # or 'unsubmitted', and we only want it to run for 'unsubmitted'
-    project = self.project
-    self.project_id = nil
     if project
       project.current_students_men -= 1 if person.is_male?
       project.current_students_women -= 1 unless person.is_male?
-    project.save(false)
+      project.save(false)
     end
     return project
   end
@@ -473,4 +454,14 @@ class SpApplication < AnswerSheet
       end
     end
   end
+  
+  def send_acceptance_email
+      if changed.include?('applicant_notified') and applicant_notified? && status.starts_with?("accept")
+        Notifier.notification(email_address, # RECIPIENTS
+                                  Questionnaire.from_email, # FROM
+                                  "Application Accepted", # LIQUID TEMPLATE NAME
+                                  {'project_name' => project.try(:name)}).deliver
+      end
+  end
+  
 end

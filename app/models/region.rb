@@ -7,9 +7,23 @@ class Region < ActiveRecord::Base
 
   attr_reader :standard_region_codes
   @@standard_region_codes = ["NE", "MA", "MS", "SE", "GL", "UM", "GP", "RR", "NW", "SW"]
+  @@campus_region_codes = @@standard_region_codes.clone << "NC"
   
   def self.standard_regions
     where(["region IN (?)", @@standard_region_codes])
+  end
+
+  def self.campus_regions
+    where(["region IN (?)", @@campus_region_codes])
+  end
+  
+  def self.full_name(code)
+    region = where("region = ?", code).first
+    if region
+      region.name
+    else
+      ""
+    end
   end
   
   def sp_phone

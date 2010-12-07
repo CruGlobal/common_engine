@@ -86,15 +86,16 @@ class Person < ActiveRecord::Base
   end
   
   def region
-    self[:region] || self.target_area.region
+    self[:region] || self.target_area.try(:region)
   end
   
-  def campus=(campus_name)
-    write_attribute("campus", campus_name)
-    if target_area
-      write_attribute("region", self.school.region)
-    end
-  end
+  #def campus=(campus_name)
+    #write_attribute("campus", campus_name)
+    #if target_area
+      #write_attribute("region", self.school.region)
+      #self.univerityState = self.school.state
+    #end
+  #end
   
   def target_area
     if (self.school)
@@ -311,8 +312,9 @@ class Person < ActiveRecord::Base
   end
   
   def set_region_if_campus_changed
-    if target_area && self[:region] != target_area.region
-      self[:region] = target_area.try(:region)
+    if changed.include?('campus') && target_area 
+      self[:region] = target_area.region unless self[:region] == target_area.region
+      self.universityState = target_area.state 
     end
   end
   

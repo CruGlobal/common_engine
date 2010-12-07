@@ -63,22 +63,24 @@ class SpProject < ActiveRecord::Base
   validates_uniqueness_of :name
   validate :validate_partnership
 
-  scope :with_partner, proc {|partner_scope| {:conditions => partner_scope}}
-  scope :show_on_website, where(:show_on_website => true)
+  scope :with_partner, proc {|partner| {:conditions => ["primary_partner = ? OR secondary_partner = ? OR tertiary_partner = ?", partner, partner, partner]}}
+  scope :show_on_website, where(:show_on_website => true, :project_status => 'open')
   scope :uses_application, where(:use_provided_application => true)
   scope :current, where(:project_status => 'open')
   scope :ascend_by_name, order(:name)
   scope :descend_by_name, order("name desc")
-  scope :ascend_by_pd, order(Person.table_name + '.lastname, ' + Person.table_name + '.firstname').where('sp_staff.type' => 'PD').joins({:sp_staff => :person})
-  scope :descend_by_pd, order(Person.table_name + '.lastname desc, ' + Person.table_name + '.firstname desc').where('sp_staff.type' => 'PD').joins({:sp_staff => :person})
-  scope :ascend_by_apd, order(Person.table_name + '.lastname, ' + Person.table_name + '.firstname').where('sp_staff.type' => 'APD').joins({:sp_staff => :person})
-  scope :descend_by_apd, order(Person.table_name + '.lastname desc, ' + Person.table_name + '.firstname desc').where('sp_staff.type' => 'APD').joins({:sp_staff => :person})
-  scope :ascend_by_opd, order(Person.table_name + '.lastname, ' + Person.table_name + '.firstname').where('sp_staff.type' => 'OPD').joins({:sp_staff => :person})
-  scope :descend_by_opd, order(Person.table_name + '.lastname desc, ' + Person.table_name + '.firstname desc').where('sp_staff.type' => 'OPD').joins({:sp_staff => :person})
+  scope :ascend_by_pd, order(Person.table_name + '.lastName, ' + Person.table_name + '.firstName').where('sp_staff.type' => 'PD').joins({:sp_staff => :person})
+  scope :descend_by_pd, order(Person.table_name + '.lastName desc, ' + Person.table_name + '.firstName desc').where('sp_staff.type' => 'PD').joins({:sp_staff => :person})
+  scope :ascend_by_apd, order(Person.table_name + '.lastName, ' + Person.table_name + '.firstName').where('sp_staff.type' => 'APD').joins({:sp_staff => :person})
+  scope :descend_by_apd, order(Person.table_name + '.lastName desc, ' + Person.table_name + '.firstName desc').where('sp_staff.type' => 'APD').joins({:sp_staff => :person})
+  scope :ascend_by_opd, order(Person.table_name + '.lastName, ' + Person.table_name + '.firstName').where('sp_staff.type' => 'OPD').joins({:sp_staff => :person})
+  scope :descend_by_opd, order(Person.table_name + '.lastName desc, ' + Person.table_name + '.firstName desc').where('sp_staff.type' => 'OPD').joins({:sp_staff => :person})
+  scope :not_full_men, where("max_student_men_applicants > current_applicants_men")
+  scope :not_full_women, where("max_student_women_applicants > current_applicants_women")
   
-  scope :pd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'PD').joins({:sp_staff => :person})}
-  scope :apd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'APD').joins({:sp_staff => :person})}
-  scope :opd_like, lambda {|name| where(Person.table_name + '.lastname LIKE ? OR ' + Person.table_name + '.firstname LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'OPD').joins(:sp_staff)}
+  scope :pd_like, lambda {|name| where(Person.table_name + '.lastName LIKE ? OR ' + Person.table_name + '.firstName LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'PD').joins({:sp_staff => :person})}
+  scope :apd_like, lambda {|name| where(Person.table_name + '.lastName LIKE ? OR ' + Person.table_name + '.firstName LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'APD').joins({:sp_staff => :person})}
+  scope :opd_like, lambda {|name| where(Person.table_name + '.lastName LIKE ? OR ' + Person.table_name + '.firstName LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'OPD').joins(:sp_staff)}
   
   
   before_create :set_to_open
@@ -121,28 +123,28 @@ class SpProject < ActiveRecord::Base
     @staff ||= {}
     @staff[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Staff'}.collect(&:person_id)).
                                     includes(:current_address).
-                                    order('lastName, firstname')
+                                    order('lastName, firstName')
   end
   def volunteers(yr = nil)
     yr ||= year
     @volunteers ||= {}
     @volunteers[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Volunteer'}.collect(&:person_id)).
                                     includes(:current_address).
-                                    order('lastName, firstname')
+                                    order('lastName, firstName')
   end
   def staff_and_volunteers(yr = nil)
     yr ||= year
     @volunteers ||= {}
     @volunteers[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| ['Volunteer', 'Staff'].include?(s.type)}.collect(&:person_id))
                                     .includes(:current_address)
-                                    .order('lastName, firstname')
+                                    .order('lastName, firstName')
   end
   def kids(yr = nil)
     yr ||= year
     @kids ||= {}
     @kids[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Kid'}.collect(&:person_id)).
                                     includes(:current_address).
-                                    order('lastName, firstname')
+                                    order('lastName, firstName')
   end
 
   def evaluators(yr = nil)
@@ -150,7 +152,7 @@ class SpProject < ActiveRecord::Base
     @evaluators ||= {}
     @evaluators[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Evaluator'}.collect(&:person_id)).
                                     includes(:current_address).
-                                    order('lastName, firstname')
+                                    order('lastName, firstName')
   end
   
   def pd=(person_id, yr = nil)
@@ -220,6 +222,14 @@ class SpProject < ActiveRecord::Base
   # helper methods for xml feed
   def percent_full
     capacity.to_f > 0 ? (accepted_count.to_f / capacity.to_f) * 100 : 0
+  end
+
+  def percent_full_women
+    max_accepted_women.to_i > 0 ? (current_students_women + current_applicants_women) / max_accepted_women.to_f * 100 : 0
+  end
+
+  def percent_full_men
+    max_accepted_men.to_i > 0 ? (current_students_men + current_applicants_men) / max_accepted_men.to_f * 100 : 0
   end
   
   def contact
@@ -398,17 +408,17 @@ class SpProject < ActiveRecord::Base
   
   def female_applicants_count(yr = nil)
     yr ||= year
-    yr == year ? current_applicants_men : sp_applications.applicant.female.for_year(yr).count
+    yr == year ? current_applicants_women : sp_applications.applicant.female.for_year(yr).count
   end
   
   def male_accepted_count(yr = nil)
     yr ||= year
-    yr == year ? current_applicants_men : sp_applications.accepted.male.for_year(yr).count
+    yr == year ? current_students_men : sp_applications.accepted.male.for_year(yr).count
   end
   
   def female_accepted_count(yr = nil)
     yr ||= year
-    yr == year ? current_applicants_men : sp_applications.accepted.female.for_year(yr).count
+    yr == year ? current_students_women : sp_applications.accepted.female.for_year(yr).count
   end
   
   def initialize_project_specific_question_sheet

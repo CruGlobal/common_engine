@@ -14,6 +14,47 @@ class Staff < ActiveRecord::Base
     staff = Staff.find(:first, :conditions => ["accountNo = ?", account_no])
   end
   
+  def self.field_roles
+    ['Director (Direct Ministry)','Team Leader (Direct Ministry)','Team Member - Mom','Field Staff In Training','Raising Support Full Time','Seminary Staff','Field Staff','Local Leader']
+  end
+  
+  def self.strategy_order
+    ['National Director','Operations','HR','LD','Fund Dev','CFM','FLD','EFM','DES','EPI','ESS','NTN','BRD','WSN','R&D','SR','SV','SSS','JPO','LHS','']
+  end
+  
+  def self.strategies
+    {
+      'National Director' => 'National Director',
+      'Operations' => 'Operations',
+      'HR' => 'Leadership Development',
+      'LD' => 'Leadership Development',
+      'Fund Dev' => 'Fund Development',
+      'CFM' => 'Campus Field Ministry',
+      'FLD' => 'Campus Field Ministry',
+      'EFM' => 'Ethnic Field Ministry',
+      'DES' => 'Destino',
+      'EPI' => 'Epic',
+      'ESS' => 'Every Student Sent',
+      'NTN' => 'Nations',
+      'BRD' => 'Bridges',
+      'WSN' => 'WSN',
+      'R&D' => 'Research and Development',
+      'SV' => 'Student Venture',
+      'LHS' => 'Lake Hart Stint'
+    }
+  end
+  
+  scope :specialty_roles, where(:jobStatus => "Full Time Staff").where(:ministry => "Campus Ministry").
+      where(:removedFromPeopleSoft => "N").where("jobTitle NOT IN (?)", field_roles).order(:jobTitle).order(:lastName)
+
+  def self.get_roles(region)
+    result = {}
+    Staff.strategy_order.each do |strategy|
+      result[strategy] = specialty_roles.where(:strategy => strategy).where(:region => region)
+    end
+    result
+  end
+  
   # "first_name last_name"
   def full_name
     firstName.to_s  + " " + lastName.to_s
