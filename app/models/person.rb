@@ -326,4 +326,11 @@ class Person < ActiveRecord::Base
     end
   end
     
+  def account_balance
+    return nil unless accountNo
+    results = connection.select_all("select f.value as balance from staffsite_staffsitepref f inner join staffsite_staffsiteprofile p on p.StaffSiteProfileID = f.fk_StaffSiteProfile where f.name = 'CURRENT_BALANCE' AND p.accountNo = '#{accountNo}'")
+    if results.present?
+      results.first["balance"]
+    else return nil end
+  end
 end
