@@ -48,7 +48,7 @@ class SpApplication < AnswerSheet
                                 app.previous_status = app.status
                               }
 
-  state :accepted_as_intern, :enter => Proc.new {|app|
+  state :accepted_as_student_staff, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} accepted as intern")
                                 app.accepted_at = Time.now
                                 if app.project_id.nil?
@@ -89,7 +89,7 @@ class SpApplication < AnswerSheet
     transitions :to => :withdrawn, :from => :completed
     transitions :to => :withdrawn, :from => :unsubmitted
     transitions :to => :withdrawn, :from => :declined
-    transitions :to => :withdrawn, :from => :accepted_as_intern
+    transitions :to => :withdrawn, :from => :accepted_as_student_staff
     transitions :to => :withdrawn, :from => :accepted_as_participant
   end
 
@@ -105,17 +105,17 @@ class SpApplication < AnswerSheet
     transitions :to => :completed, :from => :started
     transitions :to => :completed, :from => :withdrawn
     transitions :to => :completed, :from => :declined
-    transitions :to => :completed, :from => :accepted_as_intern
+    transitions :to => :completed, :from => :accepted_as_student_staff
     transitions :to => :completed, :from => :accepted_as_participant
   end
 
   event :accept_as_intern do
-    transitions :to => :accepted_as_intern, :from => :completed
-    transitions :to => :accepted_as_intern, :from => :started
-    transitions :to => :accepted_as_intern, :from => :withdrawn
-    transitions :to => :accepted_as_intern, :from => :declined
-    transitions :to => :accepted_as_intern, :from => :submitted
-    transitions :to => :accepted_as_intern, :from => :accepted_as_participant
+    transitions :to => :accepted_as_student_staff, :from => :completed
+    transitions :to => :accepted_as_student_staff, :from => :started
+    transitions :to => :accepted_as_student_staff, :from => :withdrawn
+    transitions :to => :accepted_as_student_staff, :from => :declined
+    transitions :to => :accepted_as_student_staff, :from => :submitted
+    transitions :to => :accepted_as_student_staff, :from => :accepted_as_participant
   end
 
   event :accept_as_participant do
@@ -124,14 +124,14 @@ class SpApplication < AnswerSheet
     transitions :to => :accepted_as_participant, :from => :withdrawn
     transitions :to => :accepted_as_participant, :from => :declined
     transitions :to => :accepted_as_participant, :from => :submitted
-    transitions :to => :accepted_as_participant, :from => :accepted_as_intern
+    transitions :to => :accepted_as_participant, :from => :accepted_as_student_staff
   end
 
   event :decline do
     transitions :to => :declined, :from => :started
     transitions :to => :declined, :from => :submitted
     transitions :to => :declined, :from => :completed
-    transitions :to => :declined, :from => :accepted_as_intern
+    transitions :to => :declined, :from => :accepted_as_student_staff
     transitions :to => :declined, :from => :accepted_as_participant
   end
 
@@ -167,7 +167,7 @@ class SpApplication < AnswerSheet
   after_save :complete, :send_acceptance_email
 
   def validates
-    if ((status == 'accepted_as_intern' || status == 'accepted_as_participant') && project_id.nil?)
+    if ((status == 'accepted_as_student_staff' || status == 'accepted_as_participant') && project_id.nil?)
       errors.add_to_base("You must specify which project you are accepting this applicant to.")
     end
   end
@@ -226,7 +226,7 @@ class SpApplication < AnswerSheet
   end
   
   def self.accepted_statuses
-    %w(accepted_as_intern accepted_as_participant)
+    %w(accepted_as_student_staff accepted_as_participant)
   end
 
   def self.applied_statuses
@@ -244,7 +244,7 @@ class SpApplication < AnswerSheet
   
   scope :accepted, where('sp_applications.status' => SpApplication.accepted_statuses)
   scope :accepted_participants, where('sp_applications.status' => 'accepted_as_participant')
-  scope :accepted_interns, where('sp_applications.status' => 'accepted_as_intern')
+  scope :accepted_interns, where('sp_applications.status' => 'accepted_as_student_staff')
   scope :ready_to_evaluate, where('sp_applications.status' => SpApplication.ready_statuses)
   scope :submitted, where('sp_applications.status' => SpApplication.not_ready_statuses)
   scope :not_submitted, where('sp_applications.status' => SpApplication.unsubmitted_statuses)
