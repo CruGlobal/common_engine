@@ -21,7 +21,6 @@ class SpApplication < AnswerSheet
   state :completed, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} completed")
                                 app.completed_at = Time.now
-                                app.add_to_project_queue
                                 Notifier.notification(app.email, # RECIPIENTS
                                   Questionnaire.from_email, # FROM
                                   "Application Completed").deliver # LIQUID TEMPLATE NAME
@@ -33,7 +32,6 @@ class SpApplication < AnswerSheet
                                 Notifier.notification(app.email, # RECIPIENTS
                                   Questionnaire.from_email, # FROM
                                   "Application Unsubmitted").deliver # LIQUID TEMPLATE NAME
-                                app.remove_from_project_queue
                                 app.previous_status = app.status
                               }
 
@@ -42,8 +40,6 @@ class SpApplication < AnswerSheet
                                 Notifier.notification(app.email, # RECIPIENTS
                                   Questionnaire.from_email, # FROM
                                   "Application Withdrawn").deliver if app.email
-                                app.remove_from_project_queue
-                                app.remove_from_project_assignment
                                 app.withdrawn_at = Time.now
                                 app.previous_status = app.status
                               }
@@ -51,28 +47,17 @@ class SpApplication < AnswerSheet
   state :accepted_as_student_staff, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} accepted as intern")
                                 app.accepted_at = Time.now
-                                if app.project_id.nil?
-                                  app.project_id = app.preference1_id if app.preference1_id
-                                  app.project_id = app.current_project_queue_id if app.current_project_queue_id
-                                end
                                 app.previous_status = app.status
-                                # MpdUser.create(:ssm_id => app.person.fk_ssmUserId)
                              }
 
   state :accepted_as_participant, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} accepted as participant")
                                 app.accepted_at = Time.now
-                                if app.project_id.nil?
-                                  app.project_id = app.preference1_id if app.preference1_id
-                                  app.project_id = app.current_project_queue_id if app.current_project_queue_id
-                                end
                                 app.previous_status = app.status
                              }
 
   state :declined, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} declined")
-                                app.remove_from_project_queue
-                                app.remove_from_project_assignment
                                 app.previous_status = app.status
                              }
 
@@ -164,7 +149,7 @@ class SpApplication < AnswerSheet
   scope :preferred_project, proc {|project_id| {:conditions => ["project_id = ?", project_id], 
                                                       :include => :person }}
   before_create :set_su_code
-  after_save :complete, :send_acceptance_email
+  after_save :complete, :send_acceptance_email, :update_project_counts
 
   def validates
     if ((status == 'accepted_as_student_staff' || status == 'accepted_as_participant') && project_id.nil?)
@@ -231,6 +216,10 @@ class SpApplication < AnswerSheet
 
   def self.applied_statuses
     SpApplication.ready_statuses | SpApplication.accepted_statuses
+  end
+  
+  def self.applicant_statuses
+    SpApplication.unsubmitted_statuses | SpApplication.not_ready_statuses | SpApplication.ready_statuses
   end
   
   # The statuses that mean an applicant's application is not completed, but still in progress
@@ -410,39 +399,26 @@ class SpApplication < AnswerSheet
   end
 
 
-  # When an applicant submits their application this method
-  # assigns an applicant to a project queue corresponding to their
-  # first preference or the assigned project and increments the 
-  # number of men or women that have applied for that project.
-  def add_to_project_queue
-    if project
-      if person.is_male?
-        project.current_applicants_men += 1
-      else
-        project.current_applicants_women += 1
+  # When an applicant status changes, we need to update the project counts
+  def update_project_counts
+    if changed.include?('status')
+      if person.gender.present?
+        count = SpApplication.connection.select_value("SELECT count(*) from sp_applications a inner join ministry_person p on a.person_id = p.personID where year = #{project.year} AND status IN('#{SpApplication.applicant_statuses.join("','")}') AND p.gender = #{person.gender} AND a.project_id = #{project.id}")
+        if person.is_male?
+          project.current_applicants_men = count
+        else
+          project.current_applicants_women = count
+        end
+        count = SpApplication.connection.select_value("SELECT count(*) from sp_applications a inner join ministry_person p on a.person_id = p.personID where year = #{project.year} AND status IN('#{SpApplication.accepted_statuses.join("','")}') AND p.gender = #{person.gender} AND a.project_id = #{project.id}")
+        if person.is_male?
+          project.current_students_men = count
+        else
+          project.current_students_women = count
+        end
       end
       project.save(:validate => false)
+      count
     end
-    project
-  end
-
-  # When an applicant unsubmits their application this method
-  # removes the applicant from their project queue and
-  # decrements the number of men or women that have applied
-  # for that project.
-  def remove_from_project_queue
-    # We have to check to see if the status is 'completed' because this
-    # callback hook will get called when an application is set to 'completed'
-    # or 'unsubmitted', and we only want it to run for 'unsubmitted'
-    if project
-      if person.is_male?
-        project.increment(:current_applicants_men, -1)
-      else
-        project.increment(:current_applicants_women, -1)
-      end
-      project.save(:validate => false)
-    end
-    project
   end
 
   # This method removes the applicant from their project queue and
