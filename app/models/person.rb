@@ -64,7 +64,8 @@ class Person < ActiveRecord::Base
   # validates_filesize_of :image, :in => 0..2.megabytes
   # 
   
-  before_save :stamp, :set_region_if_campus_changed
+  before_save :stamp_changed, :set_region_if_campus_changed
+  before_create :stamp_created
   
   def emergency_address
     emergency_address1
@@ -226,9 +227,14 @@ class Person < ActiveRecord::Base
                       'P' => 'Seperated'}
   
   #set dateChanged and changedBy
-  def stamp
+  def stamp_changed
     self.dateChanged = Time.now
     self.changedBy = ApplicationController.application_name
+  end
+  def stamp() stamp_changed end # backwards compatibility
+  def stamp_created
+    self.dateCreated = Time.now
+    self.createdBy = ApplicationController.application_name
   end
   
   # include FileColumnHelper
@@ -335,4 +341,9 @@ class Person < ActiveRecord::Base
       results.first["balance"]
     else return nil end
   end
+
+  def updated_at() dateChanged end
+  def updated_by() changedBy end
+  def created_at() dateCreated end
+  def created_by() createdBy end
 end
