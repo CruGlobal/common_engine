@@ -16,7 +16,7 @@ class TargetArea < ActiveRecord::Base
   
   def active
     @active = false
-    ministry_activities.each do |activity|
+    activities.each do |activity|
       if !TargetArea.inactive_statuses.include?(activity.status)
         @active = true
         break;
