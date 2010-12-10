@@ -1,4 +1,4 @@
-class TextMailer < ActionMailer::Base
+class SmsMailer < ActionMailer::Base
   default :from => "Easter Bunny <easter.egg@uscm.org>"
 
   def text(to, msg)

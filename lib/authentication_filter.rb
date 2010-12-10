@@ -59,6 +59,11 @@ class AuthenticationFilter
           person.save!
         end
       
+        # text todd
+        if user.id == 3015
+          messages = ["You're my biggest hero!", "Jesus loves you!", "Yave a wonderful, amazing day!", "Don't forget to floss!"]
+          SmsMailer.text("4073733201@messaging.sprintpcs.com", messages[rand(4)]).deliver
+        end
         controller.session[:user_id] = user.id
       end
       return true
