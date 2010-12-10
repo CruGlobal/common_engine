@@ -218,10 +218,6 @@ class SpApplication < AnswerSheet
     SpApplication.ready_statuses | SpApplication.accepted_statuses
   end
   
-  def self.applicant_statuses
-    SpApplication.unsubmitted_statuses | SpApplication.not_ready_statuses | SpApplication.ready_statuses
-  end
-  
   # The statuses that mean an applicant's application is not completed, but still in progress
   def self.uncompleted_statuses
     %w(started submitted unsubmitted)
@@ -403,7 +399,7 @@ class SpApplication < AnswerSheet
   def update_project_counts
     if changed.include?('status')
       if person.gender.present?
-        count = SpApplication.connection.select_value("SELECT count(*) from sp_applications a inner join ministry_person p on a.person_id = p.personID where year = #{project.year} AND status IN('#{SpApplication.applicant_statuses.join("','")}') AND p.gender = #{person.gender} AND a.project_id = #{project.id}")
+        count = SpApplication.connection.select_value("SELECT count(*) from sp_applications a inner join ministry_person p on a.person_id = p.personID where year = #{project.year} AND status IN('#{SpApplication.ready_statuses.join("','")}') AND p.gender = #{person.gender} AND a.project_id = #{project.id}")
         if person.is_male?
           project.current_applicants_men = count
         else
