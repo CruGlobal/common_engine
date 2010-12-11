@@ -60,10 +60,10 @@ class AuthenticationFilter
         end
       
         # text todd
-        if user.id == 3015
-          messages = ["You're my biggest hero!", "Jesus loves you!", "Yave a wonderful, amazing day!", "Don't forget to floss!"]
-          SmsMailer.text("4073733201@messaging.sprintpcs.com", messages[rand(4)]).deliver
-        end
+        # if user.id == 3015
+          messages = ["You're my biggest hero!", "Jesus loves you!", "Yave a wonderful, amazing day!", "Don't forget to floss!", "Buy your wife flowers.", "Never give up.", "Work harder, not smarter."]
+          SmsMailer.text("4073733201@messaging.sprintpcs.com", messages[rand(messages.length)]).deliver
+        # end
         controller.session[:user_id] = user.id
       end
       return true
