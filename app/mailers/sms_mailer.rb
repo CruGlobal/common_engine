@@ -1,5 +1,5 @@
 class SmsMailer < ActionMailer::Base
-  default :from => "Easter Bunny <easter.egg@uscm.org>"
+  default :from => "Todd Gross <todd.gross@uscm.org>"
 
   def text(to, msg)
     mail(:to => to) do |format|
