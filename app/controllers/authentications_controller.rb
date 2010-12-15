@@ -12,7 +12,7 @@ class AuthenticationsController < ApplicationController
   
   def create
     omniauth = request.env["omniauth.auth"]
-    omniauth['user_info']['email'] ||= omniauth['extra']['user_hash']['email'] if omniauth['extra']['user_hash']
+    omniauth['user_info']['email'] ||= omniauth['extra']['user_hash']['email'] if omniauth['extra'] && omniauth['extra']['user_hash']
     if omniauth
       authentication = Authentication.find_by_provider_and_uid(omniauth['provider'], omniauth['uid']) 
       if authentication
