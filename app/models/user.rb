@@ -138,7 +138,8 @@ class User < ActiveRecord::Base
   def apply_omniauth(omniauth)
     self.username = omniauth['user_info']['email'] if username.blank?
     unless Authentication.find_by_provider_and_uid(omniauth['provider'], omniauth['uid'])
-      authentications.build(:provider => omniauth['provider'], :uid => omniauth['uid'])
+      authentication = authentications.build(:provider => omniauth['provider'], :uid => omniauth['uid'])
+      authentication.token = omniauth['credentials']['token'] if omniauth['credentials']
     end
   end
   	

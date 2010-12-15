@@ -12,9 +12,11 @@ class AuthenticationsController < ApplicationController
   
   def create
     omniauth = request.env["omniauth.auth"]
+    omniauth['user_info']['email'] ||= omniauth['extra']['user_hash']['email'] if omniauth['extra']['user_hash']
     if omniauth
       authentication = Authentication.find_by_provider_and_uid(omniauth['provider'], omniauth['uid']) 
       if authentication
+        authentication.update_attribute(:token, omniauth['credentials']['token']) if omniauth['credentials']
         flash[:notice] = "Signed in successfully."
         sign_in_and_redirect(authentication.user, root_path)
       elsif logged_in?
