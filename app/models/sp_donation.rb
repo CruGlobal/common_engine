@@ -50,5 +50,11 @@ class SpDonation < ActiveRecord::Base
 	def	medium
 		MEDIUMS[medium_type]
 	end
+	
+  def address
+    street = [address1, address2, address3]
+    street.reject!(&:blank?)
+    "#{street.join('<br/>')}<br/>#{city}, #{state} #{zip}"
+  end
 
 end
