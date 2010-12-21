@@ -1,5 +1,6 @@
 class AuthenticationsController < ApplicationController
   skip_before_filter :verify_authenticity_token, :only => :create
+  skip_before_filter :ssm_login_required, :check_authorization, :except => :destroy
   def index
     if params[:ticket].present? 
       login_from_cas_ticket

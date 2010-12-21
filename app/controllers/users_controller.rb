@@ -54,7 +54,7 @@ class UsersController < ApplicationController
       end
       sign_in_and_redirect(@user)
     else
-      flash[:error] = @user.errors.full_messages.join('<br />')
+      flash[:alert] = @user.errors.full_messages.join('<br />')
       redirect_to :back
     end
   end
