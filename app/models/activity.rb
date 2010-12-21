@@ -27,6 +27,32 @@ class Activity < ActiveRecord::Base
     }
   end
   
+  def self.strategies_translations
+    {
+      "FS" => "FLD",
+      "IE" => "EPI",
+      "ID" => "DES", 
+      "II" => "IMP",
+      "IN" => "NTN",
+      "WS" => "WSN",
+      "BR" => "BRD",
+      "AA" => "AIA",
+      "FC" => "FC",
+      "KC" => "KN",
+      "GK" => "GK",
+      "VL" => "VL",
+      "SV" => "SV",
+      "EV" => "EV",
+      "OT" => "OT"
+    }
+  end
+  
+  def self.visible_strategies
+    result = strategies.clone
+    result.delete("EV")
+    result
+  end
+  
   def self.statuses
     {
       "AC" => "Launched",
@@ -43,11 +69,18 @@ class Activity < ActiveRecord::Base
   
   def self.determine_open_strategies(target_area)
     current_activities = target_area.activities
-    open_strategies = strategies.keys
+    open_strategies = visible_strategies.keys
     current_activities.each do |activity|
       open_strategies.delete(activity.strategy)
     end
-    open_strategies.delete("EV")
     open_strategies
+  end
+  
+  def self.translate_strategies_to_PS(strategies)
+    result = []
+    strategies.each do |strategy|
+      result << strategies_translations[strategy]
+    end
+    result
   end
 end
