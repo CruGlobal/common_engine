@@ -11,4 +11,11 @@ class Country < ActiveRecord::Base
     end
     result
   end
+  
+  def self.full_name(code)
+    result = nil
+    country = where('code = ?', code).first
+    result = country.country if country
+    result
+  end
 end
