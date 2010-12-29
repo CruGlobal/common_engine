@@ -55,16 +55,25 @@ class Activity < ActiveRecord::Base
   
   def self.statuses
     {
-      "AC" => "Launched",
       "IN" => "Inactive",
       "FR" => "Pioneering",
       "PI" => "Pioneering",
       "KE" => "Key Leader",
       "LA" => "Launched",
+      "AC" => "Launched",
       "TR" => "Multiplying (formerly Transformational)",
       "MU" => "Multiplying (formerly Transformational)",
       "TN" => "Transitioned"
     }
+  end
+  
+  def self.visible_statuses
+    result = statuses.clone
+    result.delete("FR")
+    result.delete("AC")
+    result.delete("TR")
+    result.delete("TN")
+    result
   end
   
   def self.determine_open_strategies(target_area)
