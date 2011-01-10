@@ -67,4 +67,12 @@ class Staff < ActiveRecord::Base
   def nickname
     (!preferredName.to_s.strip.empty?) ? preferredName : firstName
   end
+  
+  def is_hr?
+    strategy == "HR" || strategy == "LD"
+  end
+  
+  def is_director?
+    jobTitle.include?("Director")
+  end
 end
