@@ -67,6 +67,8 @@ class Person < ActiveRecord::Base
   before_save :stamp_changed, :set_region_if_campus_changed
   before_create :stamp_created
   
+  scope :not_secure, where("isSecure != 'T'")
+  
   def emergency_address
     emergency_address1
   end

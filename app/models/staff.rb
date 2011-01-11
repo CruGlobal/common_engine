@@ -73,6 +73,6 @@ class Staff < ActiveRecord::Base
   end
   
   def is_director?
-    jobTitle.include?("Director")
+    jobTitle && jobTitle.include?("Director")
   end
 end
