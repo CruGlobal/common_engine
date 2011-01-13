@@ -10,8 +10,8 @@ class Person < ActiveRecord::Base
 
   has_many                :team_members, :foreign_key => "personID"
   has_many                :teams, :through => :team_members
-  has_and_belongs_to_many :activities, :join_table => "ministry_movement_contact", 
-    :association_foreign_key => "ActivityID", :foreign_key => "personID"
+  has_and_belongs_to_many :activities, :join_table => "ministry_movement_contact", :association_foreign_key => "ActivityID", 
+    :foreign_key => "personID", :include => :target_area, :order => TargetArea.table_name + ".name"
 
   # Addresses
   has_one                 :current_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'current'", :class_name => '::Address'

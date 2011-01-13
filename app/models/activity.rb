@@ -29,7 +29,12 @@ class Activity < ActiveRecord::Base
       "VL" => "Valor",
       "SV" => "Student Venture",
       "EV" => "Events",
-      "OT" => "Other"
+      "OT" => "Other",
+      "IC" => "Ethnic Field Ministry",
+      "FD" => "Fund Development",
+      "HR" => "Leadership Development",
+      "OP" => "Operations",
+      "ND" => "National"
     }
   end
   
@@ -49,13 +54,18 @@ class Activity < ActiveRecord::Base
       "VL" => "VL",
       "SV" => "SV",
       "EV" => "EV",
-      "OT" => "OT"
+      "OT" => "OT",
     }
   end
   
   def self.visible_strategies
     result = strategies.clone
     result.delete("EV")
+    result.delete("IC")
+    result.delete("FD")
+    result.delete("HR")
+    result.delete("OP")
+    result.delete("ND")
     result
   end
   
