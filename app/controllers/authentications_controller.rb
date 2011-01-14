@@ -1,5 +1,6 @@
 class AuthenticationsController < ApplicationController
   skip_before_filter :verify_authenticity_token, :only => :create
+  skip_before_filter :ssm_login_required, :check_authorization, :except => :destroy
   def index
     if params[:ticket].present? 
       login_from_cas_ticket
@@ -12,9 +13,11 @@ class AuthenticationsController < ApplicationController
   
   def create
     omniauth = request.env["omniauth.auth"]
+    omniauth['user_info']['email'] ||= omniauth['extra']['user_hash']['email'] if omniauth['extra'] && omniauth['extra']['user_hash']
     if omniauth
       authentication = Authentication.find_by_provider_and_uid(omniauth['provider'], omniauth['uid']) 
       if authentication
+        authentication.update_attribute(:token, omniauth['credentials']['token']) if omniauth['credentials']
         flash[:notice] = "Signed in successfully."
         sign_in_and_redirect(authentication.user, root_path)
       elsif logged_in?

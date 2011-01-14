@@ -18,13 +18,12 @@ class SpApplication < AnswerSheet
                                 app.previous_status = app.status
                               }
 
-  state :completed, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} completed")
+  state :ready, :enter => Proc.new {|app|
+                                logger.info("application #{app.id} ready")
                                 app.completed_at = Time.now
                                 Notifier.notification(app.email, # RECIPIENTS
                                   Questionnaire.from_email, # FROM
                                   "Application Completed").deliver # LIQUID TEMPLATE NAME
-                                logger.info("Application #{app.id} completed; placed in project #{app.current_project_queue_id}'s queue")
                                 app.previous_status = app.status
                               }
 
@@ -45,7 +44,7 @@ class SpApplication < AnswerSheet
                               }
 
   state :accepted_as_student_staff, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} accepted as intern")
+                                logger.info("application #{app.id} accepted as student staff")
                                 app.accepted_at = Time.now
                                 app.previous_status = app.status
                              }
@@ -65,13 +64,13 @@ class SpApplication < AnswerSheet
     transitions :to => :submitted, :from => :started
     transitions :to => :submitted, :from => :unsubmitted
     transitions :to => :submitted, :from => :withdrawn
-    transitions :to => :submitted, :from => :completed
+    transitions :to => :submitted, :from => :ready
   end
 
   event :withdraw do
     transitions :to => :withdrawn, :from => :started
     transitions :to => :withdrawn, :from => :submitted
-    transitions :to => :withdrawn, :from => :completed
+    transitions :to => :withdrawn, :from => :ready
     transitions :to => :withdrawn, :from => :unsubmitted
     transitions :to => :withdrawn, :from => :declined
     transitions :to => :withdrawn, :from => :accepted_as_student_staff
@@ -81,21 +80,21 @@ class SpApplication < AnswerSheet
   event :unsubmit do
     transitions :to => :unsubmitted, :from => :submitted
     transitions :to => :unsubmitted, :from => :withdrawn
-    transitions :to => :unsubmitted, :from => :completed
+    transitions :to => :unsubmitted, :from => :ready
   end
 
   event :complete do
-    transitions :to => :completed, :from => :submitted
-    transitions :to => :completed, :from => :unsubmitted
-    transitions :to => :completed, :from => :started
-    transitions :to => :completed, :from => :withdrawn
-    transitions :to => :completed, :from => :declined
-    transitions :to => :completed, :from => :accepted_as_student_staff
-    transitions :to => :completed, :from => :accepted_as_participant
+    transitions :to => :ready, :from => :submitted
+    transitions :to => :ready, :from => :unsubmitted
+    transitions :to => :ready, :from => :started
+    transitions :to => :ready, :from => :withdrawn
+    transitions :to => :ready, :from => :declined
+    transitions :to => :ready, :from => :accepted_as_student_staff
+    transitions :to => :ready, :from => :accepted_as_participant
   end
 
-  event :accept_as_intern do
-    transitions :to => :accepted_as_student_staff, :from => :completed
+  event :accept_as_student_staff do
+    transitions :to => :accepted_as_student_staff, :from => :ready
     transitions :to => :accepted_as_student_staff, :from => :started
     transitions :to => :accepted_as_student_staff, :from => :withdrawn
     transitions :to => :accepted_as_student_staff, :from => :declined
@@ -104,7 +103,7 @@ class SpApplication < AnswerSheet
   end
 
   event :accept_as_participant do
-    transitions :to => :accepted_as_participant, :from => :completed
+    transitions :to => :accepted_as_participant, :from => :ready
     transitions :to => :accepted_as_participant, :from => :started
     transitions :to => :accepted_as_participant, :from => :withdrawn
     transitions :to => :accepted_as_participant, :from => :declined
@@ -115,7 +114,7 @@ class SpApplication < AnswerSheet
   event :decline do
     transitions :to => :declined, :from => :started
     transitions :to => :declined, :from => :submitted
-    transitions :to => :declined, :from => :completed
+    transitions :to => :declined, :from => :ready
     transitions :to => :declined, :from => :accepted_as_student_staff
     transitions :to => :declined, :from => :accepted_as_participant
   end
@@ -207,7 +206,7 @@ class SpApplication < AnswerSheet
 
   # The statuses that mean an applicant IS ready to evaluate
   def self.ready_statuses
-    %w(completed)
+    %w(ready)
   end
   
   def self.accepted_statuses
@@ -218,7 +217,7 @@ class SpApplication < AnswerSheet
     SpApplication.ready_statuses | SpApplication.accepted_statuses
   end
   
-  # The statuses that mean an applicant's application is not completed, but still in progress
+  # The statuses that mean an applicant's application is not ready, but still in progress
   def self.uncompleted_statuses
     %w(started submitted unsubmitted)
   end
@@ -229,7 +228,7 @@ class SpApplication < AnswerSheet
   
   scope :accepted, where('sp_applications.status' => SpApplication.accepted_statuses)
   scope :accepted_participants, where('sp_applications.status' => 'accepted_as_participant')
-  scope :accepted_interns, where('sp_applications.status' => 'accepted_as_student_staff')
+  scope :accepted_student_staff, where('sp_applications.status' => 'accepted_as_student_staff')
   scope :ready_to_evaluate, where('sp_applications.status' => SpApplication.ready_statuses)
   scope :submitted, where('sp_applications.status' => SpApplication.not_ready_statuses)
   scope :not_submitted, where('sp_applications.status' => SpApplication.unsubmitted_statuses)

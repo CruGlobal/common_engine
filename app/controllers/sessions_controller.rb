@@ -1,4 +1,5 @@
 class SessionsController < ApplicationController
+  skip_before_filter :ssm_login_required, :except => :destroy
   def show
     redirect_to authentications_path
   end
@@ -49,7 +50,7 @@ class SessionsController < ApplicationController
         SessionMailer.password_link(@user).deliver
         redirect_to login_path(:username => params[:email]), :notice => "Password reset email sent. If you don't see it within 2 minutes, please check your spam folder and add help@campuscrusadeforchrist.com to your spam filter."
       else
-        flash[:error] = "Couldn't find a record with that email."
+        flash[:alert] = "Couldn't find a record with that email."
         redirect_to :back
       end
       return

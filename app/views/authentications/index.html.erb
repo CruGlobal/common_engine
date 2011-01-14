@@ -38,10 +38,6 @@
     <%= image_tag "google_apps_64.png", :size => "64x64", :alt => "Google" %>
     Google
   </a>
-  <a href="/auth/open_id" class="auth_provider">
-    <%= image_tag "open_id_64.png", :size => "64x64", :alt => "OpenID" %>
-    OpenID
-  </a>
   <a href="<%= CASClient::Frameworks::Rails::Filter.login_url(controller) %>" class="auth_provider">
     <%= image_tag "relay.png", :size => "64x64", :alt => "Relay" %>
     Relay

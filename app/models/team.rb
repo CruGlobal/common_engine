@@ -8,5 +8,8 @@ class Team < ActiveRecord::Base
   has_many :activities, :foreign_key => 'fk_teamID', :primary_key => "teamID"
   has_many :target_areas, :through => :activities
 
+  scope :active, where("isActive = 'T'")
+  scope :from_region, lambda {|region| active.where("region = ? or hasMultiRegionalAccess = 'T'", region).order(:name)}
+
   def to_s() name; end
 end

@@ -6,9 +6,8 @@ if defined?(OmniAuth::Builder)
   require 'openid/store/filesystem'
   Rails.application.config.middleware.use OmniAuth::Builder do
     if defined?(FACEBOOK)
-      provider :facebook, FACEBOOK[:api_key], FACEBOOK[:secret_key]
+      provider :facebook, FACEBOOK[:api_key], FACEBOOK[:secret_key], {:scope => 'user_about_me,user_birthday,email,publish_stream,offline_access'}
     end
-    provider :open_id, OpenID::Store::Filesystem.new('/tmp')
     provider :google_apps, OpenID::Store::Filesystem.new('/tmp'), :domain => 'gmail.com'
     provider :CAS, :cas_server => 'https://signin.ccci.org/cas', :name => 'relay'
 

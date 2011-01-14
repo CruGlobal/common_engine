@@ -82,6 +82,7 @@ module AuthenticatedSystem
       respond_to do |accepts|
         accepts.html do
           store_location
+          flash[:alert] = "Please log in"
           redirect_to authentications_path
         end
         accepts.xml do
