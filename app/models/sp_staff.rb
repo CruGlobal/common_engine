@@ -34,7 +34,7 @@ class SpStaff < ActiveRecord::Base
         return true if [SpNationalCoordinator, SpRegionalCoordinator].include?(sp_user.class)
         return true if type == 'Evaluator' && sp_user.class == SpDirector
         return true if ['Staff', 'Volunteer'].include?(type)  && sp_user.class == [SpDirector, SpEvaluator].include?(sp_user.class)
-        sp_user.delete
+        SpUser.connection.delete("Delete from sp_users where id = #{sp_user.id}")
       end 
       base = case true
              when DIRECTORSHIPS.include?(type) then SpDirector
