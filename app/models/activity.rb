@@ -11,6 +11,7 @@ class Activity < ActiveRecord::Base
   validates_presence_of :status, :strategy, :periodBegin, :fk_targetAreaID, :fk_teamID
     
   scope :inactive, where("status = 'IN'")
+  scope :active, where("status NOT IN ('IN', 'TN')")
   scope :strategy, lambda {|strategy| where("strategy = ?", strategy)}
   
   def self.strategies

@@ -11,5 +11,11 @@ class Team < ActiveRecord::Base
   scope :active, where("isActive = 'T'")
   scope :from_region, lambda {|region| active.where("region = ? or hasMultiRegionalAccess = 'T'", region).order(:name)}
 
+  validates_presence_of :name, :lane, :region, :country
+  
   def to_s() name; end
+  
+  def can_deactivate?
+    activities.active.empty?
+  end
 end
