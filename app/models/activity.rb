@@ -16,6 +16,7 @@ class Activity < ActiveRecord::Base
   def self.strategies
     {
       "FS" => "Campus Field Ministry",
+      "IC" => "Ethnic Field Ministry",
       "IE" => "Epic",
       "ID" => "Destino", 
       "II" => "Impact",
@@ -29,12 +30,11 @@ class Activity < ActiveRecord::Base
       "VL" => "Valor",
       "SV" => "Student Venture",
       "EV" => "Events",
-      "OT" => "Other",
-      "IC" => "Ethnic Field Ministry",
       "FD" => "Fund Development",
       "HR" => "Leadership Development",
       "OP" => "Operations",
-      "ND" => "National"
+      "ND" => "National",
+      "OT" => "Other"
     }
   end
   
@@ -69,6 +69,12 @@ class Activity < ActiveRecord::Base
     result
   end
   
+  def self.visible_team_strategies
+    result = strategies.clone
+    result.delete("EV")
+    result
+  end
+
   def self.statuses
     {
       "IN" => "Inactive",
