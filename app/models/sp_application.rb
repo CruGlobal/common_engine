@@ -148,7 +148,7 @@ class SpApplication < AnswerSheet
   scope :preferred_project, proc {|project_id| {:conditions => ["project_id = ?", project_id], 
                                                       :include => :person }}
   before_create :set_su_code
-  after_save :complete, :send_acceptance_email, :update_project_counts
+  after_save :unsubmit_on_project_change, :complete, :send_acceptance_email, :update_project_counts
 
   def validates
     if ((status == 'accepted_as_student_staff' || status == 'accepted_as_participant') && project_id.nil?)
@@ -457,6 +457,14 @@ class SpApplication < AnswerSheet
                                   "Application Accepted", # LIQUID TEMPLATE NAME
                                   {'project_name' => project.try(:name)}).deliver
       end
+  end
+  
+  def unsubmit_on_project_change
+    if changed.include?('project_id')
+      if submitted? || ready? || withdrawn?
+        unsubmit!
+      end
+    end
   end
   
 end
