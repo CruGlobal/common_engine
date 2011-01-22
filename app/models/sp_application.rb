@@ -469,12 +469,11 @@ class SpApplication < AnswerSheet
   end
   
   def clean_up_unneeded_references
-      # Do any necessary cleanup of references to match new project's requirements
-      if project
-        logger.debug('has project')
-        reference_questions = project.template_question_sheet.questions.select {|q| q.is_a?(ReferenceQuestion)}
-        logger.debug('reference questions: ' + reference_questions.collect(&:id).join(', '))
-        logger.debug('references: ' + sp_references.collect(&:id).join(', '))
+    # Do any necessary cleanup of references to match new project's requirements
+    if project
+      logger.debug('has project')
+      reference_questions = project.template_question_sheet.questions.select {|q| q.is_a?(ReferenceQuestion)}
+      if sp_references.length > reference_questions.length
         sp_references.each do |reference|
           # See if this reference's question_id matches any of the questions for the new project
           if question = reference_questions.detect {|rq| rq.id == reference.question_id}
@@ -494,7 +493,7 @@ class SpApplication < AnswerSheet
           logger.debug "destroy: #{reference.id}"
           reference.destroy unless reference.completed? # no point in deleting a completed reference
         end
-        
       end
+    end
   end
 end
