@@ -464,7 +464,37 @@ class SpApplication < AnswerSheet
       if submitted? || ready? || withdrawn?
         unsubmit!
       end
+      clean_up_unneeded_references
     end
   end
   
+  def clean_up_unneeded_references
+      # Do any necessary cleanup of references to match new project's requirements
+      if project
+        logger.debug('has project')
+        reference_questions = project.template_question_sheet.questions.select {|q| q.is_a?(ReferenceQuestion)}
+        logger.debug('reference questions: ' + reference_questions.collect(&:id).join(', '))
+        logger.debug('references: ' + sp_references.collect(&:id).join(', '))
+        sp_references.each do |reference|
+          # See if this reference's question_id matches any of the questions for the new project
+          if question = reference_questions.detect {|rq| rq.id == reference.question_id}
+            logger.debug('matched question: ' + question.id.to_s)
+            next 
+          end
+          # If the question_id doesn't match, but the reference question is based on the same reference template (question sheet)
+          # AND we don't already have a reference for that question
+          # update the reference with the new question_id
+          if (reference_question = reference_questions.detect {|rq| rq.related_question_sheet_id == reference.question.related_question_sheet_id}) &&
+              !sp_references.detect {|r| r.question_id == reference_question.id}
+            reference.update_attribute(:question_id, reference_question.id) 
+            logger.debug("matched question sheet")
+            next
+          end
+          # If we get here, the reference isn't needed anymore on this application, so we should delete it.
+          logger.debug "destroy: #{reference.id}"
+          reference.destroy unless reference.completed? # no point in deleting a completed reference
+        end
+        
+      end
+  end
 end
