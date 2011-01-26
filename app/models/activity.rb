@@ -11,11 +11,13 @@ class Activity < ActiveRecord::Base
   validates_presence_of :status, :strategy, :periodBegin, :fk_targetAreaID, :fk_teamID
     
   scope :inactive, where("status = 'IN'")
+  scope :active, where("status NOT IN ('IN', 'TN')")
   scope :strategy, lambda {|strategy| where("strategy = ?", strategy)}
   
   def self.strategies
     {
       "FS" => "Campus Field Ministry",
+      "IC" => "Ethnic Field Ministry",
       "IE" => "Epic",
       "ID" => "Destino", 
       "II" => "Impact",
@@ -29,6 +31,10 @@ class Activity < ActiveRecord::Base
       "VL" => "Valor",
       "SV" => "Student Venture",
       "EV" => "Events",
+      "FD" => "Fund Development",
+      "HR" => "Leadership Development",
+      "OP" => "Operations",
+      "ND" => "National",
       "OT" => "Other"
     }
   end
@@ -49,16 +55,27 @@ class Activity < ActiveRecord::Base
       "VL" => "VL",
       "SV" => "SV",
       "EV" => "EV",
-      "OT" => "OT"
+      "OT" => "OT",
     }
   end
   
   def self.visible_strategies
     result = strategies.clone
     result.delete("EV")
+    result.delete("IC")
+    result.delete("FD")
+    result.delete("HR")
+    result.delete("OP")
+    result.delete("ND")
     result
   end
   
+  def self.visible_team_strategies
+    result = strategies.clone
+    result.delete("EV")
+    result
+  end
+
   def self.statuses
     {
       "IN" => "Inactive",
