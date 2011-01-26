@@ -1,4 +1,5 @@
 class SpDonation < ActiveRecord::Base
+  scope :for_year, lambda {|year| where(["donation_date > ?", Time.new(year,10,1)])}
   MEDIUMS = {
     'AE'  => 'American Express',
     'CCK' => 'Cashiers Check',
@@ -17,10 +18,15 @@ class SpDonation < ActiveRecord::Base
   }
   # This may be backed by Peoplesoft/Oracle in the future.  
   # For now, it is backed by a table that is synchronized with Oracle
-  def self.get_balance(designation_number)
+  def self.get_balance(designation_number, year = nil)
     return 0 unless designation_number
-    (SpDonation.sum(:amount, 
-                    :conditions => ["designation_number = ?", designation_number]) || 0)
+    if year
+      (SpDonation.sum(:amount, 
+                      :conditions => ["designation_number = ? AND donation_date > ?", designation_number, Time.new(year,10,1)]) || 0)
+    else
+      (SpDonation.sum(:amount, 
+                      :conditions => ["designation_number = ?", designation_number]) || 0)
+    end
   end
   
   def self.get_balances(designation_numbers)

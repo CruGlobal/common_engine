@@ -433,7 +433,7 @@ class SpApplication < AnswerSheet
   alias_method :email, :email_address
 
   def account_balance
-    SpDonation.get_balance(designation_number)
+    SpDonation.get_balance(designation_number, year)
   end
 
 
