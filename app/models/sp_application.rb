@@ -255,7 +255,7 @@ class SpApplication < AnswerSheet
 
   def has_paid?
     return true if self.payments.detect(&:approved?)
-    return true unless question_sheets.collect(&:questions).detect {|q| q.is_a?(PaymentQuestion) && q.required?}
+    return true unless question_sheets.collect(&:questions).flatten.detect {|q| q.is_a?(PaymentQuestion) && q.required?}
     return false
   end
 
