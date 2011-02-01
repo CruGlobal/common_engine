@@ -464,14 +464,16 @@ class SpApplication < AnswerSheet
     if changed.include?('project_id')
       # If the new project uses a different template or has additional questions, we need to unsubmit
       if changes['project_id'].length == 2 && changes.all?(&:present?)
-        old_project, new_project = SpProject.find(changes['project_id'][0]), SpProject.find(changes['project_id'][1])
-        if old_project.basic_info_question_sheet != new_project.basic_info_question_sheet ||
-               old_project.template_question_sheet != new_project.template_question_sheet ||
-               (new_project.project_specific_question_sheet && new_project.project_specific_question_sheet.questions.present?)
-          if submitted? || ready? || withdrawn?
-            unsubmit!
+        old_project, new_project = SpProject.find_by_id(changes['project_id'][0]), SpProject.find_by_id(changes['project_id'][1])
+        if old_project && new_project
+          if old_project.basic_info_question_sheet != new_project.basic_info_question_sheet ||
+                 old_project.template_question_sheet != new_project.template_question_sheet ||
+                 (new_project.project_specific_question_sheet && new_project.project_specific_question_sheet.questions.present?)
+            if submitted? || ready? || withdrawn?
+              unsubmit!
+            end
+            clean_up_unneeded_references
           end
-          clean_up_unneeded_references
         end
       end
     end
