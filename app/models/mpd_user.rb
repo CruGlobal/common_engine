@@ -21,7 +21,7 @@ class MpdUser < ActiveRecord::Base
   attr_accessor :project, :application
   
   def mpd_contacts_to_call
-    MpdContact.find(:all, :conditions => ["mpd_user_id = ? and call_made = 0", self.id], :order => "full_name ASC")
+    MpdContact.find(:all, :conditions => ["mpd_user_id = ? and contacted = 0", self.id], :order => "full_name ASC")
   end
   
   def mpd_contacts_to_thank
