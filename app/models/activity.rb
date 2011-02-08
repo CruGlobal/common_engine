@@ -5,6 +5,7 @@ class Activity < ActiveRecord::Base
   belongs_to :target_area, :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID"
   belongs_to :team, :foreign_key => "fk_teamID", :primary_key => "teamID"
   has_many :activity_histories
+  has_many :statistics, :foreign_key => "fk_Activity"
   has_and_belongs_to_many :contacts, :join_table => "ministry_movement_contact", 
     :foreign_key => "ActivityID", :association_foreign_key => "personID", :class_name => "Person"
     
