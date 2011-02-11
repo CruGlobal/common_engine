@@ -1,4 +1,5 @@
 class UsersController < ApplicationController
+  skip_before_filter :ssm_login_required, :only => [:new, :create]
   def index
     redirect_to :action => 'new'
   end
