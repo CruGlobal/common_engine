@@ -38,6 +38,9 @@ class AuthenticationFilter
           user.password = User.encrypt(Time.now.to_s)
         end
         user.save!
+        if attributes["emplid"].present?
+          controller.session[:cas_emplid] = attributes["emplid"]
+        end
         person = user.person
         if person.nil?
           person = Person.create(:user => user,

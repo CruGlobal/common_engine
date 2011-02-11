@@ -148,7 +148,7 @@ class SpApplication < AnswerSheet
   scope :preferred_project, proc {|project_id| {:conditions => ["project_id = ?", project_id], 
                                                       :include => :person }}
   before_create :set_su_code
-  after_save :complete, :send_acceptance_email, :update_project_counts
+  after_save :unsubmit_on_project_change, :complete, :send_acceptance_email, :update_project_counts
 
   def validates
     if ((status == 'accepted_as_student_staff' || status == 'accepted_as_participant') && project_id.nil?)
@@ -255,6 +255,7 @@ class SpApplication < AnswerSheet
 
   def has_paid?
     return true if self.payments.detect(&:approved?)
+    return true unless question_sheets.collect(&:questions).flatten.detect {|q| q.is_a?(PaymentQuestion) && q.required?}
     return false
   end
 
@@ -433,7 +434,7 @@ class SpApplication < AnswerSheet
   alias_method :email, :email_address
 
   def account_balance
-    SpDonation.get_balance(designation_number)
+    SpDonation.get_balance(designation_number, year)
   end
 
 
@@ -459,4 +460,51 @@ class SpApplication < AnswerSheet
       end
   end
   
+  def unsubmit_on_project_change
+    if changed.include?('project_id')
+      # If the new project uses a different template or has additional questions, we need to unsubmit
+      if changes['project_id'].length == 2 && changes.all?(&:present?)
+        old_project, new_project = SpProject.find_by_id(changes['project_id'][0]), SpProject.find_by_id(changes['project_id'][1])
+        if old_project && new_project
+          if old_project.basic_info_question_sheet != new_project.basic_info_question_sheet ||
+                 old_project.template_question_sheet != new_project.template_question_sheet ||
+                 (new_project.project_specific_question_sheet && new_project.project_specific_question_sheet.questions.present?)
+            if submitted? || ready? || withdrawn?
+              unsubmit!
+            end
+            clean_up_unneeded_references
+          end
+        end
+      end
+    end
+  end
+  
+  def clean_up_unneeded_references
+    # Do any necessary cleanup of references to match new project's requirements
+    if project
+      logger.debug('has project')
+      reference_questions = project.template_question_sheet.questions.select {|q| q.is_a?(ReferenceQuestion)}
+      if sp_references.length > reference_questions.length
+        sp_references.each do |reference|
+          # See if this reference's question_id matches any of the questions for the new project
+          if question = reference_questions.detect {|rq| rq.id == reference.question_id}
+            logger.debug('matched question: ' + question.id.to_s)
+            next 
+          end
+          # If the question_id doesn't match, but the reference question is based on the same reference template (question sheet)
+          # AND we don't already have a reference for that question
+          # update the reference with the new question_id
+          if (reference_question = reference_questions.detect {|rq| rq.related_question_sheet_id == reference.question.related_question_sheet_id}) &&
+              !sp_references.detect {|r| r.question_id == reference_question.id}
+            reference.update_attribute(:question_id, reference_question.id) 
+            logger.debug("matched question sheet")
+            next
+          end
+          # If we get here, the reference isn't needed anymore on this application, so we should delete it.
+          logger.debug "destroy: #{reference.id}"
+          reference.destroy unless reference.completed? # no point in deleting a completed reference
+        end
+      end
+    end
+  end
 end

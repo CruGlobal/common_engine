@@ -75,8 +75,8 @@ class SpProject < ActiveRecord::Base
   scope :descend_by_apd, order(Person.table_name + '.lastName desc, ' + Person.table_name + '.firstName desc').where('sp_staff.type' => 'APD').joins({:sp_staff => :person})
   scope :ascend_by_opd, order(Person.table_name + '.lastName, ' + Person.table_name + '.firstName').where('sp_staff.type' => 'OPD').joins({:sp_staff => :person})
   scope :descend_by_opd, order(Person.table_name + '.lastName desc, ' + Person.table_name + '.firstName desc').where('sp_staff.type' => 'OPD').joins({:sp_staff => :person})
-  scope :not_full_men, where("max_student_men_applicants > current_applicants_men")
-  scope :not_full_women, where("max_student_women_applicants > current_applicants_women")
+  scope :not_full_men, where("current_students_men < max_accepted_men AND max_student_men_applicants > current_applicants_men")
+  scope :not_full_women, where("current_students_women < max_accepted_women AND max_student_women_applicants > current_applicants_women")
   
   scope :pd_like, lambda {|name| where(Person.table_name + '.lastName LIKE ? OR ' + Person.table_name + '.firstName LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'PD').joins({:sp_staff => :person})}
   scope :apd_like, lambda {|name| where(Person.table_name + '.lastName LIKE ? OR ' + Person.table_name + '.firstName LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'APD').joins({:sp_staff => :person})}
@@ -225,11 +225,11 @@ class SpProject < ActiveRecord::Base
   end
 
   def percent_full_women
-    max_accepted_women.to_i > 0 ? (current_students_women + current_applicants_women) / max_accepted_women.to_f * 100 : 0
+    max_accepted_women.to_i > 0 ? current_students_women / max_accepted_women.to_f * 100 : 0
   end
 
   def percent_full_men
-    max_accepted_men.to_i > 0 ? (current_students_men + current_applicants_men) / max_accepted_men.to_f * 100 : 0
+    max_accepted_men.to_i > 0 ? current_students_men / max_accepted_men.to_f * 100 : 0
   end
   
   def contact

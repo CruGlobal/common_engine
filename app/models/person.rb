@@ -10,6 +10,8 @@ class Person < ActiveRecord::Base
 
   has_many                :team_members, :foreign_key => "personID"
   has_many                :teams, :through => :team_members
+  has_and_belongs_to_many :activities, :join_table => "ministry_movement_contact", :association_foreign_key => "ActivityID", 
+    :foreign_key => "personID", :include => :target_area, :order => TargetArea.table_name + ".name"
 
   # Addresses
   has_one                 :current_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'current'", :class_name => '::Address'
@@ -67,6 +69,8 @@ class Person < ActiveRecord::Base
   before_save :stamp_changed, :set_region_if_campus_changed
   before_create :stamp_created
   
+  scope :not_secure, where("isSecure != 'T' or isSecure IS NULL")
+  
   def emergency_address
     emergency_address1
   end
@@ -86,8 +90,10 @@ class Person < ActiveRecord::Base
     Address.create(:fk_PersonID => self.id, :addressType => 'permanent')
   end
   
-  def region
-    self[:region] || self.target_area.try(:region)
+  def region(try_target_area = true)
+    region = self[:region]
+    region ||= self.target_area.try(:region) if try_target_area
+    region
   end
   
   #def campus=(campus_name)
