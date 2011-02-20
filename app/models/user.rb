@@ -209,7 +209,7 @@ class User < ActiveRecord::Base
     end            
     # Update the password to match their gcx password too. This will save a round-trip later
     # u.plain_password = params[:plain_password]
-    u.save(false)
+    u.save(:validate => false)
     # make sure we have a person
     unless u.person
       u.create_person_and_address
