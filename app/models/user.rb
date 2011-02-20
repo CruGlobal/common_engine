@@ -156,17 +156,35 @@ class User < ActiveRecord::Base
 		end
 	end
 	
-  def create_person_and_address(attributes = {})
-    new_hash = {:dateCreated => Time.now, :dateChanged => Time.now,
-                :createdBy => ApplicationController.application_name,
-                :changedBy => ApplicationController.application_name}
-	  person = Person.new(attributes.merge(new_hash.merge({:firstName => "Please Enter Your First Name"})))
-	  person.user = self
-    person.save!
-    address = Address.new(new_hash.merge({:email => self.username, 
-                                           :addressType => 'current'}))
-    address.person = person
-    address.save!
+  def create_person_and_address(person_attributes = {})
+    unless person
+      new_hash = {:dateCreated => Time.now, :dateChanged => Time.now,
+                  :createdBy => ApplicationController.application_name,
+                  :changedBy => ApplicationController.application_name}
+  	  person = Person.new(person_attributes.merge(new_hash.merge({:firstName => "Please Enter Your First Name"})))
+  	  person.user = self
+      person.save!
+      address = Address.new(new_hash.merge({:email => self.username, 
+                                             :addressType => 'current'}))
+      address.person = person
+      address.save!
+    end
+    person
+	end
+	
+	def create_person_from_omniauth(omniauth)
+    unless person
+      new_hash = {:dateCreated => Time.now, :dateChanged => Time.now,
+                  :createdBy => ApplicationController.application_name,
+                  :changedBy => ApplicationController.application_name}
+  	  person = Person.new(new_hash.merge({:firstName => omniauth['first_name'], :lastName => omniauth['last_name']}))
+  	  person.user = self
+      person.save!
+      address = Address.new(new_hash.merge({:email => self.username, 
+                                             :addressType => 'current'}))
+      address.person = person
+      address.save!
+    end
     person
 	end
 	
@@ -230,7 +248,9 @@ class User < ActiveRecord::Base
   	end	
   	
   	def stamp_created_on
-  	  self.createdOn = Time.now
+  	  begin
+    	  self.createdOn = Time.now
+    	rescue; end
   	end
   	
     # not sure why but cas sometimes sends the extra attributes as underscored
