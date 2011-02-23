@@ -20,6 +20,7 @@ class AuthenticationsController < ApplicationController
         if authentication
           authentication.update_attribute(:token, omniauth['credentials']['token']) if omniauth['credentials']
           flash[:notice] = "Signed in successfully."
+          authentication.user.create_person_from_omniauth(omniauth['user_info'])
           sign_in_and_redirect(authentication.user, root_path)
         elsif logged_in?
           current_user.authentications.create!(:provider => omniauth['provider'], :uid => omniauth['uid'])
@@ -33,7 +34,7 @@ class AuthenticationsController < ApplicationController
             user = old_user
             user.apply_omniauth(omniauth)
           end
-          if user.save
+          if user.save && (user.person || omniauth['user_info']['first_name'])
             user.create_person_from_omniauth(omniauth['user_info'])
             flash[:notice] = "Signed in successfully."
             sign_in_and_redirect(user)
