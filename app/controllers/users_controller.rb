@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  skip_before_filter :ssm_login_required, :only => [:new, :create]
+  skip_before_filter :ssm_login_required, :only => [:new, :create, :reset_password, :update]
   def index
     redirect_to :action => 'new'
   end
@@ -39,24 +39,39 @@ class UsersController < ApplicationController
   
   def update
     if params[:c]
+      user_params = params[:user] || {}
       @user = User.find_by_password_reset_key(params[:c])
+      unless user_params[:plain_password]
+        flash[:alert] = "You didn't provide a new password"
+        redirect_to :back and return
+      end
+      unless user_params[:plain_password] && user_params[:plain_password] == user_params[:plain_password_confirmation]
+        flash[:alert] = "Your confirmation didn't match the password you provided"
+        redirect_to :back and return
+      end
+      if @user.update_attributes(params[:user])
+        redirect_to '/', :notice => "Your password has been updated."
+      else
+        flash[:alert] = @user.errors.full_messages.join('<br>')
+        redirect_to :back
+      end
     else
       redirect_to '/' and return unless logged_in?
       @user = current_user
-    end
-    @user.update_attributes(params[:user])
-    if @user.valid?
-      if omniauth = session[:omniauth]
-        @user.apply_omniauth(omniauth)
-        @user.save(:false)
-        flash[:notice] = "Thanks for logging in with #{omniauth['provider'].camelcase}!"
+      @user.update_attributes(params[:user])
+      if @user.valid?
+        if omniauth = session[:omniauth]
+          @user.apply_omniauth(omniauth)
+          @user.save(:false)
+          flash[:notice] = "Thanks for logging in with #{omniauth['provider'].camelcase}!"
+        else
+          flash[:notice] = "Your user was updated successfully"
+        end
+        sign_in_and_redirect(@user)
       else
-        flash[:notice] = "Your user was updated successfully"
+        flash[:alert] = @user.errors.full_messages.join('<br />')
+        redirect_to :back
       end
-      sign_in_and_redirect(@user)
-    else
-      flash[:alert] = @user.errors.full_messages.join('<br />')
-      redirect_to :back
     end
   end
   
