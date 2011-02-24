@@ -4,7 +4,7 @@ class Team < ActiveRecord::Base
   set_primary_key "teamID"
 
   has_many :team_members, :foreign_key => "teamID", :include => :person, :order => Person.table_name + ".lastName"
-  has_many :people, :through => :team_members, :order => "lastName"
+  has_many :people, :through => :team_members, :order => Person.table_name + ".lastName"
   has_many :activities, :foreign_key => 'fk_teamID', :primary_key => "teamID", :include => :target_area, :order => TargetArea.table_name + ".name"
   has_many :target_areas, :through => :activities, :order => "name"
 
