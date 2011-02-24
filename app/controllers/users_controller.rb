@@ -41,7 +41,7 @@ class UsersController < ApplicationController
     if params[:c]
       user_params = params[:user] || {}
       @user = User.find_by_password_reset_key(params[:c])
-      unless user_params[:plain_password]
+      unless user_params[:plain_password].to_s.strip.present?
         flash[:alert] = "You didn't provide a new password"
         redirect_to :back and return
       end
