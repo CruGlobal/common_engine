@@ -1,5 +1,5 @@
 class SpDonation < ActiveRecord::Base
-  scope :for_year, lambda {|year| where(["donation_date > ?", Time.new(year,10,1)])}
+  scope :for_year, lambda {|year| where(["donation_date > ?", Time.new(year - 1,10,1)])}
   MEDIUMS = {
     'AE'  => 'American Express',
     'CCK' => 'Cashiers Check',
@@ -22,7 +22,7 @@ class SpDonation < ActiveRecord::Base
     return 0 unless designation_number
     if year
       (SpDonation.sum(:amount, 
-                      :conditions => ["designation_number = ? AND donation_date > ?", designation_number, Time.new(year,10,1)]) || 0)
+                      :conditions => ["designation_number = ? AND donation_date > ?", designation_number, Time.new(year - 1,10,1)]) || 0)
     else
       (SpDonation.sum(:amount, 
                       :conditions => ["designation_number = ?", designation_number]) || 0)
