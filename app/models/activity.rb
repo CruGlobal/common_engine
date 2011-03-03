@@ -6,6 +6,8 @@ class Activity < ActiveRecord::Base
   belongs_to :team, :foreign_key => "fk_teamID", :primary_key => "teamID"
   has_many :activity_histories
   has_many :statistics, :foreign_key => "fk_Activity"
+  has_many :last_fifteen_stats, :class_name => "Statistic", :foreign_key => "fk_Activity",
+    :conditions => proc {"periodBegin > '#{(Date.today - 15.weeks).to_s(:db)}'"}, :order => "periodBegin"
   has_and_belongs_to_many :contacts, :join_table => "ministry_movement_contact", 
     :foreign_key => "ActivityID", :association_foreign_key => "personID", :class_name => "Person"
     
@@ -140,6 +142,18 @@ class Activity < ActiveRecord::Base
     ActivityHistory.create(:activity => self, :status => status, :period_begin => periodBegin, :trans_username => user.userID)
     transUsername = user.userID
     save(attributes)
+  end
+  
+  def get_stat_for(date)
+    sunday = date.beginning_of_week - 1.day
+    stat = statistics.where("periodBegin = ?", sunday).first
+    unless stat
+      stat = Statistic.new
+      stat.activity = self
+      stat.periodBegin = sunday
+      stat.periodEnd = sunday.end_of_week - 1.day
+    end
+    stat
   end
   
   private
