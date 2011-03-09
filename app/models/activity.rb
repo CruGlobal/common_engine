@@ -5,7 +5,7 @@ class Activity < ActiveRecord::Base
   belongs_to :target_area, :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID"
   belongs_to :team, :foreign_key => "fk_teamID", :primary_key => "teamID"
   has_many :activity_histories
-  has_many :statistics, :foreign_key => "fk_Activity"
+  has_many :statistics, :foreign_key => "fk_Activity", :order => "periodBegin"
   has_many :last_fifteen_stats, :class_name => "Statistic", :foreign_key => "fk_Activity",
     :conditions => proc {"periodBegin > '#{(Date.today - 15.weeks).to_s(:db)}'"}, :order => "periodBegin"
   has_and_belongs_to_many :contacts, :join_table => "ministry_movement_contact", 
@@ -144,19 +144,46 @@ class Activity < ActiveRecord::Base
     save(attributes)
   end
   
-  def get_stat_for(date)
-    sunday = date.beginning_of_week - 1.day
-    stat = statistics.where("periodBegin = ?", sunday).first
-    unless stat
-      stat = Statistic.new
-      stat.activity = self
-      stat.periodBegin = sunday
-      stat.periodEnd = sunday.end_of_week - 1.day
+  def get_stat_for(date, people_group = nil)
+    stat = nil
+    if strategy == "BR" && people_group.blank?
+      stat = get_bridges_stats_for(date)
+    else
+      sunday = date.traditional_beginning_of_week
+      stat_rel = statistics.where("periodBegin = ?", sunday)
+      stat_rel = stat_rel.where("peopleGroup = ?", people_group) if !people_group.blank?
+      stat = stat_rel.first
+      unless stat
+        stat = Statistic.new
+        stat.activity = self
+        stat.periodBegin = sunday
+        stat.periodEnd = sunday.traditional_end_of_week
+        stat.prefill_semester_stats
+      end
     end
     stat
   end
   
   private
+  
+  def get_bridges_stats_for(date)
+    sunday = date.traditional_beginning_of_week
+    stats = statistics.where("periodBegin = ?", sunday)
+    stats_array = []
+    Statistic.people_groups.each do |group|
+      stat = stats.where(:peopleGroup => group).first
+      unless stat
+        stat = Statistic.new
+        stat.activity = self
+        stat.periodBegin = sunday
+        stat.periodEnd = sunday.traditional_end_of_week
+        stat.peopleGroup = group
+        stat.prefill_semester_stats
+      end
+      stats_array << stat
+    end
+    stats_array
+  end
   
   def convert_date(hash, date_symbol_or_string)
     attribute = date_symbol_or_string.to_s
