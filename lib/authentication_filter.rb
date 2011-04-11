@@ -62,11 +62,6 @@ class AuthenticationFilter
           person.save!
         end
       
-        # text todd
-        if user.id == 3015
-          messages = ["I'm the best looking guy I know!"]
-          SmsMailer.text("4073733201@messaging.sprintpcs.com", messages[rand(messages.length)]).deliver
-        end
         controller.session[:user_id] = user.id
       end
       return true
