@@ -77,6 +77,8 @@ class SpProject < ActiveRecord::Base
   scope :descend_by_opd, order(Person.table_name + '.lastName desc, ' + Person.table_name + '.firstName desc').where('sp_staff.type' => 'OPD').joins({:sp_staff => :person})
   scope :not_full_men, where("current_students_men < max_accepted_men AND max_student_men_applicants > current_applicants_men")
   scope :not_full_women, where("current_students_women < max_accepted_women AND max_student_women_applicants > current_applicants_women")
+  scope :has_chart_field, where("operating_business_unit is not null AND operating_business_unit <> '' AND operating_operating_unit is not null AND operating_operating_unit <> '' AND operating_department is not null AND operating_department <> ''")
+  scope :missing_chart_field, where("operating_business_unit is null OR operating_business_unit = '' OR operating_operating_unit is null OR operating_operating_unit = '' OR operating_department is null OR operating_department = ''")
   
   scope :pd_like, lambda {|name| where(Person.table_name + '.lastName LIKE ? OR ' + Person.table_name + '.firstName LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'PD').joins({:sp_staff => :person})}
   scope :apd_like, lambda {|name| where(Person.table_name + '.lastName LIKE ? OR ' + Person.table_name + '.firstName LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'APD').joins({:sp_staff => :person})}
