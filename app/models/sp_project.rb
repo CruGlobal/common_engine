@@ -252,6 +252,7 @@ class SpProject < ActiveRecord::Base
   def international
     country.present? && country != 'United States' ? 'Yes' : 'No'
   end
+  alias_method :international?, :international
   
   def pd_name_non_secure
     pd.informal_full_name if pd
