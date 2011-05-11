@@ -1,4 +1,4 @@
-Rails::Application.routes.draw do 
+Rails.application.routes.draw do 
   match '/auth/:provider/callback' => 'authentications#create'
   match '/auth/failure' => 'authentications#failed'
   resources :authentications
