@@ -40,6 +40,7 @@ class Statistic < ActiveRecord::Base
   end
   
   # Don't save if everything is nil
+  # TODO: add updated_by info
   def save
     attribs = attributes.clone
     

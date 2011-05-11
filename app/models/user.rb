@@ -8,6 +8,8 @@ class User < ActiveRecord::Base
 	# Relationships
 	has_one :person, :foreign_key => 'fk_ssmUserID'	
 	has_many :authentications
+	has_many :activity_bookmarks, :class_name => 'Bookmark', :conditions => Bookmark.table_name + ".name = 'activity'"
+	has_many :activities, :through => :activity_bookmarks, :include => :target_area, :order => TargetArea.table_name + ".name"
 	
   # Virtual attribute for the unencrypted password
   attr_accessor :plain_password

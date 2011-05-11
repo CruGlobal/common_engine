@@ -75,4 +75,8 @@ class Staff < ActiveRecord::Base
   def is_director?
     jobTitle && jobTitle.include?("Director")
   end
+
+  def is_hr_director?
+    jobTitle && jobTitle.include?("Director (HR)")
+  end
 end
