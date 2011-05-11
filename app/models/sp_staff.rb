@@ -14,6 +14,7 @@ class SpStaff < ActiveRecord::Base
   scope :apd, where(:type => 'APD')
   scope :opd, where(:type => 'OPD')
   scope :year, proc {|year| where(:year => year)}
+  scope :most_recent, order('year desc').limit(1)
   
   delegate :email, :to => :person
 
