@@ -164,6 +164,14 @@ class Activity < ActiveRecord::Base
     stat
   end
   
+  def add_bookmark_for(user)
+    Bookmark.add_activity_bookmark_for(user, self)
+  end
+  
+  def get_bookmark_for(user)
+    Bookmark.get_activity_bookmark_for(user, self)
+  end
+  
   private
   
   def get_bridges_stats_for(date)
