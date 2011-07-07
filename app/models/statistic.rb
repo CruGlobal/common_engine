@@ -10,6 +10,18 @@ class Statistic < ActiveRecord::Base
     
   validates_presence_of :peopleGroup, :if => Proc.new { |stat| stat.activity.strategy == "BR" }
   
+  alias_attribute :personal_exposures, :evangelisticOneOnOne
+  alias_attribute :group_exposures, :evangelisticGroup
+  alias_attribute :media_exposures, :exposuresViaMedia
+  alias_attribute :holy_spirit_presentations, :holySpiritConversations
+  alias_attribute :personal_decisions, :decisionsHelpedByOneOnOne
+  alias_attribute :group_decisions, :decisionsHelpedByGroup
+  alias_attribute :media_decisions, :decisionsHelpedByMedia
+  alias_attribute :laborers_sent, :laborersSent
+  alias_attribute :student_leaders, :studentLeaders
+  alias_attribute :students_involved, :invldStudents
+  alias_attribute :seekers, :ongoingEvangReln
+  
   def self.semester_stats
     ["multipliers", "studentLeaders", "invldStudents", "ongoingEvangReln"]
   end
@@ -20,14 +32,6 @@ class Statistic < ActiveRecord::Base
   
   def self.uses_seekers
     ["BR"]
-  end
-  
-  def seekers
-    ongoingEvangReln
-  end
-  
-  def seekers=(seekers)
-    ongoingEvangReln = seekers
   end
   
   def prefill_semester_stats
