@@ -22,8 +22,12 @@ class Statistic < ActiveRecord::Base
   alias_attribute :students_involved, :invldStudents
   alias_attribute :seekers, :ongoingEvangReln
   
+  def self.weekly_stats
+    ["personal_exposures", "group_exposures", "media_exposures", "holy_spirit_presentations", "personal_decisions", "group_decisions", "media_decisions", "laborers_sent"]
+  end
+  
   def self.semester_stats
-    ["multipliers", "studentLeaders", "invldStudents", "ongoingEvangReln"]
+    ["multipliers", "student_leaders", "students_involved", "seekers"]
   end
   
   def self.people_groups
