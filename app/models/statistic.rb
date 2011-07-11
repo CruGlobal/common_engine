@@ -22,12 +22,12 @@ class Statistic < ActiveRecord::Base
   alias_attribute :students_involved, :invldStudents
   alias_attribute :seekers, :ongoingEvangReln
   
-  def self.weekly_stats
-    ["personal_exposures", "group_exposures", "media_exposures", "holy_spirit_presentations", "personal_decisions", "group_decisions", "media_decisions", "laborers_sent"]
+  def self.weekly_stats # Order matters! Reports rely on correct order,
+    ["evangelisticOneOnOne", "decisionsHelpedByOneOnOne", "evangelisticGroup", "decisionsHelpedByGroup", "exposuresViaMedia", "decisionsHelpedByMedia", "holySpiritConversations", "laborersSent"]
   end
   
-  def self.semester_stats
-    ["multipliers", "student_leaders", "students_involved", "seekers"]
+  def self.semester_stats # Order matters! Reports rely on correct order,
+    ["invldStudents", "multipliers", "studentLeaders", "ongoingEvangReln"]
   end
   
   def self.people_groups
