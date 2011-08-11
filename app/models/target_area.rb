@@ -10,6 +10,8 @@ class TargetArea < ActiveRecord::Base
   has_many :activities, :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID", :conditions => "status != 'IN'"
   has_many :teams, :through => :activities
   
+  belongs_to :sp_project, :primary_key => :eventKeyID
+
   validates_presence_of :name, :region, :city, :country, :isSecure, :type
   #validates_presence_of :state, :if => :country == "USA"
   

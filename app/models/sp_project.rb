@@ -40,6 +40,14 @@ class SpProject < ActiveRecord::Base
   
   has_many :sp_applications, :dependent => :nullify, :foreign_key => :project_id
 
+  has_one :target_area, :foreign_key => :eventKeyID, :conditions => { :eventType => "SP" }
+
+  has_many :statistics, :finder_sql => "select ministry_statistic.* from sp_projects " +
+    'left join ministry_targetarea on sp_projects.id = ministry_targetarea.eventKeyID and eventType = "SP" ' +
+    'left join ministry_activity on ministry_activity.fk_targetAreaID = ministry_targetarea.`targetAreaID` ' +
+    'left join ministry_statistic on ministry_statistic.`fk_Activity` = ministry_activity.`ActivityID` ' +
+    'where sp_projects.id = #{id}'
+
   validates_presence_of :name, :display_location, :start_date, :end_date, :student_cost, :max_accepted_men, :max_accepted_women,
                         :project_contact_name, 
                         :city, :country, :aoa, 
