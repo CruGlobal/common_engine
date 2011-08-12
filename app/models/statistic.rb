@@ -30,6 +30,10 @@ class Statistic < ActiveRecord::Base
     ["invldStudents", "multipliers", "studentLeaders", "ongoingEvangReln"]
   end
   
+  def self.all_stats
+    Statistic.weekly_stats + Statistic.semester_stats
+  end
+  
   def self.people_groups
     ["(Other Internationals)", "East Asian", "Ishmael Project", "Japanese", "South Asian"]
   end
