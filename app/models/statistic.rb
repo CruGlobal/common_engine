@@ -22,6 +22,20 @@ class Statistic < ActiveRecord::Base
   alias_attribute :students_involved, :invldStudents
   alias_attribute :seekers, :ongoingEvangReln
   
+  #Scopes
+  def self.before_date(date)
+    where(Statistic.table_name + ".periodEnd < ?", date)
+  end
+  
+  def self.after_date(date)
+    where(Statistic.table_name + ".periodBegin > ?", date)
+  end
+  
+  def self.between_dates(from_date, to_date)
+    after_date(from_date).before_date(to_date)
+  end
+  
+  #Constants
   def self.weekly_stats # Order matters! Reports rely on correct order,
     ["evangelisticOneOnOne", "decisionsHelpedByOneOnOne", "evangelisticGroup", "decisionsHelpedByGroup", "exposuresViaMedia", "decisionsHelpedByMedia", "holySpiritConversations", "laborersSent"]
   end
@@ -42,6 +56,7 @@ class Statistic < ActiveRecord::Base
     ["BR"]
   end
   
+  #Instance Methods
   def prefill_semester_stats
     prev_stat = get_previous_stat
     if prev_stat

@@ -30,6 +30,10 @@ class TargetArea < ActiveRecord::Base
     @active
   end
   
+  def get_activities_for_strategies(strategies)
+    activities.where(Activity.table_name + ".strategy IN (?)", strategies)
+  end
+  
   def self.inactive_statuses
     ['IN']
   end
