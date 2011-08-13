@@ -46,7 +46,7 @@ class SpProject < ActiveRecord::Base
     'left join ministry_targetarea on sp_projects.id = ministry_targetarea.eventKeyID and eventType = "SP" ' +
     'left join ministry_activity on ministry_activity.fk_targetAreaID = ministry_targetarea.`targetAreaID` ' +
     'left join ministry_statistic on ministry_statistic.`fk_Activity` = ministry_activity.`ActivityID` ' +
-    'where sp_projects.id = #{id} ' +
+    'where sp_projects.id = #{id} and ministry_statistic.periodBegin is not null ' + 
     'order by periodBegin desc'
 
   validates_presence_of :name, :display_location, :start_date, :end_date, :student_cost, :max_accepted_men, :max_accepted_women,
