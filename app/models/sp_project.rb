@@ -42,7 +42,7 @@ class SpProject < ActiveRecord::Base
 
   has_one :target_area, :foreign_key => :eventKeyID, :conditions => { :eventType => "SP" }
 
-  has_many :statistics, :finder_sql => "select ministry_statistic.* from sp_projects " +
+  has_many :statistics, :finder_sql => "select ministry_statistic.*, YEAR(ministry_statistic.periodBegin) as `stat_year` from sp_projects " +
     'left join ministry_targetarea on sp_projects.id = ministry_targetarea.eventKeyID and eventType = "SP" ' +
     'left join ministry_activity on ministry_activity.fk_targetAreaID = ministry_targetarea.`targetAreaID` ' +
     'left join ministry_statistic on ministry_statistic.`fk_Activity` = ministry_activity.`ActivityID` ' +
