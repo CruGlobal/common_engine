@@ -15,6 +15,10 @@ class Team < ActiveRecord::Base
   
   def to_s() name; end
   
+  def get_activities_for_strategies(strategies)
+    activities.where(Activity.table_name + ".strategy IN (?)", strategies)
+  end
+  
   def can_deactivate?
     activities.active.empty?
   end
