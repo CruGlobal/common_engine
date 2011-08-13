@@ -40,6 +40,15 @@ class SpProject < ActiveRecord::Base
   
   has_many :sp_applications, :dependent => :nullify, :foreign_key => :project_id
 
+  has_one :target_area, :foreign_key => :eventKeyID, :conditions => { :eventType => "SP" }
+
+  has_many :statistics, :finder_sql => "select ministry_statistic.* from sp_projects " +
+    'left join ministry_targetarea on sp_projects.id = ministry_targetarea.eventKeyID and eventType = "SP" ' +
+    'left join ministry_activity on ministry_activity.fk_targetAreaID = ministry_targetarea.`targetAreaID` ' +
+    'left join ministry_statistic on ministry_statistic.`fk_Activity` = ministry_activity.`ActivityID` ' +
+    'where sp_projects.id = #{id} ' +
+    'order by periodBegin desc'
+
   validates_presence_of :name, :display_location, :start_date, :end_date, :student_cost, :max_accepted_men, :max_accepted_women,
                         :project_contact_name, 
                         :city, :country, :aoa, 
@@ -63,7 +72,7 @@ class SpProject < ActiveRecord::Base
   validates_uniqueness_of :name
   validate :validate_partnership
 
-  scope :with_partner, proc {|partner| {:conditions => ["primary_partner = ? OR secondary_partner = ? OR tertiary_partner = ?", partner, partner, partner]}}
+  scope :with_partner, proc {|partner| {:conditions => ["primary_partner IN(?) OR secondary_partner IN(?) OR tertiary_partner IN(?)", partner, partner, partner]}}
   scope :show_on_website, where(:show_on_website => true, :project_status => 'open')
   scope :uses_application, where(:use_provided_application => true)
   scope :current, where(:project_status => 'open')
