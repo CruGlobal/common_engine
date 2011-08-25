@@ -128,6 +128,10 @@ class Activity < ActiveRecord::Base
     activity
   end
   
+  def is_active?
+    !['IN', 'TN'].include?(status)
+  end
+  
   # If status changes, create an ActivityHistory record
   def update_attributes_add_history(attributes, user)
     new_status = attributes[:status]

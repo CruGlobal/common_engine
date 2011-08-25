@@ -23,6 +23,10 @@ class Team < ActiveRecord::Base
     activities.active.empty?
   end
   
+  def is_active?
+    isActive && isActive == 'T'
+  end
+  
   def is_leader?(person)
     result = false
     member = find_member(person)

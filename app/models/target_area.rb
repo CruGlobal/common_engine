@@ -8,6 +8,7 @@ class TargetArea < ActiveRecord::Base
   self.inheritance_column = "nothing"
   
   has_many :activities, :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID", :conditions => "status != 'IN'"
+  has_many :all_activities, :class_name => "Activity", :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID"
   has_many :teams, :through => :activities
   
   belongs_to :sp_project, :primary_key => :eventKeyID
@@ -31,7 +32,7 @@ class TargetArea < ActiveRecord::Base
   end
   
   def get_activities_for_strategies(strategies)
-    activities.where(Activity.table_name + ".strategy IN (?)", strategies)
+    all_activities.where(Activity.table_name + ".strategy IN (?)", strategies)
   end
   
   def self.inactive_statuses
