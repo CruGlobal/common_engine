@@ -42,6 +42,10 @@ class Activity < ActiveRecord::Base
     }
   end
   
+  def self.bridges
+    "BR"
+  end
+  
   def self.strategies_translations
     {
       "FS" => "FLD",
@@ -130,6 +134,10 @@ class Activity < ActiveRecord::Base
   
   def is_active?
     !['IN', 'TN'].include?(status)
+  end
+  
+  def is_bridges?
+    ['BR'].include?(strategy)
   end
   
   # If status changes, create an ActivityHistory record
