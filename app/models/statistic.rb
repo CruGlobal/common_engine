@@ -24,11 +24,11 @@ class Statistic < ActiveRecord::Base
   
   #Scopes
   def self.before_date(date)
-    where(Statistic.table_name + ".periodEnd < ?", date)
+    where(Statistic.table_name + ".periodEnd <= ?", date)
   end
   
   def self.after_date(date)
-    where(Statistic.table_name + ".periodBegin > ?", date)
+    where(Statistic.table_name + ".periodBegin >= ?", date)
   end
   
   def self.between_dates(from_date, to_date)
