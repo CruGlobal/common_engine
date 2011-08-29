@@ -17,6 +17,14 @@ class Region < ActiveRecord::Base
     where(["region IN (?)", @@campus_region_codes])
   end
   
+  def self.standard_regions_hash
+    result = {}
+    standard_regions.each do |region|
+      result[region.name] = region.region
+    end
+    result
+  end
+  
   def self.full_name(code)
     region = where("region = ?", code).first
     if region
