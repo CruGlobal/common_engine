@@ -156,7 +156,7 @@ class SpApplication < AnswerSheet
     end
   end
 
-  YEAR = 2011
+  YEAR = 2012
   
   DEADLINE1 = Time.parse((SpApplication::YEAR - 1).to_s + "/12/10");
   DEADLINE2 = Time.parse(SpApplication::YEAR.to_s + "/01/24");
