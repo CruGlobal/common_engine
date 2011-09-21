@@ -68,6 +68,10 @@ class Staff < ActiveRecord::Base
     (!preferredName.to_s.strip.empty?) ? preferredName : firstName
   end
   
+  def is_active?
+    removedFromPeopleSoft != "Y"
+  end
+  
   def is_hr?
     strategy == "HR" || strategy == "LD"
   end
