@@ -5,7 +5,7 @@ class Region < ActiveRecord::Base
   
   default_scope order(:region)
 
-  cattr_reader :standard_region_codes
+  cattr_reader :standard_region_codes, :campus_region_codes
   @@standard_region_codes = ["GL", "GP", "MA", "MS", "NE", "NW", "RR", "SE", "SW", "UM"]
   @@campus_region_codes = @@standard_region_codes.clone << "NC"
   

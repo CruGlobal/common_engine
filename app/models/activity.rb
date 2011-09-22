@@ -106,6 +106,10 @@ class Activity < ActiveRecord::Base
     result
   end
   
+  def self.active_statuses
+    ["LA", "AC", "TR", "MU"]
+  end
+  
   def self.determine_open_strategies(target_area)
     current_activities = target_area.activities
     open_strategies = visible_strategies.keys
