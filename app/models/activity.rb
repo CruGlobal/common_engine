@@ -129,9 +129,20 @@ class Activity < ActiveRecord::Base
   
   def self.new_movement_for_strategy(target_area, strategy)
     activity = strategy(strategy).where("fk_targetAreaID = ?", target_area.targetAreaID).first
-    if activity == nil
+    unless activity
       activity = Activity.new(:strategy => strategy)
       activity.target_area = target_area
+    end
+    activity
+  end
+  
+  def self.movement_for_sp(target_area, strategy)
+    activity = Activity.where("fk_targetAreaID = ?", target_area.targetAreaID).first
+    unless activity
+      activity = Activity.new(:strategy => strategy)
+      activity.status = "IN"
+      activity.target_area = target_area
+      activity.save
     end
     activity
   end
@@ -176,6 +187,25 @@ class Activity < ActiveRecord::Base
         stat.periodEnd = sunday.traditional_end_of_week
         stat.prefill_semester_stats
       end
+    end
+    stat
+  end
+  
+  def get_sp_stat_for(year, period_begin, period_end, people_group = nil)
+    stat = nil
+    if strategy == "BR" && people_group.blank?
+      stat = get_bridges_sp_stats_for(year, period_begin, period_end)
+    else
+      stat_rel = statistics.where("sp_year = ?", year)
+      stat_rel = stat_rel.where("peopleGroup = ?", people_group) if !people_group.blank?
+      stat = stat_rel.first
+      unless stat
+        stat = Statistic.new
+        stat.activity = self
+      end
+      stat.periodBegin = period_begin
+      stat.periodEnd = period_end
+      stat.sp_year = year
     end
     stat
   end

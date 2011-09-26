@@ -6,7 +6,7 @@ class Statistic < ActiveRecord::Base
   
   validates_numericality_of :evangelisticOneOnOne, :evangelisticGroup, :exposuresViaMedia, :holySpiritConversations, 
     :decisionsHelpedByOneOnOne, :decisionsHelpedByGroup, :decisionsHelpedByMedia, :laborersSent, 
-    :multipliers, :studentLeaders, :invldStudents, :ongoingEvangReln, :only_integer => true, :allow_nil => true
+    :multipliers, :studentLeaders, :invldStudents, :ongoingEvangReln, :dollars_raised, :only_integer => true, :allow_nil => true
     
   validates_presence_of :peopleGroup, :if => Proc.new { |stat| stat.activity.strategy == "BR" }
   

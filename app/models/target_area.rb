@@ -38,5 +38,21 @@ class TargetArea < ActiveRecord::Base
   def self.inactive_statuses
     ['IN']
   end
+  
+  def self.target_area_for_sp(sp_project_id, project_name, region, is_secure, project_email)
+    ta = TargetArea.where("eventType = 'SP'").where("eventKeyID = ?", sp_project_id).first
+    unless ta
+      ta = TargetArea.new
+    end
+    ta.name = project_name
+    ta.region = region
+    ta.isSecure = is_secure
+    ta.email = project_email
+    ta.type = "Event"
+    ta.eventType = "SP"
+    ta.eventKeyID = sp_project_id
+    ta.save
+    ta
+  end
 
 end
