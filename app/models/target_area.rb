@@ -13,7 +13,7 @@ class TargetArea < ActiveRecord::Base
   
   belongs_to :sp_project, :primary_key => :eventKeyID
 
-  validates_presence_of :name, :region, :city, :country, :isSecure, :type
+  validates_presence_of :name, :region, :isSecure, :type
   #validates_presence_of :state, :if => :country == "USA"
   
   def is_semester?
@@ -39,19 +39,19 @@ class TargetArea < ActiveRecord::Base
     ['IN']
   end
   
-  def self.target_area_for_sp(sp_project_id, project_name, region, is_secure, project_email)
-    ta = TargetArea.where("eventType = 'SP'").where("eventKeyID = ?", sp_project_id).first
+  def self.target_area_for_event(type, event_id, name, region, is_secure, email)
+    ta = TargetArea.where("eventType = ?", type).where("eventKeyID = ?", event_id).first
     unless ta
       ta = TargetArea.new
     end
-    ta.name = project_name
+    ta.name = name
     ta.region = region
-    ta.isSecure = is_secure
-    ta.email = project_email
+    ta.isSecure = is_secure ? 'T' : 'F'
+    ta.email = email
     ta.type = "Event"
-    ta.eventType = "SP"
-    ta.eventKeyID = sp_project_id
-    ta.save
+    ta.eventType = type
+    ta.eventKeyID = event_id
+    ta.save!
     ta
   end
 

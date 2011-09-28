@@ -66,14 +66,19 @@ class Activity < ActiveRecord::Base
     }
   end
   
-  def self.visible_strategies
+  def self.event_strategies
     result = strategies.clone
-    result.delete("EV")
     result.delete("IC")
     result.delete("FD")
     result.delete("HR")
     result.delete("OP")
     result.delete("ND")
+    result    
+  end
+  
+  def self.visible_strategies
+    result = event_strategies.clone
+    result.delete("EV")
     result
   end
   
@@ -81,6 +86,16 @@ class Activity < ActiveRecord::Base
     result = strategies.clone
     result.delete("EV")
     result
+  end
+  
+  def self.crs_strategies
+    {
+      "USCM" => "EV",
+      "Bridges" => "BR",
+      "CCCI" => "OT",
+      "StudentVenture" => "SV",
+      "Other" => "OT"
+    }
   end
 
   def self.statuses
@@ -136,15 +151,19 @@ class Activity < ActiveRecord::Base
     activity
   end
   
-  def self.movement_for_sp(target_area, strategy)
+  def self.movement_for_event(target_area, period_begin, strategy = "EV")
     activity = Activity.where("fk_targetAreaID = ?", target_area.targetAreaID).first
     unless activity
-      activity = Activity.new(:strategy => strategy)
+      activity = Activity.new(:strategy => strategy, :periodBegin => period_begin, :fk_teamID => 0)
       activity.status = "IN"
       activity.target_area = target_area
-      activity.save
+      activity.save!
     end
     activity
+  end
+  
+  def self.interpret_strategy_from_crs(strategy)
+    crs_strategies[strategy]
   end
   
   def is_active?
@@ -206,6 +225,21 @@ class Activity < ActiveRecord::Base
       stat.periodBegin = period_begin
       stat.periodEnd = period_end
       stat.sp_year = year
+    end
+    stat
+  end
+  
+  def get_crs_stat_for(period_begin, period_end, people_group = nil) # TODO: people groups
+    if statistics.size > 1
+      raise "Too many stats for this Conference"
+    else
+      stat = statistics.first
+      unless stat
+        stat = Statistic.new
+        stat.activity = self
+      end
+      stat.periodBegin = period_begin
+      stat.periodEnd = period_end
     end
     stat
   end
