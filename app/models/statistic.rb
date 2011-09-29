@@ -67,7 +67,6 @@ class Statistic < ActiveRecord::Base
   end
   
   # Don't save if everything is nil
-  # TODO: add updated_by info
   def save
     attribs = attributes.clone
     
@@ -76,6 +75,7 @@ class Statistic < ActiveRecord::Base
     attribs.delete("periodEnd")
     attribs.delete("fk_Activity")
     attribs.delete("peopleGroup")
+    attribs.delete("updated_by")
     
     # Need to compare the semester/quarter stats to previous stat record
     prev_stat = get_previous_stat
