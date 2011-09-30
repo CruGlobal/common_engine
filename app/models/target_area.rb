@@ -14,10 +14,16 @@ class TargetArea < ActiveRecord::Base
   belongs_to :sp_project, :primary_key => :eventKeyID
 
   validates_presence_of :name, :region, :isSecure, :type
+  validates_presence_of :city, :unless => :is_event?
+  validates_presence_of :country, :unless => :is_event?
   #validates_presence_of :state, :if => :country == "USA"
   
   def is_semester?
     isSemester ? "Yes" : "No"
+  end
+  
+  def is_event?
+    type == "Event"
   end
   
   def active
