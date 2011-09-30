@@ -244,6 +244,12 @@ class Activity < ActiveRecord::Base
     stat
   end
   
+  def get_activity_history_for_date(date)
+    # Find correct date
+    max_date = activity_histories.where("period_begin <= ?", date).maximum(:period_begin)
+    result = activity_histories.where("period_begin = ?", max_date).first
+  end
+  
   def add_bookmark_for(user)
     Bookmark.add_activity_bookmark_for(user, self)
   end
