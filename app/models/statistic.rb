@@ -8,7 +8,7 @@ class Statistic < ActiveRecord::Base
     :decisionsHelpedByOneOnOne, :decisionsHelpedByGroup, :decisionsHelpedByMedia, :laborersSent, 
     :multipliers, :studentLeaders, :invldStudents, :ongoingEvangReln, :dollars_raised, :only_integer => true, :allow_nil => true
     
-  validates_presence_of :peopleGroup, :if => Proc.new { |stat| stat.activity.strategy == "BR" }
+  validates_presence_of :peopleGroup, :if => Proc.new { |stat| stat.activity.strategy == "BR" if stat.activity }
   
   alias_attribute :personal_exposures, :evangelisticOneOnOne
   alias_attribute :group_exposures, :evangelisticGroup
@@ -48,6 +48,10 @@ class Statistic < ActiveRecord::Base
     Statistic.weekly_stats + Statistic.semester_stats
   end
   
+  def self.event_stats
+    Statistic.weekly_stats + ["invldStudents", "dollars_raised"]
+  end
+  
   def self.people_groups
     ["(Other Internationals)", "East Asian", "Ishmael Project", "Japanese", "South Asian"]
   end
@@ -62,6 +66,16 @@ class Statistic < ActiveRecord::Base
     if prev_stat
       Statistic.semester_stats.each do |field|
         self[field] = prev_stat[field]
+      end
+    end
+  end
+  
+  def add_stats(new_stat)
+    Statistic.event_stats.each do |stat|
+      old_stat = self[stat] || 0
+      self[stat] = old_stat + new_stat[stat].to_i
+      if self[stat] == 0
+        self[stat] = nil
       end
     end
   end

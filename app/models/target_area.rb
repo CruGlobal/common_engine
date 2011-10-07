@@ -13,10 +13,13 @@ class TargetArea < ActiveRecord::Base
   
   belongs_to :sp_project, :primary_key => :eventKeyID
 
-  validates_presence_of :name, :region, :isSecure, :type
+  validates_presence_of :name, :isSecure, :type
   validates_presence_of :city, :unless => :is_event?
   validates_presence_of :country, :unless => :is_event?
+  validates_presence_of :region, :unless => :is_special_event?
   #validates_presence_of :state, :if => :country == "USA"
+  
+  scope :special_events, where("type = 'Event' AND eventType = 'DI'")
   
   def is_semester?
     isSemester ? "Yes" : "No"
@@ -24,6 +27,10 @@ class TargetArea < ActiveRecord::Base
   
   def is_event?
     type == "Event"
+  end
+  
+  def is_special_event?
+    is_event? && (eventType == "DI" || eventType == "DO") 
   end
   
   def active
@@ -59,6 +66,14 @@ class TargetArea < ActiveRecord::Base
     ta.eventKeyID = event_id
     ta.save!
     ta
+  end
+  
+  def self.special_events_hash
+    result = {}
+    special_events.each do |event|
+      result[event.name] = event.id
+    end
+    result
   end
 
 end

@@ -244,6 +244,17 @@ class Activity < ActiveRecord::Base
     stat
   end
   
+  def get_event_stat_for(period_begin, people_group = nil) # TODO: people groups
+    stat = statistics.where("periodBegin = ?", period_begin).first
+    unless stat
+      stat = Statistic.new
+      stat.activity = self
+    end
+    stat.periodBegin = period_begin
+    stat.periodEnd = period_begin
+    stat
+  end
+  
   def get_activity_history_for_date(date)
     # Find correct date
     max_date = activity_histories.where("period_begin <= ?", date).maximum(:period_begin)
