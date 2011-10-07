@@ -27,6 +27,19 @@ class Team < ActiveRecord::Base
     isActive && isActive == 'T'
   end
   
+  def is_responsible_for_strategies?(strategies)
+    result = false
+    strategies.each do |strategy|
+      activities.each do |activity|
+        if activity.is_active? && activity.strategy == strategy
+          result = true
+          return result
+        end
+      end
+    end
+    result
+  end
+  
   def is_leader?(person)
     result = false
     member = find_member(person)
