@@ -19,6 +19,7 @@ class TargetArea < ActiveRecord::Base
   validates_presence_of :region, :unless => :is_special_event?
   #validates_presence_of :state, :if => :country == "USA"
   
+  scope :open_school, where("isClosed is null or isClosed <> 'T'").where("eventType is null or eventType <=> ''")
   scope :special_events, where("type = 'Event' AND eventType = 'DI'")
   
   def is_semester?
