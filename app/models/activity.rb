@@ -154,12 +154,17 @@ class Activity < ActiveRecord::Base
   def self.movement_for_event(target_area, period_begin, strategy = "EV")
     activity = Activity.where("fk_targetAreaID = ?", target_area.targetAreaID).first
     unless activity
-      activity = Activity.new(:strategy => strategy, :periodBegin => period_begin, :fk_teamID => 0)
-      activity.status = "IN"
-      activity.target_area = target_area
-      activity.save!
+      activity = Activity.create_movement_for_event(target_area, period_begin, strategy)
     end
     activity
+  end
+  
+  def self.create_movement_for_event(target_area, period_begin, strategy = "EV")
+    activity = Activity.new(:strategy => strategy, :periodBegin => period_begin, :fk_teamID => 0)
+    activity.status = "IN"
+    activity.target_area = target_area
+    activity.save!
+    activity    
   end
   
   def self.interpret_strategy_from_crs(strategy)
@@ -244,14 +249,19 @@ class Activity < ActiveRecord::Base
     stat
   end
   
-  def get_event_stat_for(period_begin, people_group = nil) # TODO: people groups
-    stat = statistics.where("periodBegin = ?", period_begin).first
+  def get_event_stat_for(period_begin, period_end, people_group = nil) # TODO: people groups
+    stat = nil
+    if target_area.eventType == TargetArea.other_conference
+      stat = get_crs_stat_for(period_begin, period_end, people_group)
+    else
+      stat = statistics.where("periodEnd = ?", period_end).first
+    end
     unless stat
       stat = Statistic.new
       stat.activity = self
     end
     stat.periodBegin = period_begin
-    stat.periodEnd = period_begin
+    stat.periodEnd = period_end
     stat
   end
   

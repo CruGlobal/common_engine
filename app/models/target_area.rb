@@ -20,7 +20,15 @@ class TargetArea < ActiveRecord::Base
   #validates_presence_of :state, :if => :country == "USA"
   
   scope :open_school, where("isClosed is null or isClosed <> 'T'").where("eventType is null or eventType <=> ''")
-  scope :special_events, where("type = 'Event' AND eventType = 'DI'")
+  scope :special_events, where("type = 'Event' AND ongoing_special_event = 1")
+  
+  #Event Types
+  @@summer_project = "SP"
+  @@crs_conference = "C2"
+  @@other_conference = "CS"
+  @@website = "DI"
+  @@other = "OT"
+  cattr_reader :summer_project, :crs_conference, :other_conference, :website, :other
   
   def is_semester?
     isSemester ? "Yes" : "No"
@@ -31,7 +39,7 @@ class TargetArea < ActiveRecord::Base
   end
   
   def is_special_event?
-    is_event? && (eventType == "DI" || eventType == "DO") 
+    is_event? && (eventType == "DI" || eventType == "CS" || eventType == "OT") 
   end
   
   def active
@@ -49,23 +57,45 @@ class TargetArea < ActiveRecord::Base
     all_activities.where(Activity.table_name + ".strategy IN (?)", strategies)
   end
   
+  def get_event_activity(date, strategy)
+    activity = nil
+    if eventType == @@other_conference
+      activity = all_activities.first
+    else
+      activity = all_activities.where("strategy = ?", strategy).first
+    end
+    unless activity
+      activity = Activity.create_movement_for_event(self, date, strategy)
+    end
+    activity
+  end
+  
   def self.inactive_statuses
     ['IN']
   end
   
-  def self.target_area_for_event(type, event_id, name, region, is_secure, email)
-    ta = TargetArea.where("eventType = ?", type).where("eventKeyID = ?", event_id).first
-    unless ta
-      ta = TargetArea.new
+  def self.target_area_for_event(type, event_id, name, region, is_secure, email, ta_id = nil)
+    ta = nil
+    if !ta_id.blank?
+      ta = TargetArea.find(ta_id)
+    else
+      if !event_id.blank?
+        ta = TargetArea.where("eventType = ?", type).where("eventKeyID = ?", event_id).first
+      else
+        ta = TargetArea.where("eventType = ?", type).where("name = ?", name).first
+      end
+      unless ta
+        ta = TargetArea.new
+      end
+      ta.name = name
+      ta.region = region
+      ta.isSecure = is_secure ? 'T' : 'F'
+      ta.email = email
+      ta.type = "Event"
+      ta.eventType = type
+      ta.eventKeyID = event_id
+      ta.save!
     end
-    ta.name = name
-    ta.region = region
-    ta.isSecure = is_secure ? 'T' : 'F'
-    ta.email = email
-    ta.type = "Event"
-    ta.eventType = type
-    ta.eventKeyID = event_id
-    ta.save!
     ta
   end
   
