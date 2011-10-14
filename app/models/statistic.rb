@@ -45,7 +45,7 @@ class Statistic < ActiveRecord::Base
   end
   
   def self.all_stats
-    Statistic.weekly_stats + Statistic.semester_stats
+    Statistic.weekly_stats + Statistic.semester_stats + ["dollars_raised"]
   end
   
   def self.event_stats

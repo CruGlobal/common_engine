@@ -29,6 +29,8 @@ class Region < ActiveRecord::Base
     region = where("region = ?", code).first
     if region
       region.name
+    elsif code == "nil"
+      "Unspecified Region"
     else
       ""
     end
