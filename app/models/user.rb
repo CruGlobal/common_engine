@@ -95,7 +95,7 @@ class User < ActiveRecord::Base
 
       # Create a current address record if we don't already have one.
       u.person.current_address ||= ::CurrentAddress.create!(:fk_PersonID => u.person.id, :email => email)
-      u.person.save(false)
+      u.person.save(:validate => false)
     end
     u
   end
@@ -129,13 +129,13 @@ class User < ActiveRecord::Base
   def remember_me
     self.remember_token_expires_at = 2.weeks.from_now
     self.remember_token            = encrypt("#{username}--#{remember_token_expires_at}")
-    save(false)
+    save(:validate => false)
   end
 
   def forget_me
     self.remember_token_expires_at = nil
     self.remember_token            = nil
-    save(false)
+    save(:validate => false)
   end
   
   def apply_omniauth(omniauth)

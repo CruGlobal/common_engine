@@ -423,7 +423,7 @@ class SpApplication < AnswerSheet
     if project
       project.current_students_men -= 1 if person.is_male?
       project.current_students_women -= 1 unless person.is_male?
-      project.save(false)
+      project.save(:validate => false)
     end
     return project
   end
