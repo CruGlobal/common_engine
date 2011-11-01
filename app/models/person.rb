@@ -162,7 +162,7 @@ class Person < ActiveRecord::Base
   end
   
   def name_with_nick
-    name = firstName
+    name = firstName.to_s
     if preferredName.present? && preferredName.strip != firstName.strip
       name += " (#{preferredName.strip}) "
     end
