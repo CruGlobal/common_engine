@@ -20,7 +20,7 @@ class SpApplication < AnswerSheet
 
   state :ready, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} ready")
-                                app.completed_at = Time.now
+                                app.completed_at ||= Time.now
                                 Notifier.notification(app.email, # RECIPIENTS
                                   Questionnaire.from_email, # FROM
                                   "Application Completed").deliver # LIQUID TEMPLATE NAME
