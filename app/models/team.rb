@@ -40,6 +40,17 @@ class Team < ActiveRecord::Base
     result
   end
   
+  def is_responsible_for_strategies_in_region?(strategies, region)
+    result = false
+    activities.each do |activity|
+      if (activity.is_active? && strategies.include?(activity.strategy) && activity.target_area.region == region)
+        result = true
+        return result
+      end
+    end
+    result
+  end
+
   def is_leader?(person)
     result = false
     member = find_member(person)
