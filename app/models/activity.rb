@@ -25,6 +25,7 @@ class Activity < ActiveRecord::Base
       "ID" => "Destino", 
       "II" => "Impact",
       "IN" => "Nations",
+      "KN" => "Keynote",
       "WS" => "WSN",
       "BR" => "Bridges",
       "AA" => "Athletes In Action",
