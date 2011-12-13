@@ -19,9 +19,9 @@ class Activity < ActiveRecord::Base
   
   def self.strategies
     {
+      "FS" => "Campus Field Ministry",
       "AA" => "Athletes In Action",
       "BR" => "Bridges",
-      "FS" => "Campus Field Ministry",
       "ID" => "Destino", 
       "IC" => "Ethnic Field Ministry",
       "IE" => "Epic",
