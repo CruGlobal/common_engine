@@ -225,7 +225,9 @@ class SpProject < ActiveRecord::Base
     if start_date && end_date
       self[:weeks] = ((end_date.to_time - start_date.to_time) / 1.week).round
     end
+    true
   end
+  
   def is_wsn?
     return country != 'United States'
   end
@@ -387,6 +389,7 @@ class SpProject < ActiveRecord::Base
       rescue
       end
     end
+    true
   end
   
   def get_previous_year_records(version)
