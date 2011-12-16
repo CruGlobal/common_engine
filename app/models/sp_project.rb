@@ -51,7 +51,7 @@ class SpProject < ActiveRecord::Base
 
   validates_presence_of :name, :display_location, :start_date, :end_date, :student_cost, :max_accepted_men, :max_accepted_women,
                         :project_contact_name, 
-                        :city, :country, :aoa, 
+                        :city, :country, 
                         :primary_partner, :report_stats_to
 
 # :project_contact_role, :project_contact_phone, :project_contact_email, 
