@@ -1,6 +1,6 @@
 class PsEmployee < ActiveRecord::Base
   unloadable
-  establish_connection :peoplesoft
+  establish_connection :peoplesoft unless Rails.env.test?
   
   def self.get_balances
     query = "select lm.emplid as emplid, (lm.last_month_bal + nvl(tm.dasum,0)) as cur_bal from " + 
