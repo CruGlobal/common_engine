@@ -25,24 +25,8 @@ class SpStaff < ActiveRecord::Base
     end
     
     def create_sp_user
-      return true if type == 'Kid' # Kids don't need users
-      ssm_id = person.try(:user).try(:id)
-      return true unless ssm_id.present?
-      
-      sp_user = SpUser.find_by_ssm_id(ssm_id)
-      if sp_user
-        # Don't demote someone based on adding them to a project
-        return true if [SpNationalCoordinator, SpRegionalCoordinator].include?(sp_user.class)
-        return true if type == 'Evaluator' && sp_user.class == SpDirector
-        return true if ['Staff', 'Volunteer'].include?(type)  && sp_user.class == [SpDirector, SpEvaluator].include?(sp_user.class)
-        SpUser.connection.delete("Delete from sp_users where id = #{sp_user.id}")
-      end 
-      base = case true
-             when DIRECTORSHIPS.include?(type) then SpDirector
-             when type == 'Evaluator' then SpEvaluator
-             else SpProjectStaff
-             end
-      base.create!(:ssm_id => ssm_id, :person_id => person.id)
+      SpUser.create_max_role(person.id) unless type == 'Kid' # Kids don't need users
+      true
     end
     
     def destroy_sp_user
