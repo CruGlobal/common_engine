@@ -9,14 +9,14 @@ class Apply < ActiveRecord::Base
   state :started
   state :submitted, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} submitted")
-                                # TODO: Do we need to send a notification here?
+                                SiApplicationMailer.deliver_submitted(app)
                                 app.submitted_at = Time.now
                               }
 
   state :completed, :enter => Proc.new {|app|
                                 logger.info("application #{app.id} completed")
                                 # app.completed_at = Time.now
-                                # TODO: Do we need to send a notification here?
+                                SiApplicationMailer.deliver_completed(app)
                               }
 
   state :unsubmitted, :enter => Proc.new {|app|
@@ -84,6 +84,10 @@ class Apply < ActiveRecord::Base
   belongs_to :applicant, :class_name => "Person", :foreign_key => "applicant_id"
   has_many :apply_sheets, :include => :sleeve_sheet
   has_many :references
+  has_one :staff_reference, :class_name => "Reference", :foreign_key => "apply_id", :conditions => "sleeve_sheet_id = 2"
+  has_one :discipler_reference, :class_name => "Reference", :foreign_key => "apply_id", :conditions => "sleeve_sheet_id = 3"
+  has_one :roommate_reference, :class_name => "Reference", :foreign_key => "apply_id", :conditions => "sleeve_sheet_id = 4"
+  has_one :friend_reference, :class_name => "Reference", :foreign_key => "apply_id", :conditions => "sleeve_sheet_id = 5"
   has_many :payments
   has_one :hr_si_application
   
@@ -152,6 +156,10 @@ class Apply < ActiveRecord::Base
     self.has_paid? ? "Approved" : "Not Paid"
   end
   
+  def email_address
+    applicant.current_address.email if applicant && applicant.current_address
+  end
+
   def completed_references
     sr = Array.new()
     references.each do |r|
