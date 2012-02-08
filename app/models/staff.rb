@@ -1,8 +1,7 @@
 class Staff < ActiveRecord::Base
   unloadable
   set_table_name "ministry_staff"
-  set_primary_key "accountNo"
-  belongs_to  :person
+  belongs_to :person
   
   def self.get_staff(ssm_id)
     if ssm_id.nil? then raise "nil ssm_id!" end
