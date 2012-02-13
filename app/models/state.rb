@@ -12,6 +12,7 @@ class State
       "DC" => "District Of Columbia", 
       "FL" => "Florida",
       "GA" => "Georgia", 
+      "GU" => "Guam",
       "HI" => "Hawaii", 
       "ID" => "Idaho", 
       "IL" => "Illinois", 
