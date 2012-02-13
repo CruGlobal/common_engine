@@ -22,6 +22,9 @@ class TargetArea < ActiveRecord::Base
   scope :open_school, where("isClosed is null or isClosed <> 'T'").where("eventType is null or eventType <=> ''")
   scope :special_events, where("type = 'Event' AND ongoing_special_event = 1")
   
+  before_save :stamp_changed
+  before_create :stamp_changed
+  
   #Event Types
   @@summer_project = "SP"
   @@crs_conference = "C2"
@@ -68,6 +71,10 @@ class TargetArea < ActiveRecord::Base
       activity = Activity.create_movement_for_event(self, date, strategy)
     end
     activity
+  end
+  
+  def stamp_changed
+    self.modified = Time.now
   end
   
   def self.inactive_statuses
