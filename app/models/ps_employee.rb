@@ -2,8 +2,9 @@ class PsEmployee < ActiveRecord::Base
   unloadable
   establish_connection :peoplesoft
   set_table_name "SYSADM.PS_CCC_CM_EMPL_VW"
+  set_primary_key "emplid"
   
-  belongs_to :psTaxLocation, :foreign_key => :tax_location_cd, :primary_key => :tax_location_cd
+  belongs_to :psTaxLocation, :foreign_key => :tax_location_cd
   
   def self.get_balances
     query = "select lm.emplid as emplid, (lm.last_month_bal + nvl(tm.dasum,0)) as cur_bal from " + 
