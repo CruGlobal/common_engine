@@ -3,6 +3,9 @@ class Staff < ActiveRecord::Base
   set_table_name "ministry_staff"
   belongs_to :person
   
+  belongs_to :primary_address, :class_name => "StaffAddress", :foreign_key => :fk_primaryAddress
+  belongs_to :secondary_address, :class_name => "StaffAddress", :foreign_key => :fk_secondaryAddress
+  
   def self.get_staff(ssm_id)
     if ssm_id.nil? then raise "nil ssm_id!" end
     ssm_user = User.find(:first, :conditions => ["userID = ?", ssm_id])
