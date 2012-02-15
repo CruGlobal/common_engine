@@ -57,7 +57,7 @@
           <%= text_field_tag :username, params[:username] %>
           <br/>
           <label for="password">Password</label>
-          <%= password_field_tag :password %>
+          <%= password_field_tag :password, nil, :autocomplete => "off" %>
         </p>
         <button type="submit"><span>Log In</span></button>
       <% end %><br/>
