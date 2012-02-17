@@ -17,15 +17,15 @@ class Staff < ActiveRecord::Base
   end
   
   def self.field_roles
-    ['Director (Direct Ministry)','Team Leader (Direct Ministry)','Team Member - Mom','Field Staff In Training','Raising Support Full Time','Seminary Staff','Field Staff','Local Leader']
+    @@field_roles ||= ['Director (Direct Ministry)','Team Leader (Direct Ministry)','Team Member - Mom','Field Staff In Training','Raising Support Full Time','Seminary Staff','Field Staff','Local Leader']
   end
   
   def self.strategy_order
-    ['National Director','Operations','HR','LD','Fund Dev','CFM','FLD','EFM','DES','EPI','ESS','NTN','BRD','WSN','R&D','SR','SV','SSS','JPO','LHS','']
+    @@strategy_order ||= ['National Director','Operations','HR','LD','Fund Dev','CFM','FLD','EFM','DES','EPI','ESS','NTN','BRD','WSN','R&D','SR','SV','SSS','JPO','LHS','']
   end
   
   def self.strategies
-    {
+    @@strategies ||= {
       'National Director' => 'National Director',
       'Operations' => 'Operations',
       'HR' => 'Leadership Development',
@@ -44,6 +44,29 @@ class Staff < ActiveRecord::Base
       'SV' => 'Student Venture',
       'LHS' => 'Lake Hart Stint'
     }
+  end
+  
+  def self.staff_positions
+    @@staff_positions ||= [
+      "Associate Staff",
+      "Staff Full Time",
+      "Hourly Full Time",
+      "Hourly on Call",
+      "Salaried Exempt Full Time",
+      "Self-Supported Staff",
+      "Staff on Delayed Payroll",
+      "Staff on Paid Leave",
+      "Staff on Unpaid Leave",
+      "Staff Raising Init Supprt",
+      "Affiliate",
+      "Volunteer Full Time",
+      "Volunteer Part Time",
+      "Ministry Intern A",
+      "Ministry Intern A Part Time",
+      "Ministry Intern Hourly Part Tm",
+      "STINT Full Time",
+      "Staff Part Time"
+    ]
   end
   
   scope :specialty_roles, where(:jobStatus => "Full Time Staff").where(:ministry => "Campus Ministry").
