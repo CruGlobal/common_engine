@@ -80,7 +80,10 @@ class Person < ActiveRecord::Base
     if (self.school)
       self.school
     else 
-      if (campus?)
+      if (campus? && universityState?)
+        self.school = TargetArea.find(:first,
+                    :conditions => ["name = ? AND state = ?", campus, universityState])
+      elsif (campus?)
         self.school = TargetArea.find(:first,
                     :conditions => ["name = ?", campus])
       else
