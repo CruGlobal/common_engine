@@ -114,11 +114,16 @@ class Activity < ActiveRecord::Base
   end
   
   def self.visible_statuses
+    result = wsn_statuses.clone
+    result.delete("TN")
+    result
+  end
+  
+  def self.wsn_statuses
     result = statuses.clone
     result.delete("FR")
     result.delete("AC")
     result.delete("TR")
-    result.delete("TN")
     result
   end
   
