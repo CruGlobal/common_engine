@@ -166,6 +166,14 @@ class SpProject < ActiveRecord::Base
                                     order('lastName, firstName')
   end
   
+  def non_app_participants(yr = nil)
+    yr ||= year
+    @non_app_participants ||= {}
+    @non_app_participants[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Non App Participant'}.collect(&:person_id)).
+                                    includes(:current_address).
+                                    order('lastName, firstName')
+  end
+  
   def pd=(person_id, yr = nil)
     yr ||= year
     sp_staff.where('sp_staff.year' => yr, 'sp_staff.type' => 'PD').first.try(:destroy)
