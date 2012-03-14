@@ -59,7 +59,7 @@ class SpApplication < AnswerSheet
                                 logger.info("application #{app.id} declined")
                                 app.previous_status = app.status
                              }
-
+  
   event :submit do
     transitions :to => :submitted, :from => :started
     transitions :to => :submitted, :from => :unsubmitted

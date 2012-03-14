@@ -15,8 +15,8 @@ class SpStaff < ActiveRecord::Base
   scope :opd, where(:type => 'OPD')
   scope :year, proc {|year| where(:year => year)}
   scope :most_recent, order('year desc').limit(1)
-  scope :other_involved, where('sp_staff.type' => "Non App Participant")
-  scope :for_year, proc {|year| {:conditions => {:year => year}}}
+  
+  scope :other_involved, where("sp_staff.type = 'Non App Participant' OR sp_staff.type = 'Volunteer'")
   
   delegate :email, :to => :person
 

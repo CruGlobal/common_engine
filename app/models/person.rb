@@ -4,10 +4,12 @@ class Person < ActiveRecord::Base
   set_table_name   "ministry_person"
   set_primary_key  "personID"
   
+  # SP-298
+  has_many                :sp_designation_numbers
+  
   belongs_to              :user, :foreign_key => "fk_ssmUserId"  #Link it to SSM
 
   has_one                 :staff
-
   has_many                :team_members, :foreign_key => "personID"
   has_many                :teams, :through => :team_members
   has_and_belongs_to_many :activities, :join_table => "ministry_movement_contact", :association_foreign_key => "ActivityID", 
@@ -38,6 +40,7 @@ class Person < ActiveRecord::Base
   
   # Summer Project
   has_many                :sp_applications
+  
   has_one                 :current_application, :conditions => "year = '#{SpApplication::YEAR}'", :class_name => '::SpApplication'
   has_many                :sp_staff, :class_name => "SpStaff", :foreign_key => "person_id"
   has_many                :sp_directorships, :class_name => "SpStaff", :foreign_key => "person_id", :conditions => {:type => SpStaff::DIRECTORSHIPS}
