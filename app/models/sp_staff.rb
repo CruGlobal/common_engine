@@ -16,9 +16,29 @@ class SpStaff < ActiveRecord::Base
   scope :year, proc {|year| where(:year => year)}
   scope :most_recent, order('year desc').limit(1)
   
-  scope :other_involved, where("sp_staff.type = 'Non App Participant' OR sp_staff.type = 'Volunteer'")
+  scope :other_involved, where("sp_staff.type NOT IN ('Kid','Evaluator','Coordinator')")
   
   delegate :email, :to => :person
+
+  def designation_number=(val)
+    if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id).first
+      designation.designation_number = val
+    else
+      designation = SpDesignationNumber.new(
+                      :person_id => self.person_id, 
+                      :project_id => self.project_id,
+                      :designation_number => val)
+    end
+    designation.save!
+  end
+  
+  def designation_number
+    if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id).first
+      designation.designation_number.to_s
+    else
+      nil
+    end
+  end
 
   protected 
     def only_one_of_each_director

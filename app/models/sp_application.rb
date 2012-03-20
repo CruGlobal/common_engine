@@ -129,6 +129,10 @@ class SpApplication < AnswerSheet
   has_many :payments, :class_name => "SpPayment", :foreign_key => "application_id"
   has_many :answers, :class_name => 'Answer', :foreign_key => 'answer_sheet_id', :dependent => :destroy
   has_many :donations, :class_name => "SpDonation", :foreign_key => "designation_number", :primary_key => "designation_number", :order => 'donation_date desc'
+  
+  
+  
+  has_many :sp_designation_numbers 
   belongs_to :preference1, :class_name => 'SpProject', :foreign_key => :preference1_id
   belongs_to :preference2, :class_name => 'SpProject', :foreign_key => :preference2_id
   belongs_to :preference3, :class_name => 'SpProject', :foreign_key => :preference3_id
@@ -149,6 +153,26 @@ class SpApplication < AnswerSheet
                                                       :include => :person }}
   before_create :set_su_code
   after_save :unsubmit_on_project_change, :complete, :send_acceptance_email, :update_project_counts
+
+  def designation_number=(val)
+    if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id).first
+      designation.designation_number = val
+    else
+      designation = SpDesignationNumber.new(
+                      :person_id => self.person_id, 
+                      :project_id => self.project_id,
+                      :designation_number => val)
+    end
+    designation.save!
+  end
+  
+  def designation_number
+    if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id).first
+      designation.designation_number.to_s
+    else
+      nil
+    end
+  end
 
   def validates
     if ((status == 'accepted_as_student_staff' || status == 'accepted_as_participant') && project_id.nil?)
@@ -188,6 +212,29 @@ class SpApplication < AnswerSheet
   
   def project_cost
     project.student_cost if project
+  end
+  
+  # Get project_id (project_id | preference1_id | preference2_id | preference3_id | preference4_id | preference5_id)
+  def get_project_id
+    unless project_id = self.project_id
+      if self.preference5_id
+        project_id = self.preference5_id
+      elsif self.preference4_id
+        project_id = self.preference4_id
+      elsif self.preference3_id
+        project_id = self.preference3_id
+      elsif self.preference2_id
+        project_id = self.preference2_id
+      elsif self.preference1_id
+        project_id = self.preference1_id
+      end
+    end
+    project_id
+  end
+  
+  # Get designation_number
+  def get_designation_number
+    SpDesignationNumber.find_by_person_id_and_project_id(self.person_id, self.get_project_id).try(:designation_number)
   end
 
   # The statuses that mean an application has NOT been submitted
@@ -435,7 +482,8 @@ class SpApplication < AnswerSheet
   alias_method :email, :email_address
 
   def account_balance
-    SpDonation.get_balance(designation_number, year)
+    designation_no = self.get_designation_number
+    SpDonation.get_balance(designation_no, year)
   end
 
 

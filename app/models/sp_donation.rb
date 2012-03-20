@@ -22,10 +22,13 @@ class SpDonation < ActiveRecord::Base
     return 0 unless designation_number
     if year
       (SpDonation.sum(:amount, 
-                      :conditions => ["designation_number = ? AND donation_date > ?", designation_number, Time.new(year - 1,10,1)]) || 0)
+                      :conditions => ["designation_number = ? AND donation_date > ?",
+                                      designation_number, 
+                                      Time.new(year - 1,10,1)]) || 0)
     else
       (SpDonation.sum(:amount, 
-                      :conditions => ["designation_number = ?", designation_number]) || 0)
+                      :conditions => ["designation_number = ?", 
+                                      designation_number]) || 0)
     end
   end
   
