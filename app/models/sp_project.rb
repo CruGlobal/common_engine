@@ -100,7 +100,7 @@ class SpProject < ActiveRecord::Base
   before_create :set_to_open
   before_save :get_coordinates, :calculate_weeks
   begin
-  date_setters :apply_by_date, :start_date, :end_date, :date_of_departure, :date_of_return, :staff_start_date, :staff_end_date
+  date_setters :apply_by_date, :start_date, :end_date, :date_of_departure, :date_of_return, :staff_start_date, :staff_end_date, :pd_start_date, :pd_end_date, :pd_close_start_date, :pd_close_end_date, :student_staff_start_date, :student_staff_end_date
   rescue NoMethodError
   end
   
