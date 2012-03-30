@@ -16,7 +16,7 @@ class SpStaff < ActiveRecord::Base
   scope :year, proc {|year| where(:year => year)}
   scope :most_recent, order('year desc').limit(1)
   
-  scope :other_involved, where("sp_staff.type NOT IN ('Kid','Evaluator','Coordinator')")
+  scope :other_involved, where("sp_staff.type NOT IN ('Kid','Evaluator','Coordinator','Staff')")
   
   delegate :email, :to => :person
 
