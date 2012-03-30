@@ -175,7 +175,7 @@ class SpApplication < AnswerSheet
   end
 
   def donations
-    SpDonation.where(:designation_number => designation_number)
+    SpDonation.where(:designation_number => SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id).collect(&:designation_number))
   end
 
 
