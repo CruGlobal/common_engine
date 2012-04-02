@@ -155,19 +155,20 @@ class SpApplication < AnswerSheet
   after_save :unsubmit_on_project_change, :complete, :send_acceptance_email, :update_project_counts
 
   def designation_number=(val)
-    if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id).first
+    if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id, :year => SpApplication::YEAR).first
       designation.designation_number = val
     else
       designation = SpDesignationNumber.new(
                       :person_id => self.person_id, 
                       :project_id => self.project_id,
-                      :designation_number => val)
+                      :designation_number => val,
+                      :year => SpApplication::YEAR)
     end
     designation.save!
   end
   
-  def designation_number
-    if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id).first
+  def designation_number(year = SpApplication::YEAR)
+    if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id, :year => year).first
       designation.designation_number.to_s
     else
       nil
@@ -239,8 +240,8 @@ class SpApplication < AnswerSheet
   end
   
   # Get designation_number
-  def get_designation_number
-    SpDesignationNumber.find_by_person_id_and_project_id(self.person_id, self.get_project_id).try(:designation_number)
+  def get_designation_number(year = SpApplication::YEAR)
+    SpDesignationNumber.find_by_person_id_and_project_id_and_year(self.person_id, self.get_project_id, year).try(:designation_number)
   end
 
   # The statuses that mean an application has NOT been submitted
