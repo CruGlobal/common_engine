@@ -108,4 +108,8 @@ class Staff < ActiveRecord::Base
   def is_hr_director?
     jobTitle && jobTitle.include?("Director (HR)")
   end
+  
+  def is_removed?
+    removedFromPeopleSoft == "Y" ? true : false
+  end
 end
