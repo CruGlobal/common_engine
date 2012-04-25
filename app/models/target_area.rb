@@ -13,6 +13,7 @@ class TargetArea < ActiveRecord::Base
   
   belongs_to :sp_project, :primary_key => :eventKeyID
 
+  validates_uniqueness_of :name
   validates_presence_of :name, :isSecure, :type
   validates_presence_of :city, :unless => :is_event?
   validates_presence_of :country, :unless => :is_event?

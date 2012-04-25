@@ -11,6 +11,7 @@ class Team < ActiveRecord::Base
   scope :active, where("isActive = 'T'")
   scope :from_region, lambda {|region| active.where("region = ? or hasMultiRegionalAccess = 'T'", region).order(:name)}
 
+  validates_uniqueness_of :name
   validates_presence_of :name, :lane, :region, :country
   
   def to_s() name; end
