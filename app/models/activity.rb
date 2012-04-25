@@ -49,7 +49,7 @@ class Activity < ActiveRecord::Base
   
   def self.strategies_translations
     {
-      "FS" => "FLD",
+      "FS" => "CFM",
       "IE" => "EPI",
       "ID" => "DES", 
       "II" => "IMP",
