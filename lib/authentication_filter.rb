@@ -1,5 +1,5 @@
 class AuthenticationFilter
-  @logger = RAILS_DEFAULT_LOGGER
+  @logger = Rails.logger
 
   def self.filter(controller)
     unless controller.session[:user_id]
