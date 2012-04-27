@@ -1,6 +1,6 @@
 require 'digest/md5'
 class SpApplication < AnswerSheet
-  set_table_name 'sp_applications'
+  self.table_name = 'sp_applications'
   COST_BEFORE_DEADLINE = 25
   COST_AFTER_DEADLINE = 25
   

@@ -1,8 +1,8 @@
 class Person < ActiveRecord::Base 
   unloadable
   
-  set_table_name   "ministry_person"
-  set_primary_key  "personID"
+  self.table_name = "ministry_person"
+  self.primary_key = "personID"
   
   # SP-298
   has_many                :sp_designation_numbers

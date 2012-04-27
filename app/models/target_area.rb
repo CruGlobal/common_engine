@@ -1,8 +1,8 @@
 class TargetArea < ActiveRecord::Base
   unloadable
   
-  set_table_name				"ministry_targetarea"
-  set_primary_key   			"targetAreaID"
+  self.table_name = "ministry_targetarea"
+  self.primary_key = "targetAreaID"
   
   #override the inheritance column
   self.inheritance_column = "nothing"

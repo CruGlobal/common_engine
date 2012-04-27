@@ -2,8 +2,8 @@ require 'digest/md5'
 require 'base64'
 class User < ActiveRecord::Base
   unloadable
-  set_table_name 			"simplesecuritymanager_user"
-	set_primary_key 		"userID"
+  self.table_name = "simplesecuritymanager_user"
+	self.primary_key = "userID"
 
 	# Relationships
 	has_one :person, :foreign_key => 'fk_ssmUserID'	

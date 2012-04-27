@@ -1,7 +1,7 @@
 class HrSiApplication < ActiveRecord::Base
   unloadable
-  set_table_name        "hr_si_applications"
-  set_primary_key       "applicationID"
+  self.table_name = "hr_si_applications"
+  self.primary_key = "applicationID"
   
   belongs_to :apply
   belongs_to :person, :foreign_key => "fk_personID"
