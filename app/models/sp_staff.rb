@@ -1,8 +1,8 @@
 class SpStaff < ActiveRecord::Base
   DIRECTORSHIPS = ['PD', 'APD', 'OPD', 'Coordinator']
   unloadable
-  set_inheritance_column 'fake_column'
-  set_table_name 'sp_staff'
+  self.inheritance_column = 'fake_column'
+  self.table_name = 'sp_staff'
   belongs_to :person
   belongs_to :sp_project, :class_name => "SpProject", :foreign_key => "project_id"
   
