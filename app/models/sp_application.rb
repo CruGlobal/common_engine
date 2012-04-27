@@ -1,122 +1,125 @@
 require 'digest/md5'
 class SpApplication < AnswerSheet
+  include AASM
+
   self.table_name = 'sp_applications'
   COST_BEFORE_DEADLINE = 25
   COST_AFTER_DEADLINE = 25
   
   unloadable
-  acts_as_state_machine :initial => :started, :column => :status
+  aasm :initial => :started, :column => :status do
 
-  # State machine stuff
-  state :started
-  state :submitted, :enter => Proc.new {|app|
-                                # SpApplicationMailer.deliver_submitted(app)
-                                Notifier.notification(app.email, # RECIPIENTS
-                                  Questionnaire.from_email, # FROM
-                                  "Application Submitted").deliver # LIQUID TEMPLATE NAME
-                                app.submitted_at = Time.now
-                                app.previous_status = app.status
-                              }
+    # State machine stuff
+    state :started
+    state :submitted, :enter => Proc.new {|app|
+                                  # SpApplicationMailer.deliver_submitted(app)
+                                  Notifier.notification(app.email, # RECIPIENTS
+                                    Questionnaire.from_email, # FROM
+                                    "Application Submitted").deliver # LIQUID TEMPLATE NAME
+                                  app.submitted_at = Time.now
+                                  app.previous_status = app.status
+                                }
 
-  state :ready, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} ready")
-                                app.completed_at ||= Time.now
-                                Notifier.notification(app.email, # RECIPIENTS
-                                  Questionnaire.from_email, # FROM
-                                  "Application Completed").deliver # LIQUID TEMPLATE NAME
-                                app.previous_status = app.status
-                              }
+    state :ready, :enter => Proc.new {|app|
+                                  logger.info("application #{app.id} ready")
+                                  app.completed_at ||= Time.now
+                                  Notifier.notification(app.email, # RECIPIENTS
+                                    Questionnaire.from_email, # FROM
+                                    "Application Completed").deliver # LIQUID TEMPLATE NAME
+                                  app.previous_status = app.status
+                                }
 
-  state :unsubmitted, :enter => Proc.new {|app|
-                                Notifier.notification(app.email, # RECIPIENTS
-                                  Questionnaire.from_email, # FROM
-                                  "Application Unsubmitted").deliver # LIQUID TEMPLATE NAME
-                                app.previous_status = app.status
-                              }
+    state :unsubmitted, :enter => Proc.new {|app|
+                                  Notifier.notification(app.email, # RECIPIENTS
+                                    Questionnaire.from_email, # FROM
+                                    "Application Unsubmitted").deliver # LIQUID TEMPLATE NAME
+                                  app.previous_status = app.status
+                                }
 
-  state :withdrawn, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} withdrawn")
-                                Notifier.notification(app.email, # RECIPIENTS
-                                  Questionnaire.from_email, # FROM
-                                  "Application Withdrawn").deliver if app.email
-                                app.withdrawn_at = Time.now
-                                app.previous_status = app.status
-                              }
+    state :withdrawn, :enter => Proc.new {|app|
+                                  logger.info("application #{app.id} withdrawn")
+                                  Notifier.notification(app.email, # RECIPIENTS
+                                    Questionnaire.from_email, # FROM
+                                    "Application Withdrawn").deliver if app.email
+                                  app.withdrawn_at = Time.now
+                                  app.previous_status = app.status
+                                }
 
-  state :accepted_as_student_staff, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} accepted as student staff")
-                                app.accepted_at = Time.now
-                                app.previous_status = app.status
-                             }
+    state :accepted_as_student_staff, :enter => Proc.new {|app|
+                                  logger.info("application #{app.id} accepted as student staff")
+                                  app.accepted_at = Time.now
+                                  app.previous_status = app.status
+                               }
 
-  state :accepted_as_participant, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} accepted as participant")
-                                app.accepted_at = Time.now
-                                app.previous_status = app.status
-                             }
+    state :accepted_as_participant, :enter => Proc.new {|app|
+                                  logger.info("application #{app.id} accepted as participant")
+                                  app.accepted_at = Time.now
+                                  app.previous_status = app.status
+                               }
 
-  state :declined, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} declined")
-                                app.previous_status = app.status
-                             }
+    state :declined, :enter => Proc.new {|app|
+                                  logger.info("application #{app.id} declined")
+                                  app.previous_status = app.status
+                               }
   
-  event :submit do
-    transitions :to => :submitted, :from => :started
-    transitions :to => :submitted, :from => :unsubmitted
-    transitions :to => :submitted, :from => :withdrawn
-    transitions :to => :submitted, :from => :ready
-  end
+    event :submit do
+      transitions :to => :submitted, :from => :started
+      transitions :to => :submitted, :from => :unsubmitted
+      transitions :to => :submitted, :from => :withdrawn
+      transitions :to => :submitted, :from => :ready
+    end
 
-  event :withdraw do
-    transitions :to => :withdrawn, :from => :started
-    transitions :to => :withdrawn, :from => :submitted
-    transitions :to => :withdrawn, :from => :ready
-    transitions :to => :withdrawn, :from => :unsubmitted
-    transitions :to => :withdrawn, :from => :declined
-    transitions :to => :withdrawn, :from => :accepted_as_student_staff
-    transitions :to => :withdrawn, :from => :accepted_as_participant
-  end
+    event :withdraw do
+      transitions :to => :withdrawn, :from => :started
+      transitions :to => :withdrawn, :from => :submitted
+      transitions :to => :withdrawn, :from => :ready
+      transitions :to => :withdrawn, :from => :unsubmitted
+      transitions :to => :withdrawn, :from => :declined
+      transitions :to => :withdrawn, :from => :accepted_as_student_staff
+      transitions :to => :withdrawn, :from => :accepted_as_participant
+    end
 
-  event :unsubmit do
-    transitions :to => :unsubmitted, :from => :submitted
-    transitions :to => :unsubmitted, :from => :withdrawn
-    transitions :to => :unsubmitted, :from => :ready
-  end
+    event :unsubmit do
+      transitions :to => :unsubmitted, :from => :submitted
+      transitions :to => :unsubmitted, :from => :withdrawn
+      transitions :to => :unsubmitted, :from => :ready
+    end
 
-  event :complete do
-    transitions :to => :ready, :from => :submitted
-    transitions :to => :ready, :from => :unsubmitted
-    transitions :to => :ready, :from => :started
-    transitions :to => :ready, :from => :withdrawn
-    transitions :to => :ready, :from => :declined
-    transitions :to => :ready, :from => :accepted_as_student_staff
-    transitions :to => :ready, :from => :accepted_as_participant
-  end
+    event :complete do
+      transitions :to => :ready, :from => :submitted
+      transitions :to => :ready, :from => :unsubmitted
+      transitions :to => :ready, :from => :started
+      transitions :to => :ready, :from => :withdrawn
+      transitions :to => :ready, :from => :declined
+      transitions :to => :ready, :from => :accepted_as_student_staff
+      transitions :to => :ready, :from => :accepted_as_participant
+    end
 
-  event :accept_as_student_staff do
-    transitions :to => :accepted_as_student_staff, :from => :ready
-    transitions :to => :accepted_as_student_staff, :from => :started
-    transitions :to => :accepted_as_student_staff, :from => :withdrawn
-    transitions :to => :accepted_as_student_staff, :from => :declined
-    transitions :to => :accepted_as_student_staff, :from => :submitted
-    transitions :to => :accepted_as_student_staff, :from => :accepted_as_participant
-  end
+    event :accept_as_student_staff do
+      transitions :to => :accepted_as_student_staff, :from => :ready
+      transitions :to => :accepted_as_student_staff, :from => :started
+      transitions :to => :accepted_as_student_staff, :from => :withdrawn
+      transitions :to => :accepted_as_student_staff, :from => :declined
+      transitions :to => :accepted_as_student_staff, :from => :submitted
+      transitions :to => :accepted_as_student_staff, :from => :accepted_as_participant
+    end
 
-  event :accept_as_participant do
-    transitions :to => :accepted_as_participant, :from => :ready
-    transitions :to => :accepted_as_participant, :from => :started
-    transitions :to => :accepted_as_participant, :from => :withdrawn
-    transitions :to => :accepted_as_participant, :from => :declined
-    transitions :to => :accepted_as_participant, :from => :submitted
-    transitions :to => :accepted_as_participant, :from => :accepted_as_student_staff
-  end
+    event :accept_as_participant do
+      transitions :to => :accepted_as_participant, :from => :ready
+      transitions :to => :accepted_as_participant, :from => :started
+      transitions :to => :accepted_as_participant, :from => :withdrawn
+      transitions :to => :accepted_as_participant, :from => :declined
+      transitions :to => :accepted_as_participant, :from => :submitted
+      transitions :to => :accepted_as_participant, :from => :accepted_as_student_staff
+    end
 
-  event :decline do
-    transitions :to => :declined, :from => :started
-    transitions :to => :declined, :from => :submitted
-    transitions :to => :declined, :from => :ready
-    transitions :to => :declined, :from => :accepted_as_student_staff
-    transitions :to => :declined, :from => :accepted_as_participant
+    event :decline do
+      transitions :to => :declined, :from => :started
+      transitions :to => :declined, :from => :submitted
+      transitions :to => :declined, :from => :ready
+      transitions :to => :declined, :from => :accepted_as_student_staff
+      transitions :to => :declined, :from => :accepted_as_participant
+    end
   end
 
   belongs_to :person

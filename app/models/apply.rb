@@ -1,83 +1,85 @@
 # a visitor applies to a sleeve (application)
 class Apply < ActiveRecord::Base
+  include AASM
   unloadable
   self.table_name = "si_applies"
   
-  acts_as_state_machine :initial => :started, :column => :status
+  aasm :initial => :started, :column => :status do
   
-  # State machine stuff
-  state :started
-  state :submitted, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} submitted")
-                                # TODO: Do we need to send a notification here?
-                                app.submitted_at = Time.now
-                              }
+    # State machine stuff
+    state :started
+    state :submitted, :enter => Proc.new {|app|
+                                  logger.info("application #{app.id} submitted")
+                                  # TODO: Do we need to send a notification here?
+                                  app.submitted_at = Time.now
+                                }
 
-  state :completed, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} completed")
-                                # app.completed_at = Time.now
-                                # TODO: Do we need to send a notification here?
-                              }
+    state :completed, :enter => Proc.new {|app|
+                                  logger.info("application #{app.id} completed")
+                                  # app.completed_at = Time.now
+                                  # TODO: Do we need to send a notification here?
+                                }
 
-  state :unsubmitted, :enter => Proc.new {|app|
-                                # TODO: Do we need to send a notification here?
-                              }
+    state :unsubmitted, :enter => Proc.new {|app|
+                                  # TODO: Do we need to send a notification here?
+                                }
 
-  state :withdrawn, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} withdrawn")
-                                # TODO: Do we need to send a notification here?
-                                app.withdrawn_at = Time.now
-                              }
+    state :withdrawn, :enter => Proc.new {|app|
+                                  logger.info("application #{app.id} withdrawn")
+                                  # TODO: Do we need to send a notification here?
+                                  app.withdrawn_at = Time.now
+                                }
 
-  state :accepted, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} accepted")
-                                app.accepted_at = Time.now
-                             }
+    state :accepted, :enter => Proc.new {|app|
+                                  logger.info("application #{app.id} accepted")
+                                  app.accepted_at = Time.now
+                               }
 
-  state :declined, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} declined")
-                             }
+    state :declined, :enter => Proc.new {|app|
+                                  logger.info("application #{app.id} declined")
+                               }
 
-  event :submit do
-    transitions :to => :submitted, :from => :started
-    transitions :to => :submitted, :from => :unsubmitted
-    transitions :to => :submitted, :from => :withdrawn
-  end
+    event :submit do
+      transitions :to => :submitted, :from => :started
+      transitions :to => :submitted, :from => :unsubmitted
+      transitions :to => :submitted, :from => :withdrawn
+    end
 
-  event :withdraw do
-    transitions :to => :withdrawn, :from => :started
-    transitions :to => :withdrawn, :from => :submitted
-    transitions :to => :withdrawn, :from => :completed
-    transitions :to => :withdrawn, :from => :unsubmitted
-    transitions :to => :withdrawn, :from => :declined
-    transitions :to => :withdrawn, :from => :accepted
-  end
+    event :withdraw do
+      transitions :to => :withdrawn, :from => :started
+      transitions :to => :withdrawn, :from => :submitted
+      transitions :to => :withdrawn, :from => :completed
+      transitions :to => :withdrawn, :from => :unsubmitted
+      transitions :to => :withdrawn, :from => :declined
+      transitions :to => :withdrawn, :from => :accepted
+    end
 
-  event :unsubmit do
-    transitions :to => :unsubmitted, :from => :submitted
-    transitions :to => :unsubmitted, :from => :withdrawn
-  end
+    event :unsubmit do
+      transitions :to => :unsubmitted, :from => :submitted
+      transitions :to => :unsubmitted, :from => :withdrawn
+    end
 
-  event :complete do
-    transitions :to => :completed, :from => :submitted
-    transitions :to => :completed, :from => :unsubmitted
-    transitions :to => :completed, :from => :started
-    transitions :to => :completed, :from => :withdrawn
-    transitions :to => :completed, :from => :declined
-    transitions :to => :completed, :from => :accepted
-  end
+    event :complete do
+      transitions :to => :completed, :from => :submitted
+      transitions :to => :completed, :from => :unsubmitted
+      transitions :to => :completed, :from => :started
+      transitions :to => :completed, :from => :withdrawn
+      transitions :to => :completed, :from => :declined
+      transitions :to => :completed, :from => :accepted
+    end
 
-  event :accept do
-    transitions :to => :accepted, :from => :completed
-    transitions :to => :accepted, :from => :started
-    transitions :to => :accepted, :from => :withdrawn
-    transitions :to => :accepted, :from => :declined
-    transitions :to => :accepted, :from => :submitted
-  end
+    event :accept do
+      transitions :to => :accepted, :from => :completed
+      transitions :to => :accepted, :from => :started
+      transitions :to => :accepted, :from => :withdrawn
+      transitions :to => :accepted, :from => :declined
+      transitions :to => :accepted, :from => :submitted
+    end
 
-  event :decline do
-    transitions :to => :declined, :from => :completed
-    transitions :to => :declined, :from => :accepted
+    event :decline do
+      transitions :to => :declined, :from => :completed
+      transitions :to => :declined, :from => :accepted
+    end
   end
 
   belongs_to :sleeve
