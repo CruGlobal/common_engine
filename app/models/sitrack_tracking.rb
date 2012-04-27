@@ -75,7 +75,7 @@
 #
 
 class SitrackTracking < ActiveRecord::Base
-  set_table_name            "sitrack_tracking"
+  self.table_name = "sitrack_tracking"
   belongs_to                :hr_si_application, :foreign_key => 'application_id'
   
   def is_stint?

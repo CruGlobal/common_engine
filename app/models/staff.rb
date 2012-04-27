@@ -1,6 +1,6 @@
 class Staff < ActiveRecord::Base
   unloadable
-  set_table_name "ministry_staff"
+  self.table_name = "ministry_staff"
   belongs_to :person
   
   belongs_to :primary_address, :class_name => "StaffAddress", :foreign_key => :fk_primaryAddress

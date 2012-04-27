@@ -1,8 +1,8 @@
 class Address < ActiveRecord::Base
   unloadable
   
-  set_table_name				"ministry_newaddress"
-	set_primary_key 			"addressID"
+  self.table_name = "ministry_newaddress"
+	self.primary_key = "addressID"
 	
 	validates_presence_of :addressType
 	
