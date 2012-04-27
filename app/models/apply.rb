@@ -1,7 +1,7 @@
 # a visitor applies to a sleeve (application)
 class Apply < ActiveRecord::Base
   unloadable
-  self.table_name "si_applies"
+  self.table_name = "si_applies"
   
   acts_as_state_machine :initial => :started, :column => :status
   
