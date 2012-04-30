@@ -4,6 +4,8 @@ class Person < ActiveRecord::Base
   self.table_name = "ministry_person"
   self.primary_key = "personID"
   
+  attr_accessible :firstName, :lastName
+  
   # SP-298
   has_many                :sp_designation_numbers
   

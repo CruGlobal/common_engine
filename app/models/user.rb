@@ -13,7 +13,8 @@ class User < ActiveRecord::Base
   has_one :balance_bookmark, :class_name => 'Bookmark', :conditions => Bookmark.table_name + ".name = 'balance'"
 	
   # Virtual attribute for the unencrypted password
-  attr_accessor :plain_password
+  attr_accessible :plain_password, :plain_password_confirmation
+  attr_accessor :plain_password, :plain_password_confirmation
 
   validates_format_of       :username, :message => "must be an email address", :with => /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i
   validates_presence_of     :plain_password,                   :if => :password_required?
