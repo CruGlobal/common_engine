@@ -9,7 +9,9 @@
     <% if @user.errors[:omniauth].present? %>
       <p>Your account is almost finished being setup. We need just a little more information to link you to your <span class="servicename"><%= session[:omniauth]['provider'].camelcase %></span> account.</p>
     <% else %>
-      <%= error_messages_for :user %>
+      <% @user.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
     <% end %>
     <div style="<%= 'display:none' if @person.valid? %>">
       <%= fields_for @person do |pf| %>
