@@ -78,7 +78,7 @@ class SitrackTracking < ActiveRecord::Base
   self.table_name = "sitrack_tracking"
   belongs_to                :hr_si_application, :foreign_key => 'application_id'
   
-  attr_accessible :application_id
+  attr_accessible :application_id, :internType, :regionOfOrigin, :caringRegion, :asgTeam, :send_dept, :sendLane
   def is_stint?
     return true if ['ICS','STINT'].include?(internType)
     return false

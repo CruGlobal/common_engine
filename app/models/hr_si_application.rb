@@ -3,6 +3,8 @@ class HrSiApplication < ActiveRecord::Base
   self.table_name = "hr_si_applications"
   self.primary_key = "applicationID"
   
+  attr_accessible :ssn
+  
   belongs_to :apply
   belongs_to :person, :foreign_key => "fk_personID"
   has_one    :sitrack_tracking, :foreign_key => 'application_id'
