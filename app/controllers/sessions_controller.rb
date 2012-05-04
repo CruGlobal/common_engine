@@ -49,8 +49,6 @@ class SessionsController < ApplicationController
       if @user
         @user.generate_password_key!
         SessionMailer.password_link(@user, :protocol => 'https', :host => request.host, :port => request.port == 80 ? nil : request.port).deliver
-        #Just to test to see if changing the url/localhost check 
-        SessionMailer.password_link(@user, :host => request.host, :port => request.port == 80 ? nil : request.port).deliver
         redirect_to login_path(:username => params[:email]), :notice => "Password reset email sent. If you don't see it within 2 minutes, please check your spam folder and add help@campuscrusadeforchrist.com to your spam filter."
       else
         flash[:alert] = "Couldn't find a record with that email."
