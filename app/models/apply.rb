@@ -43,6 +43,8 @@ class Apply < ActiveRecord::Base
       transitions :to => :submitted, :from => :started
       transitions :to => :submitted, :from => :unsubmitted
       transitions :to => :submitted, :from => :withdrawn
+      # Handle when user clicks to edit references, then clicks submit
+      transitions :to => :submitted, :from => :submitted
     end
 
     event :withdraw do
