@@ -7,6 +7,7 @@ class SpApplication < AnswerSheet
   COST_AFTER_DEADLINE = 25
   
   unloadable
+  
   aasm :initial => :started, :column => :status do
 
     # State machine stuff
@@ -67,6 +68,8 @@ class SpApplication < AnswerSheet
       transitions :to => :submitted, :from => :unsubmitted
       transitions :to => :submitted, :from => :withdrawn
       transitions :to => :submitted, :from => :ready
+      # Handle when user clicks to edit references, then clicks submit
+      transitions :to => :submitted, :from => :submitted
     end
 
     event :withdraw do
