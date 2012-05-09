@@ -7,7 +7,7 @@ class SpApplication < AnswerSheet
   COST_AFTER_DEADLINE = 25
   
   unloadable
-  
+
   aasm :initial => :started, :column => :status do
 
     # State machine stuff
@@ -89,31 +89,31 @@ class SpApplication < AnswerSheet
     end
 
     event :complete do
-      transitions :to => :ready, :from => :submitted
-      transitions :to => :ready, :from => :unsubmitted
-      transitions :to => :ready, :from => :started
-      transitions :to => :ready, :from => :withdrawn
-      transitions :to => :ready, :from => :declined
-      transitions :to => :ready, :from => :accepted_as_student_staff
-      transitions :to => :ready, :from => :accepted_as_participant
+      transitions :to => :ready, :from => :submitted, :guard => :has_paid?
+      transitions :to => :ready, :from => :unsubmitted, :guard => :has_paid?
+      transitions :to => :ready, :from => :started, :guard => :has_paid?
+      transitions :to => :ready, :from => :withdrawn, :guard => :has_paid?
+      transitions :to => :ready, :from => :declined, :guard => :has_paid?
+      transitions :to => :ready, :from => :accepted_as_student_staff, :guard => :has_paid?
+      transitions :to => :ready, :from => :accepted_as_participant, :guard => :has_paid?
     end
 
     event :accept_as_student_staff do
-      transitions :to => :accepted_as_student_staff, :from => :ready
-      transitions :to => :accepted_as_student_staff, :from => :started
-      transitions :to => :accepted_as_student_staff, :from => :withdrawn
-      transitions :to => :accepted_as_student_staff, :from => :declined
-      transitions :to => :accepted_as_student_staff, :from => :submitted
-      transitions :to => :accepted_as_student_staff, :from => :accepted_as_participant
+      transitions :to => :accepted_as_student_staff, :from => :ready, :guard => :has_paid?
+      transitions :to => :accepted_as_student_staff, :from => :started, :guard => :has_paid?
+      transitions :to => :accepted_as_student_staff, :from => :withdrawn, :guard => :has_paid?
+      transitions :to => :accepted_as_student_staff, :from => :declined, :guard => :has_paid?
+      transitions :to => :accepted_as_student_staff, :from => :submitted, :guard => :has_paid?
+      transitions :to => :accepted_as_student_staff, :from => :accepted_as_participant, :guard => :has_paid?
     end
 
     event :accept_as_participant do
-      transitions :to => :accepted_as_participant, :from => :ready
-      transitions :to => :accepted_as_participant, :from => :started
-      transitions :to => :accepted_as_participant, :from => :withdrawn
-      transitions :to => :accepted_as_participant, :from => :declined
-      transitions :to => :accepted_as_participant, :from => :submitted
-      transitions :to => :accepted_as_participant, :from => :accepted_as_student_staff
+      transitions :to => :accepted_as_participant, :from => :ready, :guard => :has_paid?
+      transitions :to => :accepted_as_participant, :from => :started, :guard => :has_paid?
+      transitions :to => :accepted_as_participant, :from => :withdrawn, :guard => :has_paid?
+      transitions :to => :accepted_as_participant, :from => :declined, :guard => :has_paid?
+      transitions :to => :accepted_as_participant, :from => :submitted, :guard => :has_paid?
+      transitions :to => :accepted_as_participant, :from => :accepted_as_student_staff, :guard => :has_paid?
     end
 
     event :decline do
@@ -159,6 +159,11 @@ class SpApplication < AnswerSheet
                                                       :include => :person }}
   before_create :set_su_code
   after_save :unsubmit_on_project_change, :complete, :send_acceptance_email, :update_project_counts
+
+  def next_states_for_events
+    self.class.aasm_events.values.select { |event| event.transitions_from_state?(status.to_sym) && send(("may_" + event.name.to_s + "?").to_sym) }.collect {
+      |e| [e.transitions_from_state(status.to_sym).first.to.to_s.humanize, e.name] }
+  end
 
   def designation_number=(val)
     if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id, :year => SpApplication::YEAR).first
