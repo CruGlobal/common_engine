@@ -22,7 +22,6 @@ class SpApplication < AnswerSheet
                                 }
 
     state :ready, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} ready")
                                   app.completed_at ||= Time.now
                                   Notifier.notification(app.email, # RECIPIENTS
                                     Questionnaire.from_email, # FROM
@@ -38,7 +37,6 @@ class SpApplication < AnswerSheet
                                 }
 
     state :withdrawn, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} withdrawn")
                                   Notifier.notification(app.email, # RECIPIENTS
                                     Questionnaire.from_email, # FROM
                                     "Application Withdrawn").deliver if app.email
@@ -47,19 +45,16 @@ class SpApplication < AnswerSheet
                                 }
 
     state :accepted_as_student_staff, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} accepted as student staff")
                                   app.accepted_at = Time.now
                                   app.previous_status = app.status
                                }
 
     state :accepted_as_participant, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} accepted as participant")
                                   app.accepted_at = Time.now
                                   app.previous_status = app.status
                                }
 
     state :declined, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} declined")
                                   app.previous_status = app.status
                                }
   
