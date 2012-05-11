@@ -5,7 +5,7 @@ class SpApplication < AnswerSheet
   self.table_name = 'sp_applications'
   COST_BEFORE_DEADLINE = 25
   COST_AFTER_DEADLINE = 25
-  
+
   unloadable
 
   aasm :initial => :started, :column => :status do
@@ -153,7 +153,7 @@ class SpApplication < AnswerSheet
   scope :preferred_project, proc {|project_id| {:conditions => ["project_id = ?", project_id], 
                                                       :include => :person }}
   before_create :set_su_code
-  after_save :unsubmit_on_project_change, :complete, :send_acceptance_email, :update_project_counts
+  after_save :unsubmit_on_project_change, :complete, :send_acceptance_email, :log_changed_project, :update_project_counts
 
   def next_states_for_events
     self.class.aasm_events.values.select { |event| event.transitions_from_state?(status.to_sym) && send(("may_" + event.name.to_s + "?").to_sym) }.collect {
@@ -455,26 +455,38 @@ class SpApplication < AnswerSheet
     answers.detect {|a| a.question_id == q_id}
   end
 
+  def log_changed_project
+    if changed.include?('project_id') && changes['project_id'].all?(&:present?)
+      current_person = Thread.current[:user].try(:person) || Person.new
+      old_project = SpProject.find(changes['project_id'].first)
+      new_project = SpProject.find(changes['project_id'].last)
+      SpApplicationMove.create!(:application_id => id, :old_project_id => old_project.id, :new_project_id => new_project.id,
+                                      :moved_by_person_id => current_person.id)
+
+      # Notify old and new directors
+      [old_project.pd, old_project.apd, new_project.pd, new_project.apd].compact.each do |contact|
+        Notifier.notification(contact.email, # RECIPIENTS
+                              Questionnaire.from_email, # FROM
+                              "Application Moved", # LIQUID TEMPLATE NAME
+                              {'applicant_name' => name,
+                               'moved_by' => current_person.informal_full_name}).deliver
+      end
+
+      # Move designation number
+      dn = SpDesignationNumber.where(:person_id => person_id, :project_id => old_project.id, :year => year).first
+      dn.update_attribute(:project_id, new_project.id) if dn
+
+      # Update project counts
+      old_project.update_counts(person)
+      new_project.update_counts(person)
+    end
+  end
+
 
   # When an applicant status changes, we need to update the project counts
   def update_project_counts
     if changed.include?('status')
-      if person.gender.present?
-        count = SpApplication.connection.select_value("SELECT count(*) from sp_applications a inner join ministry_person p on a.person_id = p.personID where year = #{project.year} AND status IN('#{SpApplication.ready_statuses.join("','")}') AND p.gender = #{person.gender} AND a.project_id = #{project.id}")
-        if person.is_male?
-          project.current_applicants_men = count
-        else
-          project.current_applicants_women = count
-        end
-        count = SpApplication.connection.select_value("SELECT count(*) from sp_applications a inner join ministry_person p on a.person_id = p.personID where year = #{project.year} AND status IN('#{SpApplication.accepted_statuses.join("','")}') AND p.gender = #{person.gender} AND a.project_id = #{project.id}")
-        if person.is_male?
-          project.current_students_men = count
-        else
-          project.current_students_women = count
-        end
-      end
-      project.save(:validate => false)
-      count
+      project.update_counts(person)
     end
   end
 
