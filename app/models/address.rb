@@ -4,7 +4,7 @@ class Address < ActiveRecord::Base
   self.table_name = "ministry_newaddress"
 	self.primary_key = "addressID"
 	
-	attr_accessible :person, :email, :addressType, :fk_PersonID, :createdBy, :changedBy, :dateCreated, :dateChanged
+	attr_accessible :person, :email, :addressType, :fk_PersonID, :createdBy, :changedBy, :dateCreated, :dateChanged, :state
 	
 	validates_presence_of :addressType
 	

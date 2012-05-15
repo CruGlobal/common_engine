@@ -3,7 +3,7 @@ class HrSiApplication < ActiveRecord::Base
   self.table_name = "hr_si_applications"
   self.primary_key = "applicationID"
   
-  attr_accessible :ssn
+  attr_accessible :ssn, :fk_personID
   
   belongs_to :apply
   belongs_to :person, :foreign_key => "fk_personID"

@@ -4,6 +4,8 @@ class Apply < ActiveRecord::Base
   unloadable
   self.table_name = "si_applies"
   
+  attr_accessible :sleeve_id, :applicant_id
+  
   aasm :initial => :started, :column => :status do
   
     # State machine stuff

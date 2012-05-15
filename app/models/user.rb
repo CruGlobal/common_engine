@@ -4,6 +4,8 @@ class User < ActiveRecord::Base
   unloadable
   self.table_name = "simplesecuritymanager_user"
 	self.primary_key = "userID"
+	
+	attr_accessible :username, :createdOn
 
 	# Relationships
 	has_one :person, :foreign_key => 'fk_ssmUserID'	
