@@ -5,9 +5,9 @@ class SpApplication < AnswerSheet
   self.table_name = 'sp_applications'
   COST_BEFORE_DEADLINE = 25
   COST_AFTER_DEADLINE = 25
-  
+
   unloadable
-  
+
   aasm :initial => :started, :column => :status do
 
     # State machine stuff
@@ -22,7 +22,6 @@ class SpApplication < AnswerSheet
                                 }
 
     state :ready, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} ready")
                                   app.completed_at ||= Time.now
                                   Notifier.notification(app.email, # RECIPIENTS
                                     Questionnaire.from_email, # FROM
@@ -38,7 +37,6 @@ class SpApplication < AnswerSheet
                                 }
 
     state :withdrawn, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} withdrawn")
                                   Notifier.notification(app.email, # RECIPIENTS
                                     Questionnaire.from_email, # FROM
                                     "Application Withdrawn").deliver if app.email
@@ -47,19 +45,16 @@ class SpApplication < AnswerSheet
                                 }
 
     state :accepted_as_student_staff, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} accepted as student staff")
                                   app.accepted_at = Time.now
                                   app.previous_status = app.status
                                }
 
     state :accepted_as_participant, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} accepted as participant")
                                   app.accepted_at = Time.now
                                   app.previous_status = app.status
                                }
 
     state :declined, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} declined")
                                   app.previous_status = app.status
                                }
   
@@ -89,31 +84,31 @@ class SpApplication < AnswerSheet
     end
 
     event :complete do
-      transitions :to => :ready, :from => :submitted
-      transitions :to => :ready, :from => :unsubmitted
-      transitions :to => :ready, :from => :started
-      transitions :to => :ready, :from => :withdrawn
-      transitions :to => :ready, :from => :declined
-      transitions :to => :ready, :from => :accepted_as_student_staff
-      transitions :to => :ready, :from => :accepted_as_participant
+      transitions :to => :ready, :from => :submitted, :guard => :has_paid?
+      transitions :to => :ready, :from => :unsubmitted, :guard => :has_paid?
+      transitions :to => :ready, :from => :started, :guard => :has_paid?
+      transitions :to => :ready, :from => :withdrawn, :guard => :has_paid?
+      transitions :to => :ready, :from => :declined, :guard => :has_paid?
+      transitions :to => :ready, :from => :accepted_as_student_staff, :guard => :has_paid?
+      transitions :to => :ready, :from => :accepted_as_participant, :guard => :has_paid?
     end
 
     event :accept_as_student_staff do
-      transitions :to => :accepted_as_student_staff, :from => :ready
-      transitions :to => :accepted_as_student_staff, :from => :started
-      transitions :to => :accepted_as_student_staff, :from => :withdrawn
-      transitions :to => :accepted_as_student_staff, :from => :declined
-      transitions :to => :accepted_as_student_staff, :from => :submitted
-      transitions :to => :accepted_as_student_staff, :from => :accepted_as_participant
+      transitions :to => :accepted_as_student_staff, :from => :ready, :guard => :has_paid?
+      transitions :to => :accepted_as_student_staff, :from => :started, :guard => :has_paid?
+      transitions :to => :accepted_as_student_staff, :from => :withdrawn, :guard => :has_paid?
+      transitions :to => :accepted_as_student_staff, :from => :declined, :guard => :has_paid?
+      transitions :to => :accepted_as_student_staff, :from => :submitted, :guard => :has_paid?
+      transitions :to => :accepted_as_student_staff, :from => :accepted_as_participant, :guard => :has_paid?
     end
 
     event :accept_as_participant do
-      transitions :to => :accepted_as_participant, :from => :ready
-      transitions :to => :accepted_as_participant, :from => :started
-      transitions :to => :accepted_as_participant, :from => :withdrawn
-      transitions :to => :accepted_as_participant, :from => :declined
-      transitions :to => :accepted_as_participant, :from => :submitted
-      transitions :to => :accepted_as_participant, :from => :accepted_as_student_staff
+      transitions :to => :accepted_as_participant, :from => :ready, :guard => :has_paid?
+      transitions :to => :accepted_as_participant, :from => :started, :guard => :has_paid?
+      transitions :to => :accepted_as_participant, :from => :withdrawn, :guard => :has_paid?
+      transitions :to => :accepted_as_participant, :from => :declined, :guard => :has_paid?
+      transitions :to => :accepted_as_participant, :from => :submitted, :guard => :has_paid?
+      transitions :to => :accepted_as_participant, :from => :accepted_as_student_staff, :guard => :has_paid?
     end
 
     event :decline do
@@ -158,7 +153,12 @@ class SpApplication < AnswerSheet
   scope :preferred_project, proc {|project_id| {:conditions => ["project_id = ?", project_id], 
                                                       :include => :person }}
   before_create :set_su_code
-  after_save :unsubmit_on_project_change, :complete, :send_acceptance_email, :update_project_counts
+  after_save :unsubmit_on_project_change, :complete, :send_acceptance_email, :log_changed_project, :update_project_counts
+
+  def next_states_for_events
+    self.class.aasm_events.values.select { |event| event.transitions_from_state?(status.to_sym) && send(("may_" + event.name.to_s + "?").to_sym) }.collect {
+      |e| [e.transitions_from_state(status.to_sym).first.to.to_s.humanize, e.name] }
+  end
 
   def designation_number=(val)
     if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id, :year => SpApplication::YEAR).first
@@ -455,26 +455,38 @@ class SpApplication < AnswerSheet
     answers.detect {|a| a.question_id == q_id}
   end
 
+  def log_changed_project
+    if changed.include?('project_id') && changes['project_id'].all?(&:present?)
+      current_person = Thread.current[:user].try(:person) || Person.new
+      old_project = SpProject.find(changes['project_id'].first)
+      new_project = SpProject.find(changes['project_id'].last)
+      SpApplicationMove.create!(:application_id => id, :old_project_id => old_project.id, :new_project_id => new_project.id,
+                                      :moved_by_person_id => current_person.id)
+
+      # Notify old and new directors
+      [old_project.pd, old_project.apd, new_project.pd, new_project.apd].compact.each do |contact|
+        Notifier.notification(contact.email, # RECIPIENTS
+                              Questionnaire.from_email, # FROM
+                              "Application Moved", # LIQUID TEMPLATE NAME
+                              {'applicant_name' => name,
+                               'moved_by' => current_person.informal_full_name}).deliver
+      end
+
+      # Move designation number
+      dn = SpDesignationNumber.where(:person_id => person_id, :project_id => old_project.id, :year => year).first
+      dn.update_attribute(:project_id, new_project.id) if dn
+
+      # Update project counts
+      old_project.update_counts(person)
+      new_project.update_counts(person)
+    end
+  end
+
 
   # When an applicant status changes, we need to update the project counts
   def update_project_counts
     if changed.include?('status')
-      if person.gender.present?
-        count = SpApplication.connection.select_value("SELECT count(*) from sp_applications a inner join ministry_person p on a.person_id = p.personID where year = #{project.year} AND status IN('#{SpApplication.ready_statuses.join("','")}') AND p.gender = #{person.gender} AND a.project_id = #{project.id}")
-        if person.is_male?
-          project.current_applicants_men = count
-        else
-          project.current_applicants_women = count
-        end
-        count = SpApplication.connection.select_value("SELECT count(*) from sp_applications a inner join ministry_person p on a.person_id = p.personID where year = #{project.year} AND status IN('#{SpApplication.accepted_statuses.join("','")}') AND p.gender = #{person.gender} AND a.project_id = #{project.id}")
-        if person.is_male?
-          project.current_students_men = count
-        else
-          project.current_students_women = count
-        end
-      end
-      project.save(:validate => false)
-      count
+      project.update_counts(person)
     end
   end
 

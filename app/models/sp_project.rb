@@ -332,6 +332,25 @@ class SpProject < ActiveRecord::Base
     end
   end
 
+  def update_counts(person)
+    if person.gender.present?
+      count = SpApplication.connection.select_value("SELECT count(*) from sp_applications a inner join ministry_person p on a.person_id = p.personID where year = #{year} AND status IN('#{SpApplication.ready_statuses.join("','")}') AND p.gender = #{person.gender} AND a.project_id = #{id}")
+      if person.is_male?
+        self.current_applicants_men = count
+      else
+        self.current_applicants_women = count
+      end
+      count = SpApplication.connection.select_value("SELECT count(*) from sp_applications a inner join ministry_person p on a.person_id = p.personID where year = #{year} AND status IN('#{SpApplication.accepted_statuses.join("','")}') AND p.gender = #{person.gender} AND a.project_id = #{id}")
+      if person.is_male?
+        self.current_students_men = count
+      else
+        self.current_students_women = count
+      end
+    end
+    save(:validate => false)
+    count
+  end
+
   def self.send_leader_reminder_emails
     projects = SpProject.find(:all,
     :select => "project.*",
