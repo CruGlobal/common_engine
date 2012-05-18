@@ -22,7 +22,7 @@ class Person < ActiveRecord::Base
   has_one                 :current_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'current'", :class_name => '::Address'
   has_one                 :permanent_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'permanent'", :class_name => '::Address'
   has_one                 :emergency_address1, :foreign_key => "fk_PersonID", :conditions => "addressType = 'emergency1'", :class_name => '::Address'
-  has_many                :addresses, :foreign_key => "fk_PersonID" 
+  has_many                :addresses, :foreign_key => "fk_PersonID"
   
   # Cru Commons
   has_many                :personal_links
