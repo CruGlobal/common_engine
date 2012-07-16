@@ -17,8 +17,8 @@
 #
 
 class StaffsiteProfile < ActiveRecord::Base
-  set_table_name "staffsite_staffsiteprofile"
-  set_primary_key "StaffSiteProfileID"
+  self.table_name = "staffsite_staffsiteprofile"
+  self.primary_key = "StaffSiteProfileID"
   
   def full_name
     first_name.to_s  + " " + last_name.to_s

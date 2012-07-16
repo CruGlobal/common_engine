@@ -1,7 +1,7 @@
 class HrSiProject < ActiveRecord::Base
   unloadable
-  set_table_name				"hr_si_project"
-	set_primary_key 			"SIProjectID"
+  self.table_name = "hr_si_project"
+	self.primary_key = "SIProjectID"
   
   validates_presence_of :name, :city, :country
   

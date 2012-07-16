@@ -1,7 +1,7 @@
 class Team < ActiveRecord::Base
   unloadable
-  set_table_name "ministry_locallevel"
-  set_primary_key "teamID"
+  self.table_name  = "ministry_locallevel"
+  self.primary_key = "teamID"
 
   has_many :team_members, :foreign_key => "teamID", :include => :person, :order => Person.table_name + ".lastName"
   has_many :people, :through => :team_members, :order => Person.table_name + ".lastName"

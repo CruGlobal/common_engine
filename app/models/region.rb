@@ -1,7 +1,7 @@
 class Region < ActiveRecord::Base
   unloadable
-  set_table_name "ministry_regionalteam"
-  set_primary_key "teamID"
+  self.table_name = "ministry_regionalteam"
+  self.primary_key = "teamID"
   
   default_scope order(:region)
 

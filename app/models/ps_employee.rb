@@ -1,8 +1,8 @@
 class PsEmployee < ActiveRecord::Base
   unloadable
   establish_connection :peoplesoft
-  set_table_name "SYSADM.PS_CCC_CM_EMPL_VW"
-  set_primary_key "emplid"
+  self.table_name = "SYSADM.PS_CCC_CM_EMPL_VW"
+  self.primary_key = "emplid"
   
   belongs_to :psTaxLocation, :foreign_key => :tax_location_cd
   

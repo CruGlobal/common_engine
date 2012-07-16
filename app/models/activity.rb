@@ -1,7 +1,7 @@
 class Activity < ActiveRecord::Base
   unloadable
-  set_table_name			"ministry_activity"
-  set_primary_key   			"ActivityID"
+  self.table_name = "ministry_activity"
+  self.primary_key = "ActivityID"
   belongs_to :target_area, :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID"
   belongs_to :team, :foreign_key => "fk_teamID", :primary_key => "teamID"
   has_many :activity_histories
