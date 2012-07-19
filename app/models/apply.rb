@@ -1,3 +1,5 @@
+require 'aasm'
+
 # a visitor applies to a sleeve (application)
 class Apply < ActiveRecord::Base
   include AASM
