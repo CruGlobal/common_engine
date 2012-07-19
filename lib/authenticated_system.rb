@@ -66,7 +66,7 @@ module AuthenticatedSystem
     #
     def ssm_login_required
       username, passwd = get_auth_data
-      self.current_user ||= User.authenticate(username, passwd) || :false if username && passwd
+      self.current_user ||= :false if username && passwd
       logged_in? && authorized? ? true : access_denied
     end
     

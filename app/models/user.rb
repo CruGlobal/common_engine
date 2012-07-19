@@ -39,12 +39,12 @@ class User < ActiveRecord::Base
   def self.find_by_id(id) self.find_by_userID(id); end
 
   # Authenticates a user by their login name and unencrypted password.  Returns the user or nil.
-  def self.authenticate(username, plain_password)
-    u = find_by_username(username) # need to get the salt
-    ret_val = u && u.authenticated?(plain_password) ? u : nil
-    u.stamp_last_login if ret_val
-    return ret_val
-  end
+#  def self.authenticate(username, plain_password)
+#    u = find_by_username(username) # need to get the salt
+#    ret_val = u && u.authenticated?(plain_password) ? u : nil
+#    u.stamp_last_login if ret_val
+#    return ret_val
+#  end
   
   def self.find_or_create_from_cas(ticket)
     # Look for a user with this guid
