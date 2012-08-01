@@ -46,7 +46,7 @@ class SpDonation < ActiveRecord::Base
   
   def self.update_from_peoplesoft
     # last_date = SpDonation.maximum(:donation_date) || 2.years.ago
-    rows = PsEmployee.connection.select_all("select * from hrsdon.ps_student_load_vw")
+    rows = PsDonation.connection.select_all("select * from hrsdon.ps_student_load_vw")
     SpDonation.delete_all(["donation_date >  ?", 1.year.ago])
     SpDonation.transaction do
       rows.each do |row|

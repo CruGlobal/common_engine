@@ -18,7 +18,8 @@ class SessionsController < ApplicationController
       redirect_to '/'
       return false
     end
-    self.current_user = User.authenticate(params[:username], params[:password])
+    # Remove SSM
+#    self.current_user = User.authenticate(params[:username], params[:password])
     if logged_in?
       if session[:omniauth]
         unless current_user.authentications.where(:provider => session[:omniauth]['provider'], :uid => session[:omniauth]['uid']).count > 0

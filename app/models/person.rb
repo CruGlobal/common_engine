@@ -5,7 +5,7 @@ class Person < ActiveRecord::Base
   self.primary_key = "personID"
   
   attr_accessible :firstName, :lastName, :isSecure, :birth_date, :maritalStatus,
-                  :accountNo, :first_name, :last_name, :gender, :region
+                  :accountNo, :first_name, :last_name, :gender, :preferredName, :current_address_attributes, :region
   
   # SP-298
   has_many                :sp_designation_numbers
@@ -22,7 +22,7 @@ class Person < ActiveRecord::Base
   has_one                 :current_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'current'", :class_name => '::Address'
   has_one                 :permanent_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'permanent'", :class_name => '::Address'
   has_one                 :emergency_address1, :foreign_key => "fk_PersonID", :conditions => "addressType = 'emergency1'", :class_name => '::Address'
-  has_many                :addresses, :foreign_key => "fk_PersonID" 
+  has_many                :addresses, :foreign_key => "fk_PersonID"
   
   # Cru Commons
   has_many                :personal_links

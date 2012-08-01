@@ -26,43 +26,33 @@
   <div id="signinwith">
     <h3>Sign in through one of these services:</h3>
 <% end %>
-<!-- <a href="/auth/twitter" class="auth_provider">
-  <%= image_tag "twitter_64.png", :size => "64x64", :alt => "Twitter" %>
-  Twitter
-</a> -->
-  <a href="/auth/facebook" class="auth_provider">
-    <%= image_tag "facebook_64.png", :size => "64x64", :alt => "Facebook" %>
-    Facebook
+  <!-- <a href="/auth/twitter" class="auth_provider">
+    <%= image_tag "twitter_64.png", :size => "64x64", :alt => "Twitter" %>
+    Twitter
+  </a> -->
+  <a href="<%= CASClient::Frameworks::Rails3::Filter.login_url(controller) %>" class="auth_provider">
+    <%= image_tag "relay-sign-in.png", :alt => "Relay" %>
   </a>
-  <a href="/auth/google_apps" class="auth_provider">
+  <a href="/auth/facebook" class="auth_provider">
+    <%= image_tag "facebook-sign-in.png", :alt => "Facebook" %>
+  </a>
+  <!-- ><a href="/auth/google_apps" class="auth_provider">
     <%= image_tag "google_apps_64.png", :size => "64x64", :alt => "Google" %>
     Google
-  </a>
-  <a href="<%= CASClient::Frameworks::Rails3::Filter.login_url(controller) %>" class="auth_provider">
-    <%= image_tag "relay.png", :size => "64x64", :alt => "Relay" %>
-    Relay
-  </a>
+  </a> -->
   <div class="clear"></div>
 </div>
 
 
 <% unless logged_in? %>
   <div id="railslogin">
-      <h3>Don't use these services?</h3>
-      
-      <%= form_tag session_path do %>
-        <p>Sign in with your Username and Password or <strong><%= link_to "Sign up", new_user_path %>.</strong></p>
-        <p>
-          <label for="username">Username or Email</label>
-          <%= text_field_tag :username, params[:username] %>
-          <br/>
-          <label for="password">Password</label>
-          <%= password_field_tag :password, nil, :autocomplete => "off" %>
-        </p>
-        <button type="submit"><span>Log In</span></button>
-      <% end %><br/>
-      <%= link_to("Forgot your password? Click here and we will send you an email with a link to change your password", send_password_email_session_path) %>
-      
-      <!-- <%= link_to "sign in", new_session_path %> with a password. -->
+    <br/>
+    <p><b>Have you applied for a Summer Project or STINT or signed up for a Cru Conference before?</b><br/>
+    That username and login has been moved to our Relay Sign-In System. The Relay button will take you to it's Sign-In screen.</p>
+    <br/>
+    <p><b>Haven't registered yet? Pick a button.</b> Create a new Relay account or sign in with Facebook.</p>
+    <br/>
+    <p>If you know you logged in before but don't remember your password, the 'forgot password' link has been moved to the Relay login system as well. 
+    Please recover your password instead of creating a new account.</p>
   </div>
 <% end %>

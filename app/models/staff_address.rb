@@ -1,5 +1,5 @@
 class StaffAddress < ActiveRecord::Base
   unloadable
-  set_table_name "ministry_address"
-  set_primary_key "AddressID"
+  self.table_name = "ministry_address"
+  self.primary_key = "AddressID"
 end
