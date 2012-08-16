@@ -162,6 +162,8 @@ class Activity < ActiveRecord::Base
     unless activity
       activity = Activity.create_movement_for_event(target_area, period_begin, strategy)
     end
+    activity.strategy = strategy
+    activity.save
     activity
   end
   
@@ -240,6 +242,24 @@ class Activity < ActiveRecord::Base
     stat
   end
   
+  def get_bridges_sp_stats_for(year, period_begin, period_end)
+    stats = statistics.where("sp_year = ?", year)
+    stats_array = []
+    Statistic.people_groups.each do |group|
+      stat = stats.where(:peopleGroup => group).first
+      unless stat
+        stat = Statistic.new
+        stat.activity = self
+      end
+      stat.periodBegin = period_begin
+      stat.periodEnd = period_end
+      stat.peopleGroup = group
+      stat.sp_year = year
+      stats_array << stat
+    end
+    stats_array
+  end
+
   def get_crs_stat_for(period_begin, period_end, people_group = nil) # TODO: people groups
     if statistics.size > 1
       raise "Too many stats for this Conference"
