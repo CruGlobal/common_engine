@@ -152,6 +152,7 @@ class SpApplication < AnswerSheet
 
   scope :preferred_project, proc {|project_id| {:conditions => ["project_id = ?", project_id], 
                                                       :include => :person }}
+  scope :not_staff, where("ministry_person.isStaff <> 1 OR ministry_person.isStaff Is Null").joins(:person)
   before_create :set_su_code
   after_save :unsubmit_on_project_change, :complete, :send_acceptance_email, :log_changed_project, :update_project_counts
 
