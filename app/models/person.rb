@@ -19,6 +19,7 @@ class Person < ActiveRecord::Base
     :foreign_key => "personID", :include => :target_area, :order => TargetArea.table_name + ".name"
 
   # Addresses
+  has_many                :email_addresses, :foreign_key => "person_id", :class => '::EmailAddress'
   has_one                 :current_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'current'", :class_name => '::Address'
   has_one                 :permanent_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'permanent'", :class_name => '::Address'
   has_one                 :emergency_address1, :foreign_key => "fk_PersonID", :conditions => "addressType = 'emergency1'", :class_name => '::Address'
@@ -279,8 +280,21 @@ class Person < ActiveRecord::Base
     email_address
   end
   
+  # def email_address
+  #   current_address ? current_address.email : user.try(:username)
+  # end
+
+  # [email1, email2, email3] => primary email, or email
   def email_address
-    current_address ? current_address.email : user.try(:username)
+    if email_addresses.size > 0
+      email_addresses.where(primary: true).first || email_addresses.first
+    elsif current_address
+      current_address.email
+    elsif permanent_address
+      permanent_address.email
+    else
+      ""
+    end
   end
   
   # This method shouldn't be needed because nightly updater should fill this in
