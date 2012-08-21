@@ -19,7 +19,7 @@ class Person < ActiveRecord::Base
     :foreign_key => "personID", :include => :target_area, :order => TargetArea.table_name + ".name"
 
   # Addresses
-  has_many                :email_addresses, :foreign_key => "person_id", :class => '::EmailAddress'
+  has_many                :email_addresses, :foreign_key => "person_id", :class_name => '::EmailAddress'
   has_one                 :current_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'current'", :class_name => '::Address'
   has_one                 :permanent_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'permanent'", :class_name => '::Address'
   has_one                 :emergency_address1, :foreign_key => "fk_PersonID", :conditions => "addressType = 'emergency1'", :class_name => '::Address'
