@@ -286,15 +286,10 @@ class Person < ActiveRecord::Base
 
   # [email1, email2, email3] => primary email, or email
   def email_address
-    if email_addresses.size > 0
-      email_addresses.where(primary: true).first || email_addresses.first
-    elsif current_address
-      current_address.email
-    elsif permanent_address
-      permanent_address.email
-    else
-      ""
-    end
+    (email_addresses.where(primary: true).first || email_addresses.first).try(:email) ||
+    current_address.try(:email) ||
+    permanent_address.try(:email) ||
+    user.try(:username)
   end
   
   # This method shouldn't be needed because nightly updater should fill this in
