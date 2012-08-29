@@ -79,6 +79,7 @@ class SpProject < ActiveRecord::Base
   scope :show_on_website, where(:show_on_website => true, :project_status => 'open')
   scope :uses_application, where(:use_provided_application => true)
   scope :current, where("project_status = 'open' AND open_application_date <= ?", Date.today)
+  scope :open, where("project_status = 'open'")
   scope :ascend_by_name, order(:name)
   scope :descend_by_name, order("name desc")
   scope :ascend_by_pd, order(Person.table_name + '.lastName, ' + Person.table_name + '.firstName').where('sp_staff.type' => 'PD').joins({:sp_staff => :person})
