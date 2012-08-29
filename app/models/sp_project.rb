@@ -78,7 +78,7 @@ class SpProject < ActiveRecord::Base
   scope :with_partner, proc {|partner| {:conditions => ["primary_partner IN(?) OR secondary_partner IN(?) OR tertiary_partner IN(?)", partner, partner, partner]}}
   scope :show_on_website, where(:show_on_website => true, :project_status => 'open')
   scope :uses_application, where(:use_provided_application => true)
-  scope :current, where("project_status = 'open' AND open_application_date <= ?", Date.today)
+  scope :current, where("project_status = 'open' AND open_application_date <= ? AND start_date >= ?", Date.today, Date.today)
   scope :open, where("project_status = 'open'")
   scope :ascend_by_name, order(:name)
   scope :descend_by_name, order("name desc")
