@@ -195,7 +195,7 @@ class SpApplication < AnswerSheet
   end
 
   # When changing this variable, make sure the commit gets pulled into the MPD Tool as well
-  YEAR = 2013
+  YEAR = Time.now.month >= 9 ? Time.now.year + 1 : Time.now.year
   
   DEADLINE1 = Time.parse((SpApplication::YEAR - 1).to_s + "/12/10");
   DEADLINE2 = Time.parse(SpApplication::YEAR.to_s + "/01/24");
