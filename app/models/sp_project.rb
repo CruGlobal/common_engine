@@ -218,7 +218,7 @@ class SpProject < ActiveRecord::Base
   end
   def open!
     update_attribute('project_status', 'open')
-    update_attribute('year', SpApplication::YEAR)
+    update_attribute('year', SpApplication.year)
   end
 
   def closed?
@@ -366,7 +366,7 @@ class SpProject < ActiveRecord::Base
   def self.send_leader_reminder_emails
     projects = SpProject.find(:all,
                               :select => "project.*",
-                              :conditions => ["app.status IN(?) and app.year = ? and project.start_date > ?", SpApplication.ready_statuses, SpApplication::YEAR, Time.now],
+                              :conditions => ["app.status IN(?) and app.year = ? and project.start_date > ?", SpApplication.ready_statuses, SpApplication.year, Time.now],
                               :joins => "as project inner join sp_applications app on (app.current_project_queue_id = project.id)",
                               :group => "project.id")
     projects.each do |project|
