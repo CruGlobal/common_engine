@@ -162,19 +162,19 @@ class SpApplication < AnswerSheet
   end
 
   def designation_number=(val)
-    if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id, :year => SpApplication::YEAR).first
+    if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id, :year => SpApplication.year).first
       designation.designation_number = val
     else
       designation = SpDesignationNumber.new(
                       :person_id => self.person_id, 
                       :project_id => self.project_id,
                       :designation_number => val,
-                      :year => SpApplication::YEAR)
+                      :year => SpApplication.year)
     end
     designation.save!
   end
   
-  def designation_number(year = SpApplication::YEAR)
+  def designation_number(year = SpApplication.year)
     if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id, :year => year).first
       designation.designation_number.to_s
     else
@@ -194,12 +194,22 @@ class SpApplication < AnswerSheet
     end
   end
 
-  # When changing this variable, make sure the commit gets pulled into the MPD Tool as well
-  YEAR = 2012
-  
-  DEADLINE1 = Time.parse((SpApplication::YEAR - 1).to_s + "/12/10");
-  DEADLINE2 = Time.parse(SpApplication::YEAR.to_s + "/01/24");
-  DEADLINE3 = Time.parse(SpApplication::YEAR.to_s + "/02/24");
+  # When changing this method, make sure the commit gets pulled into the MPD Tool as well
+  def self.year
+    Time.now.month >= 9 ? Time.now.year + 1 : Time.now.year
+  end
+
+  def self.deadline1
+    Time.parse((SpApplication.year - 1).to_s + "/12/10")
+  end
+
+  def self.deadline2
+    Time.parse(SpApplication.year.to_s + "/01/24")
+  end
+
+  def self.deadline3
+    Time.parse(SpApplication.year.to_s + "/02/24")
+  end
 
   def name
     person.try(:informal_full_name)
@@ -211,13 +221,13 @@ class SpApplication < AnswerSheet
   
   def deadline_met
     if completed_at
-      if completed_at < DEADLINE1 + 1.day
+      if completed_at < SpApplication.deadline1 + 1.day
         return 1
       end
-      if completed_at < DEADLINE2 + 1.day
+      if completed_at < SpApplication.deadline2 + 1.day
         return 2
       end
-      if completed_at < DEADLINE3 + 1.day
+      if completed_at < SpApplication.deadline3 + 1.day
         return 3
       end
     end
@@ -247,7 +257,7 @@ class SpApplication < AnswerSheet
   end
   
   # Get designation_number
-  def get_designation_number(year = SpApplication::YEAR)
+  def get_designation_number(year = SpApplication.year)
     SpDesignationNumber.find_by_person_id_and_project_id_and_year(self.person_id, self.get_project_id, year).try(:designation_number)
   end
 
@@ -312,7 +322,7 @@ class SpApplication < AnswerSheet
   
   
   def self.payment_deadline
-    Time.parse("#{SpApplication::YEAR.to_s}-02-25 03:00")
+    Time.parse("#{SpApplication.year.to_s}-02-25 03:00")
   end
 
   def has_paid?
@@ -518,7 +528,7 @@ class SpApplication < AnswerSheet
     uncompleted_apps = SpApplication.find(:all,
     :select => "app.*",
     :joins => "as app inner join sp_projects as proj on (proj.id = app.preference1_id)",
-    :conditions => ["app.status in (?) and app.year = ? and proj.start_date > ?", SpApplication.uncompleted_statuses, SpApplication::YEAR, Time.now])
+    :conditions => ["app.status in (?) and app.year = ? and proj.start_date > ?", SpApplication.uncompleted_statuses, SpApplication.year, Time.now])
     uncompleted_apps.each do |app|
       if (app.person.informal_full_name && app.email_address && app.email_address != "")
         SpApplicationMailer.deliver_status(app)

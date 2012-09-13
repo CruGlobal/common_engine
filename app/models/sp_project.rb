@@ -1,69 +1,69 @@
 begin
-require 'google_geocode'
+  require 'google_geocode'
 rescue LoadError
 end
 class SpProject < ActiveRecord::Base
   unloadable
   has_attached_file :picture, :styles => { :medium => "500x300>", :thumb => "100x100>" },
-                              :storage => :s3,
-                              :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
-                              :path => "sp/project/:attachment/:id/:filename"
-                              
+    :storage => :s3,
+    :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
+    :path => "sp/project/:attachment/:id/:filename"
+
   has_attached_file :logo, :styles => { :medium => "300x300>", :thumb => "100x100>" },
-                              :storage => :s3,
-                              :s3_protocol => 'https',
-                              :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
-                              :path => "sp/project/:attachment/:id/:filename"
-                              
+    :storage => :s3,
+    :s3_protocol => 'https',
+    :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
+    :path => "sp/project/:attachment/:id/:filename"
+
   validates_attachment_size :picture, :less_than => 1.megabyte, :message => "can't be more than 1MB"
   validates_attachment_size :logo, :less_than => 1.megabyte, :message => "can't be more than 1MB"
-#  image_accessor :picture
-#  image_accessor :logo
-  
+  #  image_accessor :picture
+  #  image_accessor :logo
+
   # SP-298
   has_many :sp_designation_numbers
-  
+
   belongs_to :created_by, :class_name => "::Person", :foreign_key => "created_by_id"
   belongs_to :updated_by, :class_name => "::Person", :foreign_key => "updated_by_id"
-  
+
   belongs_to :basic_info_question_sheet, :class_name => "QuestionSheet", :foreign_key => "basic_info_question_sheet_id"
   belongs_to :template_question_sheet, :class_name => "QuestionSheet", :foreign_key => "template_question_sheet_id"
   belongs_to :project_specific_question_sheet, :class_name => "QuestionSheet", :foreign_key => "project_specific_question_sheet_id"
-  
+
   has_many   :stats, :class_name => "SpStat", :foreign_key => "project_id"
   belongs_to :primary_ministry_focus, :class_name => 'SpMinistryFocus', :foreign_key => :primary_ministry_focus_id
   has_and_belongs_to_many :ministry_focuses, :class_name => 'SpMinistryFocus', :join_table => "sp_ministry_focuses_projects"
   has_many :sp_staff, :class_name => "SpStaff", :foreign_key => "project_id"
-  
+
   has_many :project_gospel_in_actions, :class_name => "SpProjectGospelInAction", :foreign_key => "project_id", :dependent => :destroy
   has_many :gospel_in_actions, :through => :project_gospel_in_actions
-  
+
   has_many :student_quotes, :class_name => "SpStudentQuote", :foreign_key => "project_id", :dependent => :destroy
   accepts_nested_attributes_for :student_quotes, :reject_if => lambda { |a| a[:quote].blank? }, :allow_destroy => true
-  
+
   has_many :sp_applications, :dependent => :nullify, :foreign_key => :project_id
 
   has_one :target_area, :foreign_key => :eventKeyID, :conditions => { :eventType => "SP" }
 
-  has_many :statistics, :finder_sql => proc { "select ministry_statistic.*, YEAR(ministry_statistic.periodBegin) as `stat_year` from sp_projects " +
-    'left join ministry_targetarea on sp_projects.id = ministry_targetarea.eventKeyID and eventType = "SP" ' +
-    'left join ministry_activity on ministry_activity.fk_targetAreaID = ministry_targetarea.`targetAreaID` ' +
-    'left join ministry_statistic on ministry_statistic.`fk_Activity` = ministry_activity.`ActivityID` ' +
-    "where sp_projects.id = #{id} and ministry_statistic.periodBegin is not null " + 
-    'order by periodBegin desc' }
+  has_many :statistics, :finder_sql => proc { "select ministry_statistic.* from sp_projects " +
+                                              'left join ministry_targetarea on sp_projects.id = ministry_targetarea.eventKeyID and eventType = "SP" ' +
+                                              'left join ministry_activity on ministry_activity.fk_targetAreaID = ministry_targetarea.`targetAreaID` ' +
+                                              'left join ministry_statistic on ministry_statistic.`fk_Activity` = ministry_activity.`ActivityID` ' +
+                                              "where sp_projects.id = #{id} and ministry_statistic.sp_year is not null " + 
+  'order by periodBegin desc' }
 
   validates_presence_of :name, :display_location, :start_date, :end_date, :student_cost, :max_accepted_men, :max_accepted_women,
-                        :project_contact_name, 
-                        :city, :country, 
-                        :primary_partner, :report_stats_to
+    :project_contact_name, 
+    :city, :country, 
+    :primary_partner, :report_stats_to
 
-# :project_contact_role, :project_contact_phone, :project_contact_email, 
-#                         :project_contact2_name, :project_contact2_role, :project_contact2_phone, :project_contact2_email, 
-#                         :staff_start_date, :staff_end_date,
-#                                                 
+  # :project_contact_role, :project_contact_phone, :project_contact_email, 
+  #                         :project_contact2_name, :project_contact2_role, :project_contact2_phone, :project_contact2_email, 
+  #                         :staff_start_date, :staff_end_date,
+  #                                                 
   validates_inclusion_of :use_provided_application, :partner_region_only, :in => [true, false], :message => "can't be blank"
 
-#                        
+  #                        
   validates_presence_of  :apply_by_date, :if => :use_provided_application
   validates_presence_of  :state, :if => Proc.new { |project| !project.is_wsn? } #:is_wsn?
 
@@ -71,14 +71,15 @@ class SpProject < ActiveRecord::Base
   validates_inclusion_of :max_student_women_applicants, :in=>0..100, :message => "can't be less than 0 or greater than 100"
   # validates_inclusion_of :ideal_staff_men, :in=>1..100, :message => "can't be 0 or greater than 100"
   # validates_inclusion_of :ideal_staff_women, :in=>0..100, :message => "can't be less than 0 or greater than 100"
-  
+
   validates_uniqueness_of :name
   validate :validate_partnership
 
   scope :with_partner, proc {|partner| {:conditions => ["primary_partner IN(?) OR secondary_partner IN(?) OR tertiary_partner IN(?)", partner, partner, partner]}}
   scope :show_on_website, where(:show_on_website => true, :project_status => 'open')
   scope :uses_application, where(:use_provided_application => true)
-  scope :current, where(:project_status => 'open')
+  scope :current, where("project_status = 'open' AND open_application_date <= ? AND start_date >= ?", Date.today, Date.today)
+  scope :open, where("project_status = 'open'")
   scope :ascend_by_name, order(:name)
   scope :descend_by_name, order("name desc")
   scope :ascend_by_pd, order(Person.table_name + '.lastName, ' + Person.table_name + '.firstName').where('sp_staff.type' => 'PD').joins({:sp_staff => :person})
@@ -91,26 +92,31 @@ class SpProject < ActiveRecord::Base
   scope :not_full_women, where("current_students_women < max_accepted_women AND max_student_women_applicants > current_applicants_women")
   scope :has_chart_field, where("operating_business_unit is not null AND operating_business_unit <> '' AND operating_operating_unit is not null AND operating_operating_unit <> '' AND operating_department is not null AND operating_department <> ''")
   scope :missing_chart_field, where("operating_business_unit is null OR operating_business_unit = '' OR operating_operating_unit is null OR operating_operating_unit = '' OR operating_department is null OR operating_department = ''")
-  
+
   scope :pd_like, lambda {|name| where(Person.table_name + '.lastName LIKE ? OR ' + Person.table_name + '.firstName LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'PD').joins({:sp_staff => :person})}
   scope :apd_like, lambda {|name| where(Person.table_name + '.lastName LIKE ? OR ' + Person.table_name + '.firstName LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'APD').joins({:sp_staff => :person})}
   scope :opd_like, lambda {|name| where(Person.table_name + '.lastName LIKE ? OR ' + Person.table_name + '.firstName LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'OPD').joins(:sp_staff)}
-  
-  
+
+
   before_create :set_to_open
-  before_save :get_coordinates, :calculate_weeks
+  before_save :get_coordinates, :calculate_weeks, :set_year
   begin
-  date_setters :apply_by_date, :start_date, :end_date, :date_of_departure, :date_of_return, :staff_start_date, :staff_end_date, :pd_start_date, :pd_end_date, :pd_close_start_date, :pd_close_end_date, :student_staff_start_date, :student_staff_end_date
+    date_setters :apply_by_date, :start_date, :end_date, :date_of_departure, :date_of_return, :staff_start_date, :staff_end_date, :pd_start_date, :pd_end_date, 
+      :pd_close_start_date, :pd_close_end_date, :student_staff_start_date, :student_staff_end_date, :open_application_date, :archive_project_date
   rescue NoMethodError
   end
-  
-  
+
+
   @@regions = {}
-  
+
+  def current?
+    !!SpProject.current.find_by_id(id)
+  end
+
   def gospel_in_aciton_ids=(ids)
     self.gospel_in_actions = SpGospelInAction.find(ids)
   end    
-  
+
   # Leadership
   def pd(yr = nil)
     yr ||= year
@@ -136,71 +142,71 @@ class SpProject < ActiveRecord::Base
     yr ||= year
     @staff ||= {}
     @staff[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Staff'}.collect(&:person_id)).
-                                    includes(:current_address).
-                                    order('lastName, firstName')
+      includes(:current_address).
+      order('lastName, firstName')
   end
   def volunteers(yr = nil)
     yr ||= year
     @volunteers ||= {}
     @volunteers[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Volunteer'}.collect(&:person_id)).
-                                    includes(:current_address).
-                                    order('lastName, firstName')
+      includes(:current_address).
+      order('lastName, firstName')
   end
   def staff_and_volunteers(yr = nil)
     yr ||= year
     @volunteers ||= {}
     @volunteers[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| ['Volunteer', 'Staff'].include?(s.type)}.collect(&:person_id))
-                                    .includes(:current_address)
-                                    .order('lastName, firstName')
+    .includes(:current_address)
+    .order('lastName, firstName')
   end
   def kids(yr = nil)
     yr ||= year
     @kids ||= {}
     @kids[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Kid'}.collect(&:person_id)).
-                                    includes(:current_address).
-                                    order('lastName, firstName')
+      includes(:current_address).
+      order('lastName, firstName')
   end
 
   def evaluators(yr = nil)
     yr ||= year
     @evaluators ||= {}
     @evaluators[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Evaluator'}.collect(&:person_id)).
-                                    includes(:current_address).
-                                    order('lastName, firstName')
+      includes(:current_address).
+      order('lastName, firstName')
   end
-  
+
   def non_app_participants(yr = nil)
     yr ||= year
     @non_app_participants ||= {}
     @non_app_participants[yr] ||= Person.where(:personid => sp_staff.where('sp_staff.year' => yr).find_all {|s| s.type == 'Non App Participant'}.collect(&:person_id)).
-                                    includes(:current_address).
-                                    order('lastName, firstName')
+      includes(:current_address).
+      order('lastName, firstName')
   end
-  
+
   def pd=(person_id, yr = nil)
     yr ||= year
     sp_staff.where('sp_staff.year' => yr, 'sp_staff.type' => 'PD').first.try(:destroy)
     sp_staff.create(:year => yr, :type => 'PD', :person_id => person_id) if person_id
   end
-  
+
   def apd=(person_id, yr = nil)
     yr ||= year
     sp_staff.where('sp_staff.year' => yr, 'sp_staff.type' => 'APD').first.try(:destroy)
     sp_staff.create(:year => yr, :type => 'APD', :person_id => person_id) if person_id
   end
-  
+
   def opd=(person_id, yr = nil)
     yr ||= year
     sp_staff.where('sp_staff.year' => yr, 'sp_staff.type' => 'OPD').first.try(:destroy)
     sp_staff.create(:year => yr, :type => 'OPD', :person_id => person_id) if person_id
   end
-  
+
   def coordinator=(person_id, yr = nil)
     yr ||= year
     sp_staff.where('sp_staff.year' => yr, 'sp_staff.type' => 'Coordinator').first.try(:destroy)
     sp_staff.create(:year => yr, :type => 'Coordinator', :person_id => person_id) if person_id
   end
-  
+
   def validate_partnership
     if partner_region_only && (primary_partner.length != 2 && secondary_partner.length != 2)
       errors.add_to_base("You must choose a regional partnership if you want to accept from Partner Region only.")
@@ -212,11 +218,15 @@ class SpProject < ActiveRecord::Base
   end
   def open!
     update_attribute('project_status', 'open')
-    update_attribute('year', SpApplication::YEAR)
+    update_attribute('year', SpApplication.year)
   end
-  
+
   def closed?
     project_status == 'closed'
+  end
+
+  def open?
+    !closed?
   end
 
   def url=(val)
@@ -238,7 +248,13 @@ class SpProject < ActiveRecord::Base
     end
     true
   end
-  
+
+  def set_year
+    if start_date
+      self.year = start_date.month >= 9 ? start_date.year + 1 : start_date.year
+    end
+  end
+
   def is_wsn?
     return country != 'United States'
   end
@@ -255,11 +271,11 @@ class SpProject < ActiveRecord::Base
   def percent_full_men
     max_accepted_men.to_i > 0 ? current_students_men / max_accepted_men.to_f * 100 : 0
   end
-  
+
   def contact
     pd || apd || opd || coordinator
   end
-  
+
   def color
     case true
     when percent_full < 50
@@ -270,16 +286,16 @@ class SpProject < ActiveRecord::Base
       'red'
     end
   end
-  
+
   def international
     country.present? && country != 'United States' ? 'Yes' : 'No'
   end
   alias_method :international?, :international
-  
+
   def pd_name_non_secure
     pd.informal_full_name if pd
   end
-  
+
   def pd_name
     pd_name_non_secure if (country_status == 'open' && pd && !pd.is_secure?)
   end
@@ -287,7 +303,7 @@ class SpProject < ActiveRecord::Base
   def apd_name_non_secure
     apd.informal_full_name if apd
   end
-  
+
   def apd_name
     apd_name_non_secure if (country_status == 'open' && apd && !apd.is_secure?)
   end
@@ -326,10 +342,10 @@ class SpProject < ActiveRecord::Base
 
   def country_status
     @country_status ||=
-    begin
-      country = Country.find_by_country(self.country)
-      country && country.closed? ? 'closed' : 'open'
-    end
+      begin
+        country = Country.find_by_country(self.country)
+        country && country.closed? ? 'closed' : 'open'
+      end
   end
 
   def update_counts(person)
@@ -353,10 +369,10 @@ class SpProject < ActiveRecord::Base
 
   def self.send_leader_reminder_emails
     projects = SpProject.find(:all,
-    :select => "project.*",
-    :conditions => ["app.status IN(?) and app.year = ? and project.start_date > ?", SpApplication.ready_statuses, SpApplication::YEAR, Time.now],
-    :joins => "as project inner join sp_applications app on (app.current_project_queue_id = project.id)",
-    :group => "project.id")
+                              :select => "project.*",
+                              :conditions => ["app.status IN(?) and app.year = ? and project.start_date > ?", SpApplication.ready_statuses, SpApplication.year, Time.now],
+                              :joins => "as project inner join sp_applications app on (app.current_project_queue_id = project.id)",
+                              :group => "project.id")
     projects.each do |project|
       if (project.pd || project.apd)
         SpProjectMailer.deliver_leader_reminder(project)
@@ -367,9 +383,9 @@ class SpProject < ActiveRecord::Base
   def self.send_stats_reminder_emails
     campus_ministry_types = ['Campus Ministry - US summer project', 'Campus Ministry - WSN summer project']
     projects = SpProject.find(:all,
-      :select => "project.*, stat.id as stat_id",
-      :conditions => ["project.report_stats_to in (?) and project.project_status = ?", campus_ministry_types, 'open'],
-      :joins => "as project left join sp_stats stat on (stat.project_id = project.id and stat.year = project.year)")
+                              :select => "project.*, stat.id as stat_id",
+                              :conditions => ["project.report_stats_to in (?) and project.project_status = ?", campus_ministry_types, 'open'],
+                              :joins => "as project left join sp_stats stat on (stat.project_id = project.id and stat.year = project.year)")
     #at some point, may also need to search SpProjectVersions
 
     projects.each do |project|
@@ -381,7 +397,7 @@ class SpProject < ActiveRecord::Base
       end
     end
   end
-  
+
   def to_s
     name
   end
@@ -421,12 +437,12 @@ class SpProject < ActiveRecord::Base
     end
     true
   end
-  
+
   def get_previous_year_records(version)
     versions = SpProjectVersion.find(:all, :conditions => ['sp_project_id = ? AND id IN (' + SpProject.build_search_project_id_string + ')', self.id], :order => :year)
     versions.reverse
   end
-  
+
   def self.build_search_project_id_string
     string = ""
     query = "select max(id) as id from sp_project_versions group by sp_project_id, year order by max(id)"
@@ -437,35 +453,35 @@ class SpProject < ActiveRecord::Base
     end
     string.chomp(", ")
   end
-  
+
   def capacity
     max_accepted_men.to_i + max_accepted_women.to_i
   end
-  
+
   def accepted_count
     current_students_men.to_i + current_students_women.to_i
   end
-  
+
   def male_applicants_count(yr = nil)
     yr ||= year
     yr == year ? current_applicants_men : sp_applications.applicant.male.for_year(yr).count
   end
-  
+
   def female_applicants_count(yr = nil)
     yr ||= year
     yr == year ? current_applicants_women : sp_applications.applicant.female.for_year(yr).count
   end
-  
+
   def male_accepted_count(yr = nil)
     yr ||= year
     yr == year ? current_students_men : sp_applications.accepted.male.for_year(yr).count
   end
-  
+
   def female_accepted_count(yr = nil)
     yr ||= year
     yr == year ? current_students_women : sp_applications.accepted.female.for_year(yr).count
   end
-  
+
   def initialize_project_specific_question_sheet
     unless project_specific_question_sheet
       update_attribute(:project_specific_question_sheet_id, QuestionSheet.create!(:label => 'Project - ' + self.to_s).id)
