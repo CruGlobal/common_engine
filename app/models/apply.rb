@@ -13,13 +13,13 @@ class Apply < AnswerSheet
     # State machine stuff
     state :started
     state :submitted, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} submitted")
+                                  Rails.logger.info("application #{app.id} submitted")
                                   # TODO: Do we need to send a notification here?
                                   app.submitted_at = Time.now
                                 }
 
     state :completed, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} completed")
+                                  Rails.logger.info("application #{app.id} completed")
                                   # app.completed_at = Time.now
                                   # TODO: Do we need to send a notification here?
                                 }
@@ -29,18 +29,18 @@ class Apply < AnswerSheet
                                 }
 
     state :withdrawn, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} withdrawn")
+                                  Rails.logger.info("application #{app.id} withdrawn")
                                   # TODO: Do we need to send a notification here?
                                   app.withdrawn_at = Time.now
                                 }
 
     state :accepted, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} accepted")
+                                  Rails.logger.info("application #{app.id} accepted")
                                   app.accepted_at = Time.now
                                }
 
     state :declined, :enter => Proc.new {|app|
-                                  logger.info("application #{app.id} declined")
+                                  Rails.logger.info("application #{app.id} declined")
                                }
 
     event :submit do
