@@ -1,12 +1,12 @@
 require 'aasm'
 
 # a visitor applies to a sleeve (application)
-class Apply < ActiveRecord::Base
+class Apply < AnswerSheet
   include AASM
   unloadable
   self.table_name = "si_applies"
   
-  attr_accessible :sleeve_id, :applicant_id
+  attr_accessible :applicant_id ,:sleeve_id
   
   aasm :initial => :started, :column => :status do
   
@@ -88,10 +88,10 @@ class Apply < ActiveRecord::Base
     end
   end
 
-  belongs_to :sleeve
+#  belongs_to :sleeve
   belongs_to :applicant, :class_name => "Person", :foreign_key => "applicant_id"
-  has_many :apply_sheets, :include => :sleeve_sheet
-  has_many :references
+#  has_many :apply_sheets, :include => :sleeve_sheet
+  has_many :references, :class_name => 'ReferenceSheet', :foreign_key => :applicant_answer_sheet_id, :dependent => :destroy
   has_many :payments
   has_one :hr_si_application
   
