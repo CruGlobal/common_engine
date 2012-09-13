@@ -6,7 +6,7 @@ class Apply < AnswerSheet
   unloadable
   self.table_name = "si_applies"
   
-  attr_accessible :applicant_id ,:sleeve_id
+  attr_accessible :applicant_id
   
   aasm :initial => :started, :column => :status do
   
@@ -296,7 +296,7 @@ class Apply < AnswerSheet
     return true if self.completed?
     return false unless self.submitted?
     return false unless self.has_paid?
-    return false unless self.completed_references.length == self.sleeve.reference_sheets.length
+    return false unless self.completed_references.length == 4 #TODO: NO CONSTANT
     return self.complete!
   end
 
