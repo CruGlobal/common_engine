@@ -169,24 +169,24 @@ class Apply < AnswerSheet
   end
   
   def staff_reference
-    get_reference("Staff")
+    get_reference(Element.where("kind = 'ReferenceQuestion' AND style = 'staff'").first.id)
   end
   
   def discipler_reference
-    get_reference("Discipler")
+    get_reference(Element.where("kind = 'ReferenceQuestion' AND style = 'discipler'").first.id)
   end
   
   def roommate_reference
-    get_reference("Roommate")
+    get_reference(Element.where("kind = 'ReferenceQuestion' AND style = 'roommate'").first.id)
   end
 
   def friend_reference
-    get_reference("Friend Reference")
+    get_reference(Element.where("kind = 'ReferenceQuestion' AND style = 'friend'").first.id)
   end
   
-  def get_reference(title)
+  def get_reference(question_id)
     references.each do |r|
-      return r if r.sleeve_sheet.title.downcase.include? title.downcase
+      return r if r.question_id = question_id
     end
     return Reference.new()
   end
