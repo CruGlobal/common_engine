@@ -21,7 +21,7 @@ class Staff < ActiveRecord::Base
   end
   
   def self.strategy_order
-    @@strategy_order ||= ['National Director','Operations','HR','LD','Fund Dev','CFM','FLD','EFM','DES','EPI','ESS','NTN','BRD','WSN','R&D','SR','SV','SSS','JPO','LHS','']
+    @@strategy_order ||= ['National Director','Operations','HR','LD','Fund Dev','CFM','FLD','EFM','DES','EPI','ESS','NTN','BRD','WSN','GLM','R&D','SR','SV','SSS','JPO','LHS','']
   end
   
   def self.strategies
@@ -39,7 +39,8 @@ class Staff < ActiveRecord::Base
       'ESS' => 'Every Student Sent',
       'NTN' => 'Nations',
       'BRD' => 'Bridges',
-      'WSN' => 'WSN',
+      'WSN' => 'Global Missions',
+      'GLM' => 'Global Missions',
       'R&D' => 'Research and Development',
       'SV' => 'Student Venture',
       'LHS' => 'Lake Hart Stint'

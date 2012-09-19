@@ -39,7 +39,7 @@ class Activity < ActiveRecord::Base
       "SA" => "SALT",
       "SV" => "Student Venture",
       "VL" => "Valor",
-      "WS" => "WSN",
+      "WS" => "Global Missions",
       "OT" => "Other"
     }
   end
