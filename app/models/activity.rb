@@ -28,6 +28,7 @@ class Activity < ActiveRecord::Base
       "EV" => "Events",
       "FC" => "Faculty Commons",
       "FD" => "Fund Development",
+      "WS" => "Global Missions",
       "GK" => "Greek",
       "II" => "Impact",
       "KN" => "Keynote",
@@ -39,7 +40,6 @@ class Activity < ActiveRecord::Base
       "SA" => "SALT",
       "SV" => "Student Venture",
       "VL" => "Valor",
-      "WS" => "Global Missions",
       "OT" => "Other"
     }
   end
