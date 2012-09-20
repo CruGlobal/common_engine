@@ -208,7 +208,7 @@ class Apply < AnswerSheet
   end
   
   def has_references?
-    self.apply_sheets.detect { |as| as.sleeve_sheet.assign_to == 'reference'}
+    self.references.size > 0
   end
   
   # The :frozen? method lets the QuestionnaireEngine know to not allow
