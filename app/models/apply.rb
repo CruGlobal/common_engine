@@ -188,7 +188,7 @@ class Apply < AnswerSheet
     references.each do |r|
       return r if r.question_id = question_id
     end
-    return Reference.new()
+    return ReferenceSheet.new()
   end
   
   def answer_sheets
