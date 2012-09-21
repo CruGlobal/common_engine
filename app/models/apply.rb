@@ -192,17 +192,17 @@ class Apply < AnswerSheet
   end
   
   def answer_sheets
-    a_sheets = Array.new()
-    apply_sheets.each do |s|
-      a_sheets << s.answer_sheet
+    a_sheets = [self]
+    references.each do |r|
+      a_sheets << r
     end
     a_sheets
   end
   
   def reference_answer_sheets
     r_sheets = Array.new()
-    self.apply_sheets.find(:all, :include => [:sleeve_sheet, :answer_sheet], :conditions => ["#{SleeveSheet.table_name}.assign_to = ?", 'reference']).each do |s|
-      r_sheets << s.answer_sheet
+    references.each do |r|
+      r_sheets << r
     end
     r_sheets
   end
