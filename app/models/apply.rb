@@ -6,6 +6,8 @@ class Apply < AnswerSheet
   unloadable
   self.table_name = "si_applies"
   
+  COST = 35
+  
   attr_accessible :applicant_id
   
   aasm :initial => :started, :column => :status do
