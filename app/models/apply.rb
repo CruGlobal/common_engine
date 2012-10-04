@@ -152,6 +152,10 @@ class Apply < AnswerSheet
     applicant.try(:email)
   end
 
+  def phone
+    applicant.try(:phone)
+  end
+
   def has_paid?
     self.payments.each do |payment|
       return true if payment.approved?
