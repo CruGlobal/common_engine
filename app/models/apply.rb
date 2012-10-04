@@ -143,6 +143,10 @@ class Apply < AnswerSheet
   def self.statuses
     Apply.unsubmitted_statuses | Apply.not_ready_statuses | Apply.ready_statuses | Apply.post_ready_statuses | Apply.not_going_statuses
   end
+  
+  def email
+    applicant.email if applicant
+  end
 
   def has_paid?
     self.payments.each do |payment|
