@@ -144,8 +144,12 @@ class Apply < AnswerSheet
     Apply.unsubmitted_statuses | Apply.not_ready_statuses | Apply.ready_statuses | Apply.post_ready_statuses | Apply.not_going_statuses
   end
   
+  def name
+    applicant.try(:informal_full_name)
+  end
+  
   def email
-    applicant.email if applicant
+    applicant.try(:email)
   end
 
   def has_paid?
