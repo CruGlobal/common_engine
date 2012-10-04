@@ -94,11 +94,13 @@ class Apply < AnswerSheet
   has_many :references, :class_name => 'ReferenceSheet', :foreign_key => :applicant_answer_sheet_id, :dependent => :destroy
   has_many :payments
   has_one :hr_si_application
+  has_one :answer_sheet_question_sheet, :foreign_key => "answer_sheet_id"
   
   scope :by_region, proc {|region, year| {:include => [:applicant, :references, [:hr_si_application => :sitrack_tracking], :payments],
                                :conditions => ["#{HrSiApplication.table_name}.siYear = ? and (concat_ws('','',#{Person.table_name}.region )= ? or #{SitrackTracking.table_name}.regionOfOrigin = ?)", year, region, region],
                                :order => "#{Person.table_name}.lastName, #{Person.table_name}.firstName"}}
   
+  before_create :create_answer_sheet_question_sheet
   after_save :complete
   
   # The statuses that mean an application has NOT been submitted
@@ -209,6 +211,10 @@ class Apply < AnswerSheet
   
   def has_references?
     self.references.size > 0
+  end
+  
+  def create_answer_sheet_question_sheet
+    self.answer_sheet_question_sheet ||= AnswerSheetQuestionSheet.create(:question_sheet_id => 1) #TODO: NO CONSTANT
   end
   
   # The :frozen? method lets the QuestionnaireEngine know to not allow
