@@ -90,9 +90,7 @@ class Apply < AnswerSheet
     end
   end
 
-#  belongs_to :sleeve
   belongs_to :applicant, :class_name => "Person", :foreign_key => "applicant_id"
-#  has_many :apply_sheets, :include => :sleeve_sheet
   has_many :references, :class_name => 'ReferenceSheet', :foreign_key => :applicant_answer_sheet_id, :dependent => :destroy
   has_many :payments
   has_one :hr_si_application
@@ -223,77 +221,6 @@ class Apply < AnswerSheet
     %w(started unsubmitted submitted).include?(self.status)
   end
 
-  # create Applicant answer sheets for this application
-  def find_or_create_applicant_answer_sheets
-    answer_sheets = []
-    
-    transaction do  
-      # existing answer sheets for this applicant
-      apply_sheets = self.apply_sheets.find(:all, :include => :sleeve_sheet, :conditions => ["#{SleeveSheet.table_name}.assign_to = ?", 'applicant'])
-  
-      if self.sleeve.present?
-        if apply_sheets.empty?
-          # check the application sleeve to setup answer sheets
-        
-          sleeve_sheets = self.sleeve.sleeve_sheets.find(:all, :conditions => "assign_to = 'applicant'")
-    
-          sleeve_sheets.each do |sleeve_sheet|
-            answer_sheet = sleeve_sheet.question_sheet.answer_sheets.create
-            # tie the answer_sheet to this visitor and sleeve via apply_sheets
-            self.apply_sheets.create(:sleeve_sheet => sleeve_sheet, :answer_sheet => answer_sheet)
-            answer_sheets << answer_sheet
-          end
-        else
-          # use what we have
-          answer_sheets = apply_sheets.map {|a| a.answer_sheet}
-        end
-      end
-    end
-    
-    answer_sheets
-  end
-  
-  def find_or_create_reference_answer_sheet(sleeve_sheet, create_new_answer_sheet = false)
-    answer_sheet = nil
-    
-    transaction do
-      apply_sheet = self.apply_sheets.find_by_sleeve_sheet_id(sleeve_sheet)
-      
-      if apply_sheet.nil?
-        answer_sheet = sleeve_sheet.question_sheet.answer_sheets.create
-        self.apply_sheets.create(:sleeve_sheet => sleeve_sheet, :answer_sheet => answer_sheet)
-      else
-        if create_new_answer_sheet
-          apply_sheet.answer_sheet = sleeve_sheet.question_sheet.answer_sheets.create
-          apply_sheet.save
-        end
-        answer_sheet = apply_sheet.answer_sheet
-      end
-    end
-    
-    answer_sheet
-  end
-  
-  # prepare "provide reference" page for editing (either new or existing data)
-  def reference_sheets
-    references = []
-    
-    # pre-defined template
-    sleeve_sheets = self.sleeve.sleeve_sheets.find(:all, :conditions => ['assign_to = ?', 'reference'])   # templates
-    
-    # any data?
-    data = self.references.find(:all).index_by(&:sleeve_sheet_id)
-    
-    sleeve_sheets.each do |ss|
-      reference = data[ss.id] || self.references.build(:sleeve_sheet_id => ss.id)   # existing data or an empty record
-      reference.title = ss.title  # reference title for easy access
-      reference.save! if reference.id.nil? 
-      references << reference
-    end
-    
-    references
-  end
-  
   def complete
     return true if self.completed?
     return false unless self.submitted?
