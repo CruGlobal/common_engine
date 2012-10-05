@@ -239,11 +239,13 @@ class Apply < AnswerSheet
     %w(started unsubmitted submitted).include?(self.status)
   end
 
-  def complete
+  def complete(ref = nil)
     return true if self.completed?
     return false unless self.submitted?
     return false unless self.has_paid?
-    return false unless self.completed_references.length == 4 #TODO: NO CONSTANT
+    references.each do |reference|
+      return false  unless reference.completed? || reference == ref
+    end
     return self.complete!
   end
 
