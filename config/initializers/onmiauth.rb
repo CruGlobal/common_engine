@@ -13,4 +13,5 @@ if defined?(OmniAuth::Builder)
 
     # provider :open_id, OpenID::Store::Filesystem.new('/tmp'), :name => 'google', :identifier => 'https://www.google.com/accounts/o8/id'
   end
+  OmniAuth.config.logger = Rails.logger
 end
