@@ -9,7 +9,7 @@ class UsersController < ApplicationController
     @person = Person.new
     if session[:omniauth]
       @user.apply_omniauth(session[:omniauth])
-      @person.apply_omniauth(session[:omniauth]["user_info"])
+      @person.apply_omniauth(session[:omniauth]["info"])
       @user.valid?
       @person.valid?
       @user.errors[:omniauth] = true if @user.errors.present? || @person.errors.present?
@@ -22,7 +22,7 @@ class UsersController < ApplicationController
     @person = Person.new(params[:person])
     if session[:omniauth]
       @user.apply_omniauth(session[:omniauth])
-      @person.apply_omniauth(session[:omniauth]["user_info"])
+      @person.apply_omniauth(session[:omniauth]["info"])
     end
     if @user.valid? && @person.valid?
       @user.save!

@@ -142,7 +142,7 @@ class User < ActiveRecord::Base
   end
   
   def apply_omniauth(omniauth)
-    self.username = omniauth['user_info']['email'] if username.blank?
+    self.username = omniauth['info']['email'] if username.blank?
     unless Authentication.find_by_provider_and_uid(omniauth['provider'], omniauth['uid'])
       authentication = authentications.build(:provider => omniauth['provider'], :uid => omniauth['uid'])
       authentication.token = omniauth['credentials']['token'] if omniauth['credentials']
@@ -183,7 +183,7 @@ class User < ActiveRecord::Base
       new_hash = {:dateCreated => Time.now, :dateChanged => Time.now,
                   :createdBy => ApplicationController.application_name,
                   :changedBy => ApplicationController.application_name}
-  	  person = Person.new(new_hash.merge({:firstName => omniauth['first_name'], :lastName => omniauth['last_name']}))
+  	  person = Person.new(new_hash.merge({:firstName => omniauth['info']['first_name'], :lastName => omniauth['info']['last_name']}))
   	  person.user = self
       person.save!
       address = Address.new(new_hash.merge({:email => self.username, 
