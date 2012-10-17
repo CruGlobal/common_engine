@@ -33,6 +33,7 @@ class Staff < ActiveRecord::Base
       'Fund Dev' => 'Fund Development',
       'CFM' => 'Campus Field Ministry',
       'FLD' => 'Campus Field Ministry',
+      'SV' =>  'Cru High School',
       'EFM' => 'Ethnic Field Ministry',
       'DES' => 'Destino',
       'EPI' => 'Epic',
@@ -42,7 +43,6 @@ class Staff < ActiveRecord::Base
       'WSN' => 'Global Missions',
       'GLM' => 'Global Missions',
       'R&D' => 'Research and Development',
-      'SV' => 'Student Venture',
       'LHS' => 'Lake Hart Stint'
     }
   end
