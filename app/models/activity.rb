@@ -38,7 +38,7 @@ class Activity < ActiveRecord::Base
       "IN" => "Nations",
       "OP" => "Operations",
       "SA" => "SALT",
-      "SV" => "Student Venture",
+      "SV" => "Cru High School",
       "VL" => "Valor",
       "OT" => "Other"
     }
