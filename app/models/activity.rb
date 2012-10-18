@@ -22,6 +22,7 @@ class Activity < ActiveRecord::Base
       "FS" => "Campus Field Ministry",
       "AA" => "Athletes In Action",
       "BR" => "Bridges",
+      "SV" => "Cru High School",
       "ID" => "Destino", 
       "IC" => "Ethnic Field Ministry",
       "IE" => "Epic",
@@ -38,7 +39,6 @@ class Activity < ActiveRecord::Base
       "IN" => "Nations",
       "OP" => "Operations",
       "SA" => "SALT",
-      "SV" => "Cru High School",
       "VL" => "Valor",
       "OT" => "Other"
     }
