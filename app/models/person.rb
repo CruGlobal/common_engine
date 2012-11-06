@@ -73,7 +73,7 @@ class Person < ActiveRecord::Base
   # validates_filesize_of :image, :in => 0..2.megabytes
   # 
   
-  before_save :stamp_changed, :set_region_if_campus_changed
+  before_save :check_region, :stamp_changed 
   before_create :stamp_created
   
   scope :not_secure, where("isSecure != 'T' or isSecure IS NULL")
@@ -341,8 +341,8 @@ class Person < ActiveRecord::Base
     self.lastName ||= omniauth['last_name']
   end
   
-  def set_region_if_campus_changed
-    if changed.include?('campus') && target_area 
+  def check_region
+    if self[:campus] && target_area && self[:region] != target_area.region
       self[:region] = target_area.region unless self[:region] == target_area.region
       self.universityState = target_area.state 
     end
