@@ -295,8 +295,8 @@ class Person < ActiveRecord::Base
   
   # Sets the primary email address in email_addresses table
   def primary_email_address=(email)
-    old_primary = email_addresses.select{ |email| email.primary == true }.first
-    if old_primary
+    old_primaries = email_addresses.select{ |email| email.primary == true }
+    old_primaries.each do |old_primary|
       old_primary.primary = 0
       old_primary.save!
     end
@@ -313,8 +313,8 @@ class Person < ActiveRecord::Base
   # Sets a phone number in the phone_numbers table
   def set_phone_number(phone, location, primary=false, extension=nil)
     if primary
-      old_primary = phone_numbers.select{ |phone| phone.primary == true }.first
-      if old_primary
+      old_primaries = phone_numbers.select{ |phone| phone.primary == true }
+      old_primaries.each do |old_primary|
         old_primary.primary = 0
         old_primary.save!
       end
