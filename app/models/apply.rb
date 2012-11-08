@@ -16,13 +16,13 @@ class Apply < AnswerSheet
     state :started
     state :submitted, :enter => Proc.new {|app|
                                   Rails.logger.info("application #{app.id} submitted")
-                                  # TODO: Do we need to send a notification here?
+                                  # SiApplicationMailer.deliver_submitted(app)
                                   app.submitted_at = Time.now
                                 }
 
     state :completed, :enter => Proc.new {|app|
                                   Rails.logger.info("application #{app.id} completed")
-                                  # app.completed_at = Time.now
+                                  # SiApplicationMailer.deliver_completed(app)
                                   # TODO: Do we need to send a notification here?
                                 }
 
