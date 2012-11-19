@@ -16,14 +16,13 @@ class Apply < AnswerSheet
     state :started
     state :submitted, :enter => Proc.new {|app|
                                   Rails.logger.info("application #{app.id} submitted")
-                                  # SiApplicationMailer.deliver_submitted(app)
+                                  notify_app_submitted
                                   app.submitted_at = Time.now
                                 }
 
     state :completed, :enter => Proc.new {|app|
                                   Rails.logger.info("application #{app.id} completed")
-                                  # SiApplicationMailer.deliver_completed(app)
-                                  # TODO: Do we need to send a notification here?
+                                  notify_app_completed
                                 }
 
     state :unsubmitted, :enter => Proc.new {|app|
@@ -237,6 +236,20 @@ class Apply < AnswerSheet
 
   def can_change_references?
     %w(started unsubmitted submitted).include?(self.status)
+  end
+  
+  def notify_app_submitted
+    Notifier.notification(self.email,
+                          "stintandinternships@cru.org", 
+                          "Application Submitted", 
+                          {'applicant_first_name' => applicant.nickname, }).deliver
+  end
+
+  def notify_app_completed
+    Notifier.notification(self.email,
+                          "stintandinternships@cru.org", 
+                          "Application Completed", 
+                          {'applicant_first_name' => applicant.nickname, }).deliver
   end
 
   def complete(ref = nil)
