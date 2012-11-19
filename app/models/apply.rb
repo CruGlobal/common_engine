@@ -16,13 +16,13 @@ class Apply < AnswerSheet
     state :started
     state :submitted, :enter => Proc.new {|app|
                                   Rails.logger.info("application #{app.id} submitted")
-                                  notify_app_submitted
+                                  app.notify_app_submitted
                                   app.submitted_at = Time.now
                                 }
 
     state :completed, :enter => Proc.new {|app|
                                   Rails.logger.info("application #{app.id} completed")
-                                  notify_app_completed
+                                  app.notify_app_completed
                                 }
 
     state :unsubmitted, :enter => Proc.new {|app|
