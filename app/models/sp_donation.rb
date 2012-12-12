@@ -16,25 +16,25 @@ class SpDonation < ActiveRecord::Base
     'NCG' => 'Non-Cash Gift',
     'IGT' => 'Internal Gift Transfer'
   }
-  # This may be backed by Peoplesoft/Oracle in the future.  
+  # This may be backed by Peoplesoft/Oracle in the future.
   # For now, it is backed by a table that is synchronized with Oracle
   def self.get_balance(designation_number, year = nil)
     return 0 unless designation_number
     if year
-      (SpDonation.sum(:amount, 
+      (SpDonation.sum(:amount,
                       :conditions => ["designation_number = ? AND donation_date > ?",
-                                      designation_number, 
+                                      designation_number,
                                       Time.new(year - 1,10,1)]) || 0)
     else
-      (SpDonation.sum(:amount, 
-                      :conditions => ["designation_number = ?", 
+      (SpDonation.sum(:amount,
+                      :conditions => ["designation_number = ?",
                                       designation_number]) || 0)
     end
   end
-  
+
   def self.get_balances(designation_numbers)
     return [] unless !designation_numbers.empty?
-    sums = SpDonation.sum(:amount, 
+    sums = SpDonation.sum(:amount,
       :conditions => ["designation_number in (?)", designation_numbers],
       :group => :designation_number)
     balances = Hash.new
@@ -43,30 +43,80 @@ class SpDonation < ActiveRecord::Base
     end
     return balances
   end
-  
-  def self.update_from_peoplesoft
+
+  def self.update_from_siebel
+    total_donations = 0
+    donors = {}
+    start_date = 2.years.ago.strftime("%Y-%m-%d")
+    end_date = Time.now.strftime("%Y-%m-%d")
+
     # last_date = SpDonation.maximum(:donation_date) || 2.years.ago
-    rows = PsDonation.connection.select_all("select * from hrsdon.ps_student_load_vw")
-    SpDonation.delete_all(["donation_date >  ?", 1.year.ago])
-    SpDonation.transaction do
-      rows.each do |row|
-        row[:designation_number] = row.delete('designation')
-        row[:donor_name] = row.delete('acct_name')
-        row[:medium_type] = row.delete('don_medium_type')
-        if donation = SpDonation.find_by_donation_id(row['donation_id'])
-          donation.update_attributes(row)
-        else
-          SpDonation.create(row)
+    SpDesignationNumber.where(year: SpApplication.year - 1).find_each do |dn|
+      if dn.designation_number.present?
+        donation_ids = []
+
+        # Get all donations for current designations
+        Rails.logger.debug(Time.now)
+        donations = SiebelDonations::Donation.find(designations: dn.designation_number, start_date: start_date, end_date: end_date)
+
+        donations.each do |donation|
+          attributes = {
+                         designation_number: donation.designation,
+                         amount: donation.amount,
+                         medium_type: donation.payment_method,
+                         donation_id: donation.id
+                       }
+
+          if old_donation = SpDonation.find_by_donation_id(donation.id)
+            old_donation.update_attributes(attributes)
+          else
+            # Find the donor for this donation
+            unless donors[donation.donor_id]
+              Rails.logger.debug(Time.now)
+              donors[donation.donor_id] = SiebelDonations::Donor.find(ids: donation.donor_id).first
+            end
+            donor = donors[donation.donor_id]
+            address = donor.primary_address || SiebelDonations::Address.new
+            contact = donor.primary_contact || SiebelDonations::Contact.new
+            email_address = contact.primary_email_address || SiebelDonations::EmailAddress.new
+            phone_number = contact.primary_phone_number || SiebelDonations::PhoneNumber.new
+
+            attributes.merge!({
+              people_id: donor.id,
+              donor_name: donor.account_name,
+              donation_date: donation.donation_date,
+              address1: address.address1,
+              address2: address.address2,
+              address3: address.address3,
+              city: address.city,
+              state: address.state,
+              zip: address.zip,
+              phone: phone_number.phone,
+              email_address: email_address.email,
+            })
+
+            SpDonation.create(attributes)
+          end
+          donation_ids << donation.id
         end
+
+        # Remove any donations not found in the update
+        SpDonation.where(designation_number: dn.designation_number)
+                  .where("donation_date > ? AND donation_id NOT IN(?)", 2.years.ago, donation_ids)
+                  .delete_all if donation_ids.present?
+
+        total_donations += donations.length
       end
     end
-    rows.length
+
+    total_donations
   end
+
 
 	def	medium
 		MEDIUMS[medium_type]
 	end
-	
+
   def address
     street = [address1, address2, address3]
     street.reject!(&:blank?)
