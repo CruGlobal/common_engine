@@ -27,8 +27,16 @@ class AuthenticationFilter
           end
         else #found user by guid
           if user.username != cas_user
-            @logger.info("Sso username different; changing username from " + user.username + " to " + cas_user)
-            user.username = cas_user
+            other_user = User.find_by_username(cas_user)
+            if other_user
+              @logger.info("Sso username different, but new username already exists in SSM table. Marking for merge and moving on.")
+              user.needs_merge = "#{guid} - #{cas_user}"
+              other_user.needs_merge = "#{guid} - #{cas_user}"
+              other_user.save
+            else
+              @logger.info("Sso username different; changing username from " + user.username + " to " + cas_user)
+              user.username = cas_user
+            end
           end
         end
         #stamp user login
