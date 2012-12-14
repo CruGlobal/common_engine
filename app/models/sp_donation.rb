@@ -55,7 +55,7 @@ class SpDonation < ActiveRecord::Base
     end_date = Time.now.strftime("%Y-%m-%d")
 
     # last_date = SpDonation.maximum(:donation_date) || 2.years.ago
-    SpDesignationNumber.where(year: SpApplication.year - 1).find_each do |dn|
+    SpDesignationNumber.where(year: SpApplication.year).find_each do |dn|
       if dn.designation_number.present?
         donation_ids = []
 
