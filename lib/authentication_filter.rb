@@ -26,7 +26,7 @@ class AuthenticationFilter
             user.globallyUniqueID = guid;
           end
         else #found user by guid
-          if user.username != cas_user
+          if user.username.upcase != cas_user.upcase
             other_user = User.find_by_username(cas_user)
             if other_user
               @logger.info("Sso username different, but new username already exists in SSM table. Marking for merge and moving on.")
