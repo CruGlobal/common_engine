@@ -1,4 +1,8 @@
+#begin
+require 'retryable'
+#rescue; end
 class SpDonation < ActiveRecord::Base
+
   scope :for_year, lambda {|year| where(["donation_date > ?", Time.new(year - 1,10,1)])}
   MEDIUMS = {
     'AE'  => 'American Express',
@@ -51,13 +55,15 @@ class SpDonation < ActiveRecord::Base
     end_date = Time.now.strftime("%Y-%m-%d")
 
     # last_date = SpDonation.maximum(:donation_date) || 2.years.ago
-    SpDesignationNumber.where(year: SpApplication.year - 1).find_each do |dn|
+    SpDesignationNumber.where(year: SpApplication.year).find_each do |dn|
       if dn.designation_number.present?
         donation_ids = []
 
         # Get all donations for current designations
         Rails.logger.debug(Time.now)
-        donations = SiebelDonations::Donation.find(designations: dn.designation_number, start_date: start_date, end_date: end_date)
+        donations = Retryable.retryable :times => 10, :sleep => 10 do
+          SiebelDonations::Donation.find(designations: dn.designation_number, start_date: start_date, end_date: end_date)
+        end
 
         donations.each do |donation|
           attributes = {
@@ -73,7 +79,15 @@ class SpDonation < ActiveRecord::Base
             # Find the donor for this donation
             unless donors[donation.donor_id]
               Rails.logger.debug(Time.now)
-              donors[donation.donor_id] = SiebelDonations::Donor.find(ids: donation.donor_id).first
+              donors[donation.donor_id] = Retryable.retryable :times => 20, :sleep => 15 do
+                SiebelDonations::Donor.find(ids: donation.donor_id).first
+              end
+
+              # Make sure we got a donor
+              if donors[donation.donor_id].nil?
+                Rails.logger.debug "Couldn't find a donor with ID: #{donation.donor_id} -- #{donation.inspect}"
+                next
+              end
             end
             donor = donors[donation.donor_id]
             address = donor.primary_address || SiebelDonations::Address.new
