@@ -1,6 +1,6 @@
-#begin
+begin
 require 'retryable'
-#rescue; end
+rescue; end
 class SpDonation < ActiveRecord::Base
 
   scope :for_year, lambda {|year| where(["donation_date > ?", Time.new(year - 1,10,1)])}
