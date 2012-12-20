@@ -62,7 +62,7 @@ class SpDonation < ActiveRecord::Base
 
         # Get all donations for current designations
         Rails.logger.debug(Time.now)
-        donations = Retryable.retryable :times => 10, :sleep => 10 do
+        donations = Retryable.retryable :on => [Net::HTTPInternalServerError, Timeout::Error, Errno::ECONNRESET], :times => 20, :sleep => 20 do
           SiebelDonations::Donation.find(designations: dn.designation_number, start_date: start_date, end_date: end_date)
         end
 
