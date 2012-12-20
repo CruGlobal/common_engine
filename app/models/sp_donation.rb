@@ -66,7 +66,7 @@ class SpDonation < ActiveRecord::Base
           donations = Retryable.retryable :on => [Net::HTTPInternalServerError, Timeout::Error, Errno::ECONNRESET], :times => 20, :sleep => 20 do
             SiebelDonations::Donation.find(designations: dn.designation_number, start_date: start_date, end_date: end_date)
           end
-        rescue Net::HTTPBadRequest
+        rescue RestClient::ExceptionWithResponse
           # If there was something bad about this request, skip it and move on
           next
         end
