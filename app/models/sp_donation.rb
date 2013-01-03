@@ -1,7 +1,3 @@
-begin
-require 'retryable'
-rescue LoadError
-end
 class SpDonation < ActiveRecord::Base
 
   scope :for_year, lambda {|year| where(["donation_date > ?", Time.new(year - 1,10,1)])}
@@ -63,9 +59,7 @@ class SpDonation < ActiveRecord::Base
         # Get all donations for current designations
         Rails.logger.debug(Time.now)
         begin
-          donations = Retryable.retryable :on => [Net::HTTPInternalServerError, Timeout::Error, Errno::ECONNRESET], :times => 20, :sleep => 20 do
-            SiebelDonations::Donation.find(designations: dn.designation_number, start_date: start_date, end_date: end_date)
-          end
+          donations = SiebelDonations::Donation.find(designations: dn.designation_number, start_date: start_date, end_date: end_date)
         rescue RestClient::ExceptionWithResponse
           # If there was something bad about this request, skip it and move on
           next
@@ -84,10 +78,7 @@ class SpDonation < ActiveRecord::Base
           else
             # Find the donor for this donation
             unless donors[donation.donor_id]
-              Rails.logger.debug(Time.now)
-              donors[donation.donor_id] = Retryable.retryable :times => 20, :sleep => 15 do
-                SiebelDonations::Donor.find(ids: donation.donor_id).first
-              end
+              donors[donation.donor_id] = SiebelDonations::Donor.find(ids: donation.donor_id).first
 
               # Make sure we got a donor
               if donors[donation.donor_id].nil?
