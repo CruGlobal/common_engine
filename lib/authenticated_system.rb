@@ -127,6 +127,7 @@ module AuthenticatedSystem
         cookies[:auth_token] = { :value => self.current_user.remember_token , :expires => self.current_user.remember_token_expires_at }
         flash[:notice] = "Logged in successfully"
       end
+      user
     end
     def sign_in_and_redirect(user, return_to = nil)
       self.current_user = user
