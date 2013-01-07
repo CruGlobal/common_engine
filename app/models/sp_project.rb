@@ -49,21 +49,21 @@ class SpProject < ActiveRecord::Base
                                               'left join ministry_targetarea on sp_projects.id = ministry_targetarea.eventKeyID and eventType = "SP" ' +
                                               'left join ministry_activity on ministry_activity.fk_targetAreaID = ministry_targetarea.`targetAreaID` ' +
                                               'left join ministry_statistic on ministry_statistic.`fk_Activity` = ministry_activity.`ActivityID` ' +
-                                              "where sp_projects.id = #{id} and ministry_statistic.sp_year is not null " + 
+                                              "where sp_projects.id = #{id} and ministry_statistic.sp_year is not null " +
   'order by periodBegin desc' }
 
   validates_presence_of :name, :display_location, :start_date, :end_date, :student_cost, :max_accepted_men, :max_accepted_women,
-    :project_contact_name, 
-    :city, :country, 
+    :project_contact_name,
+    :city, :country,
     :primary_partner, :report_stats_to
 
-  # :project_contact_role, :project_contact_phone, :project_contact_email, 
-  #                         :project_contact2_name, :project_contact2_role, :project_contact2_phone, :project_contact2_email, 
+  # :project_contact_role, :project_contact_phone, :project_contact_email,
+  #                         :project_contact2_name, :project_contact2_role, :project_contact2_phone, :project_contact2_email,
   #                         :staff_start_date, :staff_end_date,
-  #                                                 
+  #
   validates_inclusion_of :use_provided_application, :partner_region_only, :in => [true, false], :message => "can't be blank"
 
-  #                        
+  #
   validates_presence_of  :apply_by_date, :if => :use_provided_application
   validates_presence_of  :state, :if => Proc.new { |project| !project.is_wsn? } #:is_wsn?
 
@@ -101,7 +101,7 @@ class SpProject < ActiveRecord::Base
   before_create :set_to_open
   before_save :get_coordinates, :calculate_weeks, :set_year
   begin
-    date_setters :apply_by_date, :start_date, :end_date, :date_of_departure, :date_of_return, :staff_start_date, :staff_end_date, :pd_start_date, :pd_end_date, 
+    date_setters :apply_by_date, :start_date, :end_date, :date_of_departure, :date_of_return, :staff_start_date, :staff_end_date, :pd_start_date, :pd_end_date,
       :pd_close_start_date, :pd_close_end_date, :student_staff_start_date, :student_staff_end_date, :open_application_date, :archive_project_date
   rescue NoMethodError
   end
@@ -115,7 +115,7 @@ class SpProject < ActiveRecord::Base
 
   def gospel_in_aciton_ids=(ids)
     self.gospel_in_actions = SpGospelInAction.find(ids)
-  end    
+  end
 
   # Leadership
   def pd(yr = nil)
@@ -484,7 +484,7 @@ class SpProject < ActiveRecord::Base
 
   def initialize_project_specific_question_sheet
     unless project_specific_question_sheet
-      update_attribute(:project_specific_question_sheet_id, QuestionSheet.create!(:label => 'Project - ' + self.to_s).id)
+      update_attribute(:project_specific_question_sheet_id, QuestionSheet.find_or_create_by_label('Project - ' + self.to_s).id)
     end
     if project_specific_question_sheet.pages.length == 0
       project_specific_question_sheet.pages.create!(:label => 'Project Specific Questions', :number => 1)
