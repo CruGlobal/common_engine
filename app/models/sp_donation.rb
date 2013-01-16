@@ -1,3 +1,8 @@
+begin
+  require 'retryable'
+rescue LoadError
+  # do nothing
+end
 class SpDonation < ActiveRecord::Base
 
   scope :for_year, lambda {|year| where(["donation_date > ?", Time.new(year - 1,10,1)])}
@@ -47,7 +52,6 @@ class SpDonation < ActiveRecord::Base
 
   def self.update_from_siebel
     total_donations = 0
-    donors = {}
     start_date = 2.years.ago.strftime("%Y-%m-%d")
     end_date = Time.now.strftime("%Y-%m-%d")
 
@@ -65,6 +69,8 @@ class SpDonation < ActiveRecord::Base
           next
         end
 
+        donors = Hash[SiebelDonations::Donor.find(having_given_to_designations: dn.designation_number).collect {|sd| [sd.id, sd] }]
+
         donations.each do |donation|
           attributes = {
                          designation_number: donation.designation,
@@ -73,40 +79,42 @@ class SpDonation < ActiveRecord::Base
                          donation_id: donation.id
                        }
 
-          if old_donation = SpDonation.find_by_donation_id(donation.id)
-            old_donation.update_attributes(attributes)
-          else
-            # Find the donor for this donation
-            unless donors[donation.donor_id]
-              donors[donation.donor_id] = SiebelDonations::Donor.find(ids: donation.donor_id).first
+          Retryable.retryable :on => [ActiveRecord::RecordNotUnique], :times => 3 do
+            if old_donation = SpDonation.find_by_donation_id(donation.id)
+              old_donation.update_attributes(attributes)
+            else
+              # Find the donor for this donation
+              unless donors[donation.donor_id]
+                donors[donation.donor_id] = SiebelDonations::Donor.find(ids: donation.donor_id).first
 
-              # Make sure we got a donor
-              if donors[donation.donor_id].nil?
-                Rails.logger.debug "Couldn't find a donor with ID: #{donation.donor_id} -- #{donation.inspect}"
-                next
+                # Make sure we got a donor
+                if donors[donation.donor_id].nil?
+                  Rails.logger.debug "Couldn't find a donor with ID: #{donation.donor_id} -- #{donation.inspect}"
+                  next
+                end
               end
+              donor = donors[donation.donor_id]
+              address = donor.primary_address || SiebelDonations::Address.new
+              contact = donor.primary_contact || SiebelDonations::Contact.new
+              email_address = contact.primary_email_address || SiebelDonations::EmailAddress.new
+              phone_number = contact.primary_phone_number || SiebelDonations::PhoneNumber.new
+
+              attributes.merge!({
+                people_id: donor.id,
+                donor_name: donor.account_name,
+                donation_date: donation.donation_date,
+                address1: address.address1,
+                address2: address.address2,
+                address3: address.address3,
+                city: address.city,
+                state: address.state,
+                zip: address.zip,
+                phone: phone_number.phone,
+                email_address: email_address.email,
+              })
+
+              SpDonation.create(attributes)
             end
-            donor = donors[donation.donor_id]
-            address = donor.primary_address || SiebelDonations::Address.new
-            contact = donor.primary_contact || SiebelDonations::Contact.new
-            email_address = contact.primary_email_address || SiebelDonations::EmailAddress.new
-            phone_number = contact.primary_phone_number || SiebelDonations::PhoneNumber.new
-
-            attributes.merge!({
-              people_id: donor.id,
-              donor_name: donor.account_name,
-              donation_date: donation.donation_date,
-              address1: address.address1,
-              address2: address.address2,
-              address3: address.address3,
-              city: address.city,
-              state: address.state,
-              zip: address.zip,
-              phone: phone_number.phone,
-              email_address: email_address.email,
-            })
-
-            SpDonation.create(attributes)
           end
           donation_ids << donation.id
         end
