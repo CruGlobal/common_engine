@@ -57,7 +57,7 @@ class SpApplication < AnswerSheet
     state :declined, :enter => Proc.new {|app|
                                   app.previous_status = app.status
                                }
-  
+
     event :submit do
       transitions :to => :submitted, :from => :started
       transitions :to => :submitted, :from => :unsubmitted
@@ -129,10 +129,10 @@ class SpApplication < AnswerSheet
   # has_one :sp_parent_reference, :class_name => 'SpParentReference', :foreign_key => :application_id
   has_many :payments, :class_name => "SpPayment", :foreign_key => "application_id"
   has_many :answers, :class_name => 'Answer', :foreign_key => 'answer_sheet_id', :dependent => :destroy
-  
-  
-  
-  #has_many :sp_designation_numbers 
+
+
+
+  #has_many :sp_designation_numbers
   #has_many :donations, through: :sp_designation_numbers
   belongs_to :preference1, :class_name => 'SpProject', :foreign_key => :preference1_id
   belongs_to :preference2, :class_name => 'SpProject', :foreign_key => :preference2_id
@@ -146,11 +146,11 @@ class SpApplication < AnswerSheet
   #   end
   # end
   has_one :evaluation, :class_name => 'SpEvaluation', :foreign_key => :application_id
-  
+
   scope :for_year, proc {|year| {:conditions => {:year => year}}}
   scope :preferrenced_project, proc {|project_id| {:conditions => ["project_id = ? OR preference1_id = ? OR preference2_id = ? OR preference3_id = ?", project_id, project_id, project_id, project_id]}}
 
-  scope :preferred_project, proc {|project_id| {:conditions => ["project_id = ?", project_id], 
+  scope :preferred_project, proc {|project_id| {:conditions => ["project_id = ?", project_id],
                                                       :include => :person }}
   scope :not_staff, where("ministry_person.isStaff <> 1 OR ministry_person.isStaff Is Null").joins(:person)
   before_create :set_su_code
@@ -166,14 +166,14 @@ class SpApplication < AnswerSheet
       designation.designation_number = val
     else
       designation = SpDesignationNumber.new(
-                      :person_id => self.person_id, 
+                      :person_id => self.person_id,
                       :project_id => self.project_id,
                       :designation_number => val,
                       :year => SpApplication.year)
     end
     designation.save!
   end
-  
+
   def designation_number(year = SpApplication.year)
     if designation = SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id, :year => year).first
       designation.designation_number.to_s
@@ -214,11 +214,11 @@ class SpApplication < AnswerSheet
   def name
     person.try(:informal_full_name)
   end
-  
+
   def phone
     person.try(:current_address).try(:homePhone)
   end
-  
+
   def deadline_met
     if completed_at
       if completed_at < SpApplication.deadline1 + 1.day
@@ -233,11 +233,11 @@ class SpApplication < AnswerSheet
     end
     return 0
   end
-  
+
   def project_cost
     project.student_cost if project
   end
-  
+
   # Get project_id (project_id | preference1_id | preference2_id | preference3_id | preference4_id | preference5_id)
   def get_project_id
     unless project_id = self.project_id
@@ -255,7 +255,7 @@ class SpApplication < AnswerSheet
     end
     project_id
   end
-  
+
   # Get designation_number
   def get_designation_number(year = SpApplication.year)
     SpDesignationNumber.find_by_person_id_and_project_id_and_year(self.person_id, self.get_project_id, year).try(:designation_number)
@@ -280,7 +280,7 @@ class SpApplication < AnswerSheet
   def self.ready_statuses
     %w(ready)
   end
-  
+
   def self.accepted_statuses
     %w(accepted_as_student_staff accepted_as_participant)
   end
@@ -288,7 +288,7 @@ class SpApplication < AnswerSheet
   def self.applied_statuses
     SpApplication.ready_statuses | SpApplication.accepted_statuses
   end
-  
+
   # The statuses that mean an applicant's application is not ready, but still in progress
   def self.uncompleted_statuses
     %w(started submitted unsubmitted)
@@ -297,7 +297,7 @@ class SpApplication < AnswerSheet
   def self.statuses
     SpApplication.unsubmitted_statuses | SpApplication.not_ready_statuses | SpApplication.ready_statuses | SpApplication.accepted_statuses | SpApplication.not_going_statuses
   end
-  
+
   scope :accepted, where('sp_applications.status' => SpApplication.accepted_statuses)
   scope :accepted_participants, where('sp_applications.status' => 'accepted_as_participant')
   scope :accepted_student_staff, where('sp_applications.status' => 'accepted_as_student_staff')
@@ -306,10 +306,10 @@ class SpApplication < AnswerSheet
   scope :not_submitted, where('sp_applications.status' => SpApplication.unsubmitted_statuses)
   scope :not_going, where('sp_applications.status' => SpApplication.not_going_statuses)
   scope :applicant, where('sp_applications.status' => SpApplication.applied_statuses)
-  
+
   scope :male, where('ministry_person.gender = 1').includes(:person)
   scope :female, where('ministry_person.gender <> 1').includes(:person)
-  
+
   delegate :campus, :to => :person
 
   def self.cost
@@ -319,8 +319,8 @@ class SpApplication < AnswerSheet
       return COST_AFTER_DEADLINE
     end
   end
-  
-  
+
+
   def self.payment_deadline
     Time.parse("#{SpApplication.year.to_s}-02-25 03:00")
   end
@@ -341,7 +341,7 @@ class SpApplication < AnswerSheet
     end
     return nil
   end
-  
+
   def waive_fee!
     self.payments.create!(:status => "Approved", :payment_type => 'Waived')
     self.complete #Check to see if application is complete
@@ -416,7 +416,7 @@ class SpApplication < AnswerSheet
   def continuing_school?
     @continuing_school ||= is_true(get_answer(57)) ? "Yes" : "No"
   end
-  
+
   def has_passport?
     @has_passport ||= is_true(get_answer(409)) ? "Yes" : "No"
   end
@@ -428,7 +428,7 @@ class SpApplication < AnswerSheet
   def ministries_on_campus
     @ministries_on_campus ||= Element.find(68)
   end
-  
+
   def applying_for_internship
     @applying_for_internship ||= Element.find(98)
   end
@@ -480,7 +480,9 @@ class SpApplication < AnswerSheet
                               Questionnaire.from_email, # FROM
                               "Application Moved", # LIQUID TEMPLATE NAME
                               {'applicant_name' => name,
-                               'moved_by' => current_person.informal_full_name}).deliver
+                               'moved_by' => current_person.informal_full_name,
+                               'original_project' => old_project,
+                               'new_project' => new_project}).deliver
       end
 
       # Move designation number
@@ -535,7 +537,7 @@ class SpApplication < AnswerSheet
       end
     end
   end
-  
+
   def send_acceptance_email
       if changed.include?('applicant_notified') and applicant_notified? && status.starts_with?("accept")
         Notifier.notification(email_address, # RECIPIENTS
@@ -544,7 +546,7 @@ class SpApplication < AnswerSheet
                                   {'project_name' => project.try(:name)}).deliver
       end
   end
-  
+
   def unsubmit_on_project_change
     if changed.include?('project_id')
       # If the new project uses a different template or has additional questions, we need to unsubmit
@@ -563,7 +565,7 @@ class SpApplication < AnswerSheet
       end
     end
   end
-  
+
   def clean_up_unneeded_references
     # Do any necessary cleanup of references to match new project's requirements
     if project
@@ -574,14 +576,14 @@ class SpApplication < AnswerSheet
           # See if this reference's question_id matches any of the questions for the new project
           if question = reference_questions.detect {|rq| rq.id == reference.question_id}
             logger.debug('matched question: ' + question.id.to_s)
-            next 
+            next
           end
           # If the question_id doesn't match, but the reference question is based on the same reference template (question sheet)
           # AND we don't already have a reference for that question
           # update the reference with the new question_id
           if (reference_question = reference_questions.detect {|rq| rq.related_question_sheet_id == reference.question.related_question_sheet_id}) &&
               !sp_references.detect {|r| r.question_id == reference_question.id}
-            reference.update_attribute(:question_id, reference_question.id) 
+            reference.update_attribute(:question_id, reference_question.id)
             logger.debug("matched question sheet")
             next
           end
