@@ -381,7 +381,7 @@ class SpProject < ActiveRecord::Base
   end
 
   def self.send_stats_reminder_emails
-    campus_ministry_types = ['Campus Ministry - US summer project', 'Campus Ministry - WSN summer project']
+    campus_ministry_types = ['Campus Ministry - US summer project', 'Campus Ministry - Global Missions summer project']
     projects = SpProject.find(:all,
                               :select => "project.*, stat.id as stat_id",
                               :conditions => ["project.report_stats_to in (?) and project.project_status = ?", campus_ministry_types, 'open'],
