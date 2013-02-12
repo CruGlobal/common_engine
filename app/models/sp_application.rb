@@ -481,8 +481,8 @@ class SpApplication < AnswerSheet
                               "Application Moved", # LIQUID TEMPLATE NAME
                               {'applicant_name' => name,
                                'moved_by' => current_person.informal_full_name,
-                               'original_project' => old_project,
-                               'new_project' => new_project}).deliver
+                               'original_project' => old_project.name,
+                               'new_project' => new_project.name}).deliver
       end
 
       # Move designation number
