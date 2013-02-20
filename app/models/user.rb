@@ -167,7 +167,7 @@ class User < ActiveRecord::Base
       new_hash = {:dateCreated => Time.now, :dateChanged => Time.now,
                   :createdBy => ApplicationController.application_name,
                   :changedBy => ApplicationController.application_name}
-  	  person = Person.new(person_attributes.merge(new_hash.merge({:firstName => "Please Enter Your First Name"})))
+  	  person = Person.new(person_attributes.merge(new_hash))
   	  person.user = self
       person.save!
       address = Address.new(new_hash.merge({:email => self.username, 
