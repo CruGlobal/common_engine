@@ -15,10 +15,7 @@ class AuthenticationFilter
           user = User.find_by_username(cas_user)
           if user.nil?
             @logger.info("User not found for user_name: " + cas_user + "; creating new user")
-            user = User.create(:username => cas_user,
-              :globallyUniqueID => guid,
-              :createdOn => Time.now,
-              :password => User.encrypt(Time.now.to_s))
+            user = User.create(:username => cas_user, :createdOn => Time.now)
           else
             @logger.info("Trusting user and associating guid " + guid + " with user " + user.username)
             #todo: prompt for old password (or verify email?)
@@ -45,19 +42,22 @@ class AuthenticationFilter
         if user.password.blank?
           user.password = User.encrypt(Time.now.to_s)
         end
+        #set the global unique ID if it's blank
+        if user.globallyUniqueID.nil?
+          user.globallyUniqueID = guid
+        end
         user.save!
         if attributes["emplid"].present?
           controller.session[:cas_emplid] = attributes["emplid"]
         end
         person = user.person
         if person.nil?
-          person = Person.create(:user => user,
+        	person = user.create_person_and_address({
+        		:user => user,
             :firstName => attributes["firstName"],
             :lastName => attributes["lastName"],
-            :dateCreated => Time.now,
-            :dateChanged => Time.now,
-            :createdBy => controller.application_name,
-            :changedBy => controller.application_name)
+            :fk_ssmUserId => user.userID
+        	})
           if attributes["emplid"].present?
             person.accountNo = attributes["emplid"]
             person.staff = Staff.find_by_accountNo(attributes["emplid"])

@@ -200,15 +200,15 @@ class SpApplication < AnswerSheet
   end
 
   def self.deadline1
-    Time.parse((SpApplication.year - 1).to_s + "/12/10")
+    Time.parse((SpApplication.year - 1).to_s + "/12/10 00:00:00 EST")
   end
 
   def self.deadline2
-    Time.parse(SpApplication.year.to_s + "/01/24")
+    Time.parse(SpApplication.year.to_s + "/01/24 00:00:00 EST")
   end
 
   def self.deadline3
-    Time.parse(SpApplication.year.to_s + "/02/24")
+    Time.parse(SpApplication.year.to_s + "/02/24 00:00:00 EST")
   end
 
   def name
@@ -476,13 +476,15 @@ class SpApplication < AnswerSheet
 
       # Notify old and new directors
       [old_project.pd, old_project.apd, new_project.pd, new_project.apd].compact.each do |contact|
-        Notifier.notification(contact.email, # RECIPIENTS
-                              Questionnaire.from_email, # FROM
-                              "Application Moved", # LIQUID TEMPLATE NAME
-                              {'applicant_name' => name,
-                               'moved_by' => current_person.informal_full_name,
-                               'original_project' => old_project.name,
-                               'new_project' => new_project.name}).deliver
+        if contact.email.present?
+          Notifier.notification(contact.email, # RECIPIENTS
+                                Questionnaire.from_email, # FROM
+                                "Application Moved", # LIQUID TEMPLATE NAME
+                                {'applicant_name' => name,
+                                 'moved_by' => current_person.informal_full_name,
+                                 'original_project' => old_project.name,
+                                 'new_project' => new_project.name}).deliver
+        end
       end
 
       # Move designation number
