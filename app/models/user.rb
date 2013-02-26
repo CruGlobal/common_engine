@@ -4,16 +4,16 @@ class User < ActiveRecord::Base
   unloadable
   self.table_name = "simplesecuritymanager_user"
 	self.primary_key = "userID"
-	
+
 	attr_accessible :username, :createdOn
 
 	# Relationships
-	has_one :person, :foreign_key => 'fk_ssmUserID'	
+	has_one :person, :foreign_key => 'fk_ssmUserID'
 	has_many :authentications
 	has_many :activity_bookmarks, :class_name => 'Bookmark', :conditions => Bookmark.table_name + ".name = 'activity'"
 	has_many :activities, :through => :activity_bookmarks, :include => :target_area, :order => TargetArea.table_name + ".name"
   has_one :balance_bookmark, :class_name => 'Bookmark', :conditions => Bookmark.table_name + ".name = 'balance'"
-	
+
   # Virtual attribute for the unencrypted password
   attr_accessible :plain_password, :plain_password_confirmation
   attr_accessor :plain_password, :plain_password_confirmation
@@ -27,7 +27,7 @@ class User < ActiveRecord::Base
   # validates_presence_of     :secret_question,                  :if => :password_required?
   # validates_presence_of     :secret_answer,                    :if => :password_required?
   validates_uniqueness_of   :username, :case_sensitive => false, :message => "is already registered in our system.  This may have occurred when you registered for a Campus Crusade related conference; therefore, you do not need to create a new account. If you need help with your password, please click on the appropriate link at the login screen.  If you still need assistance, please send an email to help@campuscrusadeforchrist.com describing your problem."
-  
+
   before_save :encrypt_password
   before_create :stamp_created_on
 
@@ -35,7 +35,7 @@ class User < ActiveRecord::Base
   def secret_question=(val) self[:passwordQuestion] = val; end
   def secret_answer() self[:passwordAnswer]; end
   def secret_answer=(val) self[:passwordAnswer] = val; end
-  
+
   def self.find_by_id(id) self.find_by_userID(id); end
 
   # Authenticates a user by their login name and unencrypted password.  Returns the user or nil.
@@ -45,7 +45,7 @@ class User < ActiveRecord::Base
 #    u.stamp_last_login if ret_val
 #    return ret_val
 #  end
-  
+
   def self.find_or_create_from_cas(ticket)
     # Look for a user with this guid
     receipt = ticket.response
@@ -56,7 +56,7 @@ class User < ActiveRecord::Base
     email = receipt.user
     find_or_create_from_guid_or_email(guid, email, first_name, last_name)
   end
-  
+
   def self.find_or_create_from_guid_or_email(guid, email, first_name, last_name, secure = true)
     if guid
       u = ::User.where(:globallyUniqueID => guid).first
@@ -66,7 +66,7 @@ class User < ActiveRecord::Base
 
     # if we have a user by this method, great! update the email address if it doesn't match
     # We also need to make sure there isn't already another user with this email
-    if u 
+    if u
       u.username = email if u.username != email && !User.find_by_username(email)
     else
       # If we didn't find a user with the guid, do it by email address and stamp the guid
@@ -85,7 +85,7 @@ class User < ActiveRecord::Base
     unless u.person
       # Try to find a person with the same email address.  If multiple people are found, use
       # the one who's logged in most recently
-      address = ::CurrentAddress.find(:first, 
+      address = ::CurrentAddress.find(:first,
                                       :joins => { :person => :user },
                                       :conditions => {:email => email},
                                       :order => "lastLogin DESC"
@@ -102,7 +102,7 @@ class User < ActiveRecord::Base
     end
     u
   end
-  
+
   def generate_password_key!
     self.update_attribute(:password_reset_key, Digest::MD5.hexdigest(username + 'yo mama' + Time.now.to_s) + '_' + username)
   end
@@ -140,7 +140,7 @@ class User < ActiveRecord::Base
     self.remember_token            = nil
     save(:validate => false)
   end
-  
+
   def apply_omniauth(omniauth)
     self.username = omniauth['info']['email'] if username.blank?
     unless Authentication.find_by_provider_and_uid(omniauth['provider'], omniauth['uid'])
@@ -148,7 +148,7 @@ class User < ActiveRecord::Base
       authentication.token = omniauth['credentials']['token'] if omniauth['credentials']
     end
   end
-  	
+
 	def stamp_last_login
 	  self.lastLogin = Time.now
 	  save!
@@ -161,7 +161,7 @@ class User < ActiveRecord::Base
 			person.save!
 		end
 	end
-	
+
   def create_person_and_address(person_attributes = {})
     unless person
       new_hash = {:dateCreated => Time.now, :dateChanged => Time.now,
@@ -170,14 +170,14 @@ class User < ActiveRecord::Base
   	  person = Person.new(person_attributes.merge(new_hash.merge({:firstName => "Please Enter Your First Name"})))
   	  person.user = self
       person.save!
-      address = Address.new(new_hash.merge({:email => self.username, 
+      address = Address.new(new_hash.merge({:email => self.username,
                                              :addressType => 'current'}))
       address.person = person
       address.save!
     end
     person
 	end
-	
+
 	def create_person_from_omniauth(omniauth)
     unless person
       new_hash = {:dateCreated => Time.now, :dateChanged => Time.now,
@@ -186,14 +186,14 @@ class User < ActiveRecord::Base
   	  person = Person.new(new_hash.merge({:firstName => omniauth['first_name'], :lastName => omniauth['last_name']}))
   	  person.user = self
       person.save!
-      address = Address.new(new_hash.merge({:email => self.username, 
+      address = Address.new(new_hash.merge({:email => self.username,
                                              :addressType => 'current'}))
       address.person = person
       address.save!
     end
     person
 	end
-	
+
 	def self.create_new_user_from_cas(username, cas_extra_attributes)
     # Look for a user with this guid
     guid = cas_extra_attributes['ssoGuid']
@@ -212,17 +212,17 @@ class User < ActiveRecord::Base
         # If we still don't have a user in SSM, we need to create one.
         u = User.new(:username => username.downcase, :globallyUniqueID => guid)
       end
-    end            
+    end
     # Update the password to match their gcx password too. This will save a round-trip later
     # u.plain_password = params[:plain_password]
     u.save(:validate => false)
     # make sure we have a person
     unless u.person
-      u.create_person_and_address
+      u.create_person_and_address(firstName: first_name, lastName: last_name)
     end
     u
   end
-  	
+
   def password_required?
     (authentications.empty? && password.blank? && globallyUniqueID.blank?) || !plain_password.blank?
   end
@@ -233,7 +233,7 @@ class User < ActiveRecord::Base
   def remember_me_for(time)
     remember_me_until time.from_now.utc
   end
-  
+
   def refresh_token
     remember_me_until 1.year.from_now
   end
@@ -245,20 +245,20 @@ class User < ActiveRecord::Base
     self.remember_token = encrypt("#{username}--#{remember_token_expires_at}")
     save(:validate => false)
   end
-	
+
   protected
-    # before filter 
+    # before filter
     def encrypt_password
       return if plain_password.blank?
   		self.password = encrypt(plain_password)
-  	end	
-  	
+  	end
+
   	def stamp_created_on
   	  begin
     	  self.createdOn = Time.now
     	rescue; end
   	end
-  	
+
     # not sure why but cas sometimes sends the extra attributes as underscored
     def self.att_from_receipt(atts, key)
       atts[key] || atts[key.underscore]
