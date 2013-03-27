@@ -29,7 +29,7 @@ class HrSiApplication < ActiveRecord::Base
     return false
   end
 
-  def self.is_staff(type)
+  def self.is_part_time_field_staff?(type)
     return true if 'Part Time Field Staff' == type
     return false
   end
