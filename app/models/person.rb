@@ -39,6 +39,7 @@ class Person < ActiveRecord::Base
   
   # STINT
   has_many                :hr_si_applications, :foreign_key => "fk_PersonID"
+  has_many                :sitrack_trackings, through: :hr_si_applications
   has_many                :applies, :foreign_key => "applicant_id"   # applicants applying
   has_many                :apply_sheets    # whoever, filling in a sheet
   has_one                 :current_si_application, :foreign_key => "fk_PersonID", :conditions => "siYear = '#{HrSiApplication::YEAR}'", :class_name => '::HrSiApplication'
