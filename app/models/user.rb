@@ -15,7 +15,7 @@ class User < ActiveRecord::Base
   has_one :balance_bookmark, :class_name => 'Bookmark', :conditions => Bookmark.table_name + ".name = 'balance'"
 
   # Virtual attribute for the unencrypted password
-  attr_accessible :plain_password, :plain_password_confirmation
+  attr_accessible :plain_password, :plain_password_confirmation, :username, :globallyUniqueID
   attr_accessor :plain_password, :plain_password_confirmation
 
   validates_format_of       :username, :message => "must be an email address", :with => /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i
@@ -60,8 +60,6 @@ class User < ActiveRecord::Base
   def self.find_or_create_from_guid_or_email(guid, email, first_name, last_name, secure = true)
     if guid
       u = ::User.where(:globallyUniqueID => guid).first
-    else
-      u = nil
     end
 
     # if we have a user by this method, great! update the email address if it doesn't match
@@ -81,6 +79,7 @@ class User < ActiveRecord::Base
     # Update the password to match their gcx password too. This will save a round-trip later
     # u.plain_password = params[:plain_password]
     u.save(:validate => false) if secure
+
     # make sure we have a person
     unless u.person
       # Try to find a person with the same email address.  If multiple people are found, use
@@ -93,8 +92,9 @@ class User < ActiveRecord::Base
       person = address.try(:person)
 
       # Attach the found person to the user, or create a new person
-      u.person = person || ::Person.create!(:fk_ssmUserId => u.id, :firstName => first_name,
+      u.person = person || ::Person.create!(:firstName => first_name,
                                           :lastName => last_name)
+      u.person.fk_ssmUserId = u.id
 
       # Create a current address record if we don't already have one.
       u.person.current_address ||= ::CurrentAddress.create!(:fk_PersonID => u.person.id, :email => email)
