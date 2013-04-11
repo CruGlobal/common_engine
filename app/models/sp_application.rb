@@ -297,7 +297,11 @@ class SpApplication < AnswerSheet
   def self.statuses
     SpApplication.unsubmitted_statuses | SpApplication.not_ready_statuses | SpApplication.ready_statuses | SpApplication.accepted_statuses | SpApplication.not_going_statuses
   end
-
+  
+  scope :ascend_by_accepted, order("sp_applications.accepted_at")
+  scope :descend_by_accepted, order("sp_applications.accepted_at desc")
+  scope :ascend_by_name, order("lastName, firstName")
+  scope :descend_by_name, order("lastName desc, firstName desc")
   scope :accepted, where('sp_applications.status' => SpApplication.accepted_statuses)
   scope :accepted_participants, where('sp_applications.status' => 'accepted_as_participant')
   scope :accepted_student_staff, where('sp_applications.status' => 'accepted_as_student_staff')
