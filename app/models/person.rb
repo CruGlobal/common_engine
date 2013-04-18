@@ -5,7 +5,8 @@ class Person < ActiveRecord::Base
   self.primary_key = "personID"
 
   attr_accessible :firstName, :lastName, :isSecure, :birth_date, :maritalStatus,
-                  :accountNo, :first_name, :last_name, :gender, :preferredName, :current_address_attributes, :region
+                  :accountNo, :first_name, :last_name, :gender, :preferredName, :current_address_attributes, :region,
+                  :sp_gcx_site
 
   # SP-298
   has_many                :sp_designation_numbers, dependent: :destroy
