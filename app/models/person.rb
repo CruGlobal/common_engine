@@ -9,23 +9,23 @@ class Person < ActiveRecord::Base
                   :sp_gcx_site
 
   # SP-298
-  has_many                :sp_designation_numbers
+  has_many                :sp_designation_numbers, dependent: :destroy
 
   belongs_to              :user, :foreign_key => "fk_ssmUserId"  #Link it to SSM
 
   has_one                 :staff
-  has_many                :team_members, :foreign_key => "personID"
+  has_many                :team_members, :foreign_key => "personID", dependent: :destroy
   has_many                :teams, :through => :team_members
   has_and_belongs_to_many :activities, :join_table => "ministry_movement_contact", :association_foreign_key => "ActivityID",
     :foreign_key => "personID", :include => :target_area, :order => TargetArea.table_name + ".name"
 
   # Addresses
-  has_many                :email_addresses, :foreign_key => "person_id", :class_name => '::EmailAddress'
-  has_many                :phone_numbers, :foreign_key => "person_id", :class_name => '::PhoneNumber'
+  has_many                :email_addresses, :foreign_key => "person_id", :class_name => '::EmailAddress', dependent: :destroy
+  has_many                :phone_numbers, :foreign_key => "person_id", :class_name => '::PhoneNumber', dependent: :destroy
   has_one                 :current_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'current'", :class_name => '::Address'
   has_one                 :permanent_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'permanent'", :class_name => '::Address'
   has_one                 :emergency_address1, :foreign_key => "fk_PersonID", :conditions => "addressType = 'emergency1'", :class_name => '::Address'
-  has_many                :addresses, :foreign_key => "fk_PersonID"
+  has_many                :addresses, :foreign_key => "fk_PersonID", dependent: :destroy
 
   # Cru Commons
   has_many                :personal_links

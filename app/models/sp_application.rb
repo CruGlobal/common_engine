@@ -238,6 +238,10 @@ class SpApplication < AnswerSheet
     project.student_cost if project
   end
 
+  def is_secure?
+    project.secure?
+  end
+
   # Get project_id (project_id | preference1_id | preference2_id | preference3_id | preference4_id | preference5_id)
   def get_project_id
     unless project_id = self.project_id
