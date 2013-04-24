@@ -48,28 +48,33 @@ class SpStaff < ActiveRecord::Base
 
     def create_or_reset_sp_user
       ssm_id = person.try(:fk_ssmUserId)
+      return false unless ssm_id.present?
+
       new_role = SpUser.get_max_role(person.id)
-      if ssm_id && sp_user = SpUser.where(:ssm_id => ssm_id, :person_id => person.id).first
-        if sp_user.type != 'SpNationalCoordinator' && sp_user.type != 'SpRegionalCoordinator' && new_role
+      sp_user = SpUser.where(:ssm_id => ssm_id, :person_id => person.id).first
+      if sp_user
+        if new_role && sp_user.type != 'SpNationalCoordinator' && sp_user.type != 'SpRegionalCoordinator'
           sp_user.update_attribute(:type, new_role.to_s)
         end
       else
         SpUser.create_max_role(person.id) unless type == 'Kid' # Kids don't need users
       end
-      true
+      return true
     end
 
     def delete_or_reset_sp_user
       ssm_id = person.try(:fk_ssmUserId)
+      return false unless ssm_id.present?
+
       new_role = SpUser.get_max_role(person.id)
-      if ssm_id && sp_user = SpUser.where(:ssm_id => ssm_id, :person_id => person.id).first
-        if sp_user.type != 'SpNationalCoordinator' && sp_user.type != 'SpRegionalCoordinator'
-          if new_role
-            sp_user.update_attribute(:type, new_role.to_s)
-          else
-            sp_user.destroy
-          end
+      sp_user = SpUser.where(:ssm_id => ssm_id, :person_id => person.id).first
+      if sp_user && sp_user.type != 'SpNationalCoordinator' && sp_user.type != 'SpRegionalCoordinator'
+        if new_role
+          sp_user.update_attribute(:type, new_role.to_s)
+        else
+          sp_user.destroy
         end
       end
+      return true
     end
 end
