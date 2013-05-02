@@ -18,7 +18,7 @@ class SpApplication < AnswerSheet
                                     app.email, # RECIPIENTS
                                     Questionnaire.from_email, # FROM
                                     "Application Submitted"
-                                  ).deliver if app.email # LIQUID TEMPLATE NAME
+                                  ).deliver if app.email.present? # LIQUID TEMPLATE NAME
                                   app.submitted_at = Time.now
                                   app.previous_status = app.status
                                 }
@@ -29,7 +29,7 @@ class SpApplication < AnswerSheet
                                 app.email, # RECIPIENTS
                                 Questionnaire.from_email, # FROM
                                 "Application Completed"
-                              ).deliver if app.email
+                              ).deliver if app.email.present?
                               app.previous_status = app.status
                             }
 
@@ -38,7 +38,7 @@ class SpApplication < AnswerSheet
                                       app.email, # RECIPIENTS
                                       Questionnaire.from_email, # FROM
                                       "Application Unsubmitted"
-                                    ).deliver if app.email
+                                    ).deliver if app.email.present?
                                     app.previous_status = app.status
                                   }
 
@@ -47,7 +47,7 @@ class SpApplication < AnswerSheet
                                     app.email, # RECIPIENTS
                                     Questionnaire.from_email, # FROM
                                     "Application Withdrawn"
-                                  ).deliver if app.email
+                                  ).deliver if app.email.present?
                                   app.withdrawn_at = Time.now
                                   app.previous_status = app.status
                                 }
