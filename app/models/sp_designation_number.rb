@@ -12,7 +12,7 @@ class SpDesignationNumber < ActiveRecord::Base
 
   # if this person is going to a secure location, mark them as secure in siebel
   def secure_siebel
-    if sp_application.is_secure? && APP_CONFIG['siebel_url']
+    if sp_application && sp_application.is_secure? && APP_CONFIG['siebel_url']
       parameters = {designation: designation_number, startDate: "03-01-#{year}", endDate: "09-01-#{year}", key: APP_CONFIG['siebel_key'], dateFormatString: 'MM-dd-yyyy'}
       logger.ap parameters
       RestClient::Request.execute(:method => :post, :url => APP_CONFIG['siebel_url'], :payload => parameters, :timeout => -1) { |res, request, result, &block|
