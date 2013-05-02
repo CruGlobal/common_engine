@@ -14,32 +14,40 @@ class SpApplication < AnswerSheet
     state :started
     state :submitted, :enter => Proc.new {|app|
                                   # SpApplicationMailer.deliver_submitted(app)
-                                  Notifier.notification(app.email, # RECIPIENTS
+                                  Notifier.notification(
+                                    app.email, # RECIPIENTS
                                     Questionnaire.from_email, # FROM
-                                    "Application Submitted").deliver # LIQUID TEMPLATE NAME
+                                    "Application Submitted"
+                                  ).deliver if app.email # LIQUID TEMPLATE NAME
                                   app.submitted_at = Time.now
                                   app.previous_status = app.status
                                 }
 
     state :ready, :enter => Proc.new {|app|
-                                  app.completed_at ||= Time.now
-                                  Notifier.notification(app.email, # RECIPIENTS
-                                    Questionnaire.from_email, # FROM
-                                    "Application Completed").deliver # LIQUID TEMPLATE NAME
-                                  app.previous_status = app.status
-                                }
+                              app.completed_at ||= Time.now
+                              Notifier.notification(
+                                app.email, # RECIPIENTS
+                                Questionnaire.from_email, # FROM
+                                "Application Completed"
+                              ).deliver if app.email
+                              app.previous_status = app.status
+                            }
 
     state :unsubmitted, :enter => Proc.new {|app|
-                                  Notifier.notification(app.email, # RECIPIENTS
-                                    Questionnaire.from_email, # FROM
-                                    "Application Unsubmitted").deliver # LIQUID TEMPLATE NAME
-                                  app.previous_status = app.status
-                                }
+                                    Notifier.notification(
+                                      app.email, # RECIPIENTS
+                                      Questionnaire.from_email, # FROM
+                                      "Application Unsubmitted"
+                                    ).deliver if app.email
+                                    app.previous_status = app.status
+                                  }
 
     state :withdrawn, :enter => Proc.new {|app|
-                                  Notifier.notification(app.email, # RECIPIENTS
+                                  Notifier.notification(
+                                    app.email, # RECIPIENTS
                                     Questionnaire.from_email, # FROM
-                                    "Application Withdrawn").deliver if app.email
+                                    "Application Withdrawn"
+                                  ).deliver if app.email
                                   app.withdrawn_at = Time.now
                                   app.previous_status = app.status
                                 }
