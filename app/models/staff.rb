@@ -54,6 +54,7 @@ class Staff < ActiveRecord::Base
       "Hourly Full Time",
       "Hourly on Call",
       "Salaried Exempt Full Time",
+      "Salaried w Desig #",
       "Self-Supported Staff",
       "Staff on Delayed Payroll",
       "Staff on Paid Leave",
