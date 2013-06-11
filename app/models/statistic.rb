@@ -36,12 +36,12 @@ class Statistic < ActiveRecord::Base
   end
   
   #Constants
-  def self.weekly_stats # Order matters! Reports rely on correct order,
-    ["evangelisticOneOnOne", "decisionsHelpedByOneOnOne", "evangelisticGroup", "decisionsHelpedByGroup", "exposuresViaMedia", "decisionsHelpedByMedia", "holySpiritConversations", "laborersSent"]
+  def self.weekly_stats # Order matters! Reports rely on correct order, if changed here, change Infobase app/views/reports/_report_header_bar.html.erb
+    ["evangelisticOneOnOne", "decisionsHelpedByOneOnOne", "evangelisticGroup", "decisionsHelpedByGroup", "exposuresViaMedia", "decisionsHelpedByMedia", "spiritual_conversations", "holySpiritConversations", "laborersSent", "faculty_sent"]
   end
   
-  def self.semester_stats # Order matters! Reports rely on correct order,
-    ["invldStudents", "multipliers", "studentLeaders", "ongoingEvangReln"]
+  def self.semester_stats # Order matters! Reports rely on correct order, if changed here, change Infobase app/views/reports/_report_header_bar.html.erb
+    ["invldStudents", "multipliers", "studentLeaders", "ongoingEvangReln", "faculty_involved", "faculty_engaged", "faculty_leaders"]
   end
   
   def self.all_stats
