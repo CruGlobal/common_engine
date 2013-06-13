@@ -57,7 +57,7 @@ class Statistic < ActiveRecord::Base
   end
   
   def self.uses_seekers
-    ["BR"]
+    []
   end
   
   #Instance Methods
