@@ -225,6 +225,19 @@ class Activity < ActiveRecord::Base
     stat
   end
   
+  def get_stats_for_dates(begin_date, end_date, people_group = nil)
+    stat = nil
+    if strategy == "BR" && people_group.blank?
+      stat = get_bridges_stats_for(begin_date)
+    else
+      start_date = begin_date.traditional_beginning_of_week
+      ending_date = end_date.traditional_end_of_week
+      stat_rel = statistics.where("periodBegin >= ? AND periodEnd <= ?", start_date, ending_date)
+      stats = stat_rel.all
+    end
+    stats
+  end
+  
   def get_sp_stat_for(year, period_begin, period_end, people_group = nil)
     stat = nil
     if strategy == "BR" && people_group.blank?
