@@ -10,16 +10,28 @@ class Statistic < ActiveRecord::Base
     
   validates_presence_of :peopleGroup, :if => Proc.new { |stat| stat.activity.strategy == "BR" if stat.activity }
   
+  alias_attribute :activity_id, :fkActivity
+  alias_attribute :period_begin, :periodBegin
+  alias_attribute :period_end, :periodEnd
+  #alias_attribute :spiritual_conversations, :spiritual_conversations
   alias_attribute :personal_exposures, :evangelisticOneOnOne
+  alias_attribute :personal_evangelism, :evangelisticOneOnOne
   alias_attribute :group_exposures, :evangelisticGroup
+  alias_attribute :group_evangelism, :evangelisticOneOnOne
   alias_attribute :media_exposures, :exposuresViaMedia
   alias_attribute :holy_spirit_presentations, :holySpiritConversations
   alias_attribute :personal_decisions, :decisionsHelpedByOneOnOne
   alias_attribute :group_decisions, :decisionsHelpedByGroup
   alias_attribute :media_decisions, :decisionsHelpedByMedia
+  alias_attribute :graduating_on_mission, :laborersSent
+  alias_attribute :faculty_on_mission, :faculty_sent
   alias_attribute :laborers_sent, :laborersSent
-  alias_attribute :student_leaders, :studentLeaders
   alias_attribute :students_involved, :invldStudents
+  alias_attribute :students_engaged, :multipliers
+  alias_attribute :student_leaders, :studentLeaders
+  #alias_attribute :faculty_involved, :faculty_involved
+  #alias_attribute :faculty_engaged, :faculty_engaged
+  #alias_attribute :facutly_leaders, :facutly_leaders
   alias_attribute :seekers, :ongoingEvangReln
   
   #Scopes
