@@ -10,7 +10,7 @@ class Statistic < ActiveRecord::Base
     
   validates_presence_of :peopleGroup, :if => Proc.new { |stat| stat.activity.strategy == "BR" if stat.activity }
   
-  alias_attribute :activity_id, :fkActivity
+  alias_attribute :activity_id, :fk_Activity
   alias_attribute :period_begin, :periodBegin
   alias_attribute :period_end, :periodEnd
   #alias_attribute :spiritual_conversations, :spiritual_conversations
