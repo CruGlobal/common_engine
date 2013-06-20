@@ -4,9 +4,10 @@ class Statistic < ActiveRecord::Base
   self.primary_key = "StatisticID"
   belongs_to :activity, :foreign_key => "fk_Activity"
   
-  validates_numericality_of :evangelisticOneOnOne, :evangelisticGroup, :exposuresViaMedia, :holySpiritConversations, 
-    :decisionsHelpedByOneOnOne, :decisionsHelpedByGroup, :decisionsHelpedByMedia, :laborersSent, 
-    :multipliers, :studentLeaders, :invldStudents, :ongoingEvangReln, :dollars_raised, :only_integer => true, :allow_nil => true
+  validates_numericality_of :spiritual_conversations, :evangelisticOneOnOne, :evangelisticGroup, :exposuresViaMedia, 
+    :holySpiritConversations, :decisionsHelpedByOneOnOne, :decisionsHelpedByGroup, :decisionsHelpedByMedia, 
+    :laborersSent, :faculty_sent, :multipliers, :studentLeaders, :invldStudents, :faculty_involved, 
+    :faculty_engaged, :facutly_leaders, :ongoingEvangReln, :dollars_raised, :only_integer => true, :allow_nil => true
     
   validates_presence_of :peopleGroup, :if => Proc.new { |stat| stat.activity.strategy == "BR" if stat.activity }
   
@@ -17,7 +18,7 @@ class Statistic < ActiveRecord::Base
   alias_attribute :personal_exposures, :evangelisticOneOnOne
   alias_attribute :personal_evangelism, :evangelisticOneOnOne
   alias_attribute :group_exposures, :evangelisticGroup
-  alias_attribute :group_evangelism, :evangelisticOneOnOne
+  alias_attribute :group_evangelism, :evangelisticGroup
   alias_attribute :media_exposures, :exposuresViaMedia
   alias_attribute :holy_spirit_presentations, :holySpiritConversations
   alias_attribute :personal_decisions, :decisionsHelpedByOneOnOne
