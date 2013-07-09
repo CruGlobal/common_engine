@@ -226,9 +226,9 @@ class Activity < ActiveRecord::Base
   end
   
   def get_stats_for_dates(begin_date, end_date, people_group = nil)
-    stat = nil
+    stats = nil
     if strategy == "BR" && people_group.blank?
-      stat = get_bridges_stats_for(begin_date)
+      stats = get_bridges_stats_for(begin_date)
     else
       start_date = begin_date.traditional_beginning_of_week
       ending_date = end_date.traditional_end_of_week
