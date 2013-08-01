@@ -207,74 +207,44 @@ class Activity < ActiveRecord::Base
   
   def get_stat_for(date, people_group = nil)
     stat = nil
-    if strategy == "BR" && people_group.blank?
-      stat = get_bridges_stats_for(date)
-    else
-      sunday = date.traditional_beginning_of_week
-      stat_rel = statistics.where("periodBegin = ?", sunday)
-      stat_rel = stat_rel.where("peopleGroup = ?", people_group) if !people_group.blank?
-      stat = stat_rel.first
-      unless stat
-        stat = Statistic.new
-        stat.activity = self
-        stat.periodBegin = sunday
-        stat.periodEnd = sunday.traditional_end_of_week
-        stat.prefill_semester_stats
-      end
+    sunday = date.traditional_beginning_of_week
+    stat_rel = statistics.where("periodBegin = ?", sunday)
+    stat_rel = stat_rel.where("peopleGroup = ?", people_group) if !people_group.blank?
+    stat = stat_rel.first
+    unless stat
+      stat = Statistic.new
+      stat.activity = self
+      stat.periodBegin = sunday
+      stat.periodEnd = sunday.traditional_end_of_week
+      stat.prefill_semester_stats
     end
     stat
   end
   
   def get_stats_for_dates(begin_date, end_date, people_group = nil)
     stats = nil
-    if strategy == "BR" && people_group.blank?
-      stats = get_bridges_stats_for(begin_date)
-    else
-      start_date = begin_date.traditional_beginning_of_week
-      ending_date = end_date.traditional_end_of_week
-      stat_rel = statistics.where("periodBegin >= ? AND periodEnd <= ?", start_date, ending_date)
-      stats = stat_rel.all
-    end
+    start_date = begin_date.traditional_beginning_of_week
+    ending_date = end_date.traditional_end_of_week
+    stat_rel = statistics.where("periodBegin >= ? AND periodEnd <= ?", start_date, ending_date)
+    stats = stat_rel.all
     stats
   end
   
   def get_sp_stat_for(year, period_begin, period_end, people_group = nil)
     stat = nil
-    if strategy == "BR" && people_group.blank?
-      stat = get_bridges_sp_stats_for(year, period_begin, period_end)
-    else
-      stat_rel = statistics.where("sp_year = ?", year)
-      stat_rel = stat_rel.where("peopleGroup = ?", people_group) if !people_group.blank?
-      stat = stat_rel.first
-      unless stat
-        stat = Statistic.new
-        stat.activity = self
-      end
-      stat.periodBegin = period_begin
-      stat.periodEnd = period_end
-      stat.sp_year = year
+    stat_rel = statistics.where("sp_year = ?", year)
+    stat_rel = stat_rel.where("peopleGroup = ?", people_group) if !people_group.blank?
+    stat = stat_rel.first
+    unless stat
+      stat = Statistic.new
+      stat.activity = self
     end
+    stat.periodBegin = period_begin
+    stat.periodEnd = period_end
+    stat.sp_year = year
     stat
   end
   
-  def get_bridges_sp_stats_for(year, period_begin, period_end)
-    stats = statistics.where("sp_year = ?", year)
-    stats_array = []
-    Statistic.people_groups.each do |group|
-      stat = stats.where(:peopleGroup => group).first
-      unless stat
-        stat = Statistic.new
-        stat.activity = self
-      end
-      stat.periodBegin = period_begin
-      stat.periodEnd = period_end
-      stat.peopleGroup = group
-      stat.sp_year = year
-      stats_array << stat
-    end
-    stats_array
-  end
-
   def get_crs_stat_for(period_begin, period_end, people_group = nil) # TODO: people groups
     if statistics.size > 1
       raise "Too many stats for this Conference"
@@ -321,25 +291,6 @@ class Activity < ActiveRecord::Base
   end
   
   private
-  
-  def get_bridges_stats_for(date)
-    sunday = date.traditional_beginning_of_week
-    stats = statistics.where("periodBegin = ?", sunday)
-    stats_array = []
-    Statistic.people_groups.each do |group|
-      stat = stats.where(:peopleGroup => group).first
-      unless stat
-        stat = Statistic.new
-        stat.activity = self
-        stat.periodBegin = sunday
-        stat.periodEnd = sunday.traditional_end_of_week
-        stat.peopleGroup = group
-        stat.prefill_semester_stats
-      end
-      stats_array << stat
-    end
-    stats_array
-  end
   
   def convert_date(hash, date_symbol_or_string)
     attribute = date_symbol_or_string.to_s
