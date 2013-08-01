@@ -54,7 +54,7 @@ class Statistic < ActiveRecord::Base
   end
   
   def self.semester_stats # Order matters! Reports rely on correct order, if changed here, change Infobase app/views/reports/_report_header_bar.html.erb
-    ["invldStudents", "multipliers", "studentLeaders", "ongoingEvangReln", "faculty_involved", "faculty_engaged", "faculty_leaders"]
+    ["invldStudents", "multipliers", "studentLeaders", "faculty_involved", "faculty_engaged", "faculty_leaders"]
   end
   
   def self.all_stats
