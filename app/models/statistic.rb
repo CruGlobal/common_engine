@@ -8,9 +8,7 @@ class Statistic < ActiveRecord::Base
     :holySpiritConversations, :decisionsHelpedByOneOnOne, :decisionsHelpedByGroup, :decisionsHelpedByMedia, 
     :laborersSent, :faculty_sent, :multipliers, :studentLeaders, :invldStudents, :faculty_involved, 
     :faculty_engaged, :faculty_leaders, :ongoingEvangReln, :dollars_raised, :only_integer => true, :allow_nil => true
-    
-  validates_presence_of :peopleGroup, :if => Proc.new { |stat| stat.activity.strategy == "BR" if stat.activity }
-  
+
   alias_attribute :activity_id, :fk_Activity
   alias_attribute :period_begin, :periodBegin
   alias_attribute :period_end, :periodEnd
