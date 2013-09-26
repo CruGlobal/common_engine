@@ -67,7 +67,7 @@ class AuthenticationsController < ApplicationController
   
   protected
   def login_from_cas_ticket
-    CASClient::Frameworks::Rails3::Filter.filter(self)
+    CASClient::Frameworks::Rails::Filter.filter(self)
     login_from_cas
   end
 end

@@ -38,7 +38,7 @@ class SessionsController < ApplicationController
     logout_keeping_session!
     if session[:cas_user]
 			session[:event_id] = nil
-      CASClient::Frameworks::Rails3::Filter.logout(self)
+      CASClient::Frameworks::Rails::Filter.logout(self)
     else
       redirect_to root_path
     end
