@@ -14,7 +14,7 @@ module AuthenticatedSystem
       cas_user = session[:cas_user]
       u = false
       if cas_user
-        u = User.find_or_create_from_cas(session[:cas_last_valid_ticket])
+        u = User.find_or_create_from_cas(session[:cas_extra_attributes])
         self.current_user = u
       end
     end
@@ -117,9 +117,7 @@ module AuthenticatedSystem
     # When called with before_filter :login_from_cookie will check for an :auth_token
     # cookie and log the user back in if apropriate
     def login_from_cookie
-      if !cookies[:auth_token] || (@current_user && @current_user != :false) || login_from_session
-        return
-      end
+      return unless cookies[:auth_token] && !logged_in?
       user = User.find_by_remember_token(cookies[:auth_token])
       if user && user.remember_token?
         user.remember_me

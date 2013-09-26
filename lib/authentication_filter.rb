@@ -3,10 +3,9 @@ class AuthenticationFilter
 
   def self.filter(controller)
     unless controller.session[:user_id]
-      last_response = controller.session[:cas_last_valid_ticket].try(:response)
-      if last_response
+      attributes = controller.session[:cas_extra_attributes]
+      if attributes
         cas_user = controller.session[:cas_user]
-        attributes = last_response.extra_attributes
         guid = attributes["ssoGuid"]
         user = User.find_by_globallyUniqueID(guid)
         if user.nil?

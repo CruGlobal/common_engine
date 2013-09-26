@@ -46,14 +46,12 @@ class User < ActiveRecord::Base
 #    return ret_val
 #  end
 
-  def self.find_or_create_from_cas(ticket)
+  def self.find_or_create_from_cas(atts)
     # Look for a user with this guid
-    receipt = ticket.response
-    atts = receipt.extra_attributes
     guid = att_from_receipt(atts, 'ssoGuid')
     first_name = att_from_receipt(atts, 'firstName')
     last_name = att_from_receipt(atts, 'lastName')
-    email = receipt.user
+    email = atts['username']
     find_or_create_from_guid_or_email(guid, email, first_name, last_name)
   end
 
