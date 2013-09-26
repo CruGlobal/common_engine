@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.version     = CommonEngine::VERSION
   s.authors     = ['Josh Starcher', 'Justin Sabelko', 'Kurt Eichstadt']
   s.email       = ['programmers@cojourners.com']
-  s.homepage    = 'none'
+  s.homepage    = 'http://cru.org'
   s.summary     = 'Collection of models and whatnot that are used across several cru apps.'
   s.description = 'Collection of models and whatnot that are used across several cru apps.'
 
