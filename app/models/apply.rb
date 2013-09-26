@@ -1,100 +1,105 @@
+require 'aasm'
+
 # a visitor applies to a sleeve (application)
-class Apply < ActiveRecord::Base
+class Apply < AnswerSheet
+  include AASM
   unloadable
+  self.table_name = "si_applies"
   
-  acts_as_state_machine :initial => :started, :column => :status
-  set_table_name "#{TABLE_NAME_PREFIX}#{self.table_name}"
+  COST = 35
   
-  # State machine stuff
-  state :started
-  state :submitted, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} submitted")
-                                SiApplicationMailer.deliver_submitted(app)
-                                app.submitted_at = Time.now
-                              }
+  attr_accessible :applicant_id
+  
+  aasm :initial => :started, :column => :status do
+  
+    # State machine stuff
+    state :started
+    state :submitted, :enter => Proc.new {|app|
+                                  Rails.logger.info("application #{app.id} submitted")
+                                  app.notify_app_submitted
+                                  app.submitted_at = Time.now
+                                }
 
-  state :completed, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} completed")
-                                # app.completed_at = Time.now
-                                SiApplicationMailer.deliver_completed(app)
-                              }
+    state :completed, :enter => Proc.new {|app|
+                                  Rails.logger.info("application #{app.id} completed")
+                                  app.notify_app_completed
+                                }
 
-  state :unsubmitted, :enter => Proc.new {|app|
-                                # TODO: Do we need to send a notification here?
-                              }
+    state :unsubmitted, :enter => Proc.new {|app|
+                                  # TODO: Do we need to send a notification here?
+                                }
 
-  state :withdrawn, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} withdrawn")
-                                # TODO: Do we need to send a notification here?
-                                app.withdrawn_at = Time.now
-                              }
+    state :withdrawn, :enter => Proc.new {|app|
+                                  Rails.logger.info("application #{app.id} withdrawn")
+                                  # TODO: Do we need to send a notification here?
+                                  app.withdrawn_at = Time.now
+                                }
 
-  state :accepted, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} accepted")
-                                app.accepted_at = Time.now
-                             }
+    state :accepted, :enter => Proc.new {|app|
+                                  Rails.logger.info("application #{app.id} accepted")
+                                  app.accepted_at = Time.now
+                               }
 
-  state :declined, :enter => Proc.new {|app|
-                                logger.info("application #{app.id} declined")
-                             }
+    state :declined, :enter => Proc.new {|app|
+                                  Rails.logger.info("application #{app.id} declined")
+                               }
 
-  event :submit do
-    transitions :to => :submitted, :from => :started
-    transitions :to => :submitted, :from => :unsubmitted
-    transitions :to => :submitted, :from => :withdrawn
+    event :submit do
+      transitions :to => :submitted, :from => :started
+      transitions :to => :submitted, :from => :unsubmitted
+      transitions :to => :submitted, :from => :withdrawn
+      # Handle when user clicks to edit references, then clicks submit
+      transitions :to => :submitted, :from => :submitted
+    end
+
+    event :withdraw do
+      transitions :to => :withdrawn, :from => :started
+      transitions :to => :withdrawn, :from => :submitted
+      transitions :to => :withdrawn, :from => :completed
+      transitions :to => :withdrawn, :from => :unsubmitted
+      transitions :to => :withdrawn, :from => :declined
+      transitions :to => :withdrawn, :from => :accepted
+    end
+
+    event :unsubmit do
+      transitions :to => :unsubmitted, :from => :submitted
+      transitions :to => :unsubmitted, :from => :withdrawn
+    end
+
+    event :complete do
+      transitions :to => :completed, :from => :submitted
+      transitions :to => :completed, :from => :unsubmitted
+      transitions :to => :completed, :from => :started
+      transitions :to => :completed, :from => :withdrawn
+      transitions :to => :completed, :from => :declined
+      transitions :to => :completed, :from => :accepted
+    end
+
+    event :accept do
+      transitions :to => :accepted, :from => :completed
+      transitions :to => :accepted, :from => :started
+      transitions :to => :accepted, :from => :withdrawn
+      transitions :to => :accepted, :from => :declined
+      transitions :to => :accepted, :from => :submitted
+    end
+
+    event :decline do
+      transitions :to => :declined, :from => :completed
+      transitions :to => :declined, :from => :accepted
+    end
   end
 
-  event :withdraw do
-    transitions :to => :withdrawn, :from => :started
-    transitions :to => :withdrawn, :from => :submitted
-    transitions :to => :withdrawn, :from => :completed
-    transitions :to => :withdrawn, :from => :unsubmitted
-    transitions :to => :withdrawn, :from => :declined
-    transitions :to => :withdrawn, :from => :accepted
-  end
-
-  event :unsubmit do
-    transitions :to => :unsubmitted, :from => :submitted
-    transitions :to => :unsubmitted, :from => :withdrawn
-  end
-
-  event :complete do
-    transitions :to => :completed, :from => :submitted
-    transitions :to => :completed, :from => :unsubmitted
-    transitions :to => :completed, :from => :started
-    transitions :to => :completed, :from => :withdrawn
-    transitions :to => :completed, :from => :declined
-    transitions :to => :completed, :from => :accepted
-  end
-
-  event :accept do
-    transitions :to => :accepted, :from => :completed
-    transitions :to => :accepted, :from => :started
-    transitions :to => :accepted, :from => :withdrawn
-    transitions :to => :accepted, :from => :declined
-    transitions :to => :accepted, :from => :submitted
-  end
-
-  event :decline do
-    transitions :to => :declined, :from => :completed
-    transitions :to => :declined, :from => :accepted
-  end
-
-  belongs_to :sleeve
   belongs_to :applicant, :class_name => "Person", :foreign_key => "applicant_id"
-  has_many :apply_sheets, :include => :sleeve_sheet
-  has_many :references
-  has_one :staff_reference, :class_name => "Reference", :foreign_key => "apply_id", :conditions => "sleeve_sheet_id = 2"
-  has_one :discipler_reference, :class_name => "Reference", :foreign_key => "apply_id", :conditions => "sleeve_sheet_id = 3"
-  has_one :roommate_reference, :class_name => "Reference", :foreign_key => "apply_id", :conditions => "sleeve_sheet_id = 4"
-  has_one :friend_reference, :class_name => "Reference", :foreign_key => "apply_id", :conditions => "sleeve_sheet_id = 5"
+  has_many :references, :class_name => 'ReferenceSheet', :foreign_key => :applicant_answer_sheet_id, :dependent => :destroy
   has_many :payments
   has_one :hr_si_application
+  has_one :answer_sheet_question_sheet, :foreign_key => "answer_sheet_id"
   
-  named_scope :by_region, proc {|region, year| {:include => [:applicant, :references, [:hr_si_application => :sitrack_tracking], :payments],
+  scope :by_region, proc {|region, year| {:include => [:applicant, :references, [:hr_si_application => :sitrack_tracking], :payments],
                                :conditions => ["#{HrSiApplication.table_name}.siYear = ? and (concat_ws('','',#{Person.table_name}.region )= ? or #{SitrackTracking.table_name}.regionOfOrigin = ?)", year, region, region],
                                :order => "#{Person.table_name}.lastName, #{Person.table_name}.firstName"}}
   
+  before_create :create_answer_sheet_question_sheet
   after_save :complete
   
   # The statuses that mean an application has NOT been submitted
@@ -137,6 +142,18 @@ class Apply < ActiveRecord::Base
   def self.statuses
     Apply.unsubmitted_statuses | Apply.not_ready_statuses | Apply.ready_statuses | Apply.post_ready_statuses | Apply.not_going_statuses
   end
+  
+  def name
+    applicant.try(:informal_full_name)
+  end
+  
+  def email
+    applicant.try(:email)
+  end
+
+  def phone
+    applicant.try(:phone)
+  end
 
   def has_paid?
     self.payments.each do |payment|
@@ -156,10 +173,6 @@ class Apply < ActiveRecord::Base
     self.has_paid? ? "Approved" : "Not Paid"
   end
   
-  def email_address
-    applicant.current_address.email if applicant && applicant.current_address
-  end
-
   def completed_references
     sr = Array.new()
     references.each do |r|
@@ -169,46 +182,50 @@ class Apply < ActiveRecord::Base
   end
   
   def staff_reference
-    get_reference("Staff")
+    get_reference(Element.where("kind = 'ReferenceQuestion' AND style = 'staff'").first.id)
   end
   
   def discipler_reference
-    get_reference("Discipler")
+    get_reference(Element.where("kind = 'ReferenceQuestion' AND style = 'discipler'").first.id)
   end
   
   def roommate_reference
-    get_reference("Roommate")
+    get_reference(Element.where("kind = 'ReferenceQuestion' AND style = 'roommate'").first.id)
   end
 
   def friend_reference
-    get_reference("Friend Reference")
+    get_reference(Element.where("kind = 'ReferenceQuestion' AND style = 'friend'").first.id)
   end
   
-  def get_reference(title)
+  def get_reference(question_id)
     references.each do |r|
-      return r if r.sleeve_sheet.title.downcase.include? title.downcase
+      return r if r.question_id == question_id
     end
-    return Reference.new()
+    return ReferenceSheet.new()
   end
   
   def answer_sheets
-    a_sheets = Array.new()
-    apply_sheets.each do |s|
-      a_sheets << s.answer_sheet
+    a_sheets = [self]
+    references.each do |r|
+      a_sheets << r
     end
     a_sheets
   end
   
   def reference_answer_sheets
     r_sheets = Array.new()
-    self.apply_sheets.find(:all, :include => [:sleeve_sheet, :answer_sheet], :conditions => ["#{SleeveSheet.table_name}.assign_to = ?", 'reference']).each do |s|
-      r_sheets << s.answer_sheet
+    references.each do |r|
+      r_sheets << r
     end
     r_sheets
   end
   
   def has_references?
-    self.apply_sheets.detect { |as| as.sleeve_sheet.assign_to == 'reference'}
+    self.references.size > 0
+  end
+  
+  def create_answer_sheet_question_sheet
+    self.answer_sheet_question_sheet ||= AnswerSheetQuestionSheet.create(:question_sheet_id => 1) #TODO: NO CONSTANT
   end
   
   # The :frozen? method lets the QuestionnaireEngine know to not allow
@@ -220,83 +237,28 @@ class Apply < ActiveRecord::Base
   def can_change_references?
     %w(started unsubmitted submitted).include?(self.status)
   end
+  
+  def notify_app_submitted
+    Notifier.notification(self.email,
+                          "stintandinternships@cru.org", 
+                          "Application Submitted", 
+                          {'applicant_first_name' => applicant.nickname, }).deliver
+  end
 
-  # create Applicant answer sheets for this application
-  def find_or_create_applicant_answer_sheets
-    answer_sheets = []
-    
-    transaction do  
-      # existing answer sheets for this applicant
-      apply_sheets = self.apply_sheets.find(:all, :include => :sleeve_sheet, :conditions => ["#{SleeveSheet.table_name}.assign_to = ?", 'applicant'])
-  
-      if self.sleeve.present?
-        if apply_sheets.empty?
-          # check the application sleeve to setup answer sheets
-        
-          sleeve_sheets = self.sleeve.sleeve_sheets.find(:all, :conditions => "assign_to = 'applicant'")
-    
-          sleeve_sheets.each do |sleeve_sheet|
-            answer_sheet = sleeve_sheet.question_sheet.answer_sheets.create
-            # tie the answer_sheet to this visitor and sleeve via apply_sheets
-            self.apply_sheets.create(:sleeve_sheet => sleeve_sheet, :answer_sheet => answer_sheet)
-            answer_sheets << answer_sheet
-          end
-        else
-          # use what we have
-          answer_sheets = apply_sheets.map {|a| a.answer_sheet}
-        end
-      end
-    end
-    
-    answer_sheets
+  def notify_app_completed
+    Notifier.notification(self.email,
+                          "stintandinternships@cru.org", 
+                          "Application Completed", 
+                          {'applicant_first_name' => applicant.nickname, }).deliver
   end
-  
-  def find_or_create_reference_answer_sheet(sleeve_sheet, create_new_answer_sheet = false)
-    answer_sheet = nil
-    
-    transaction do
-      apply_sheet = self.apply_sheets.find_by_sleeve_sheet_id(sleeve_sheet)
-      
-      if apply_sheet.nil?
-        answer_sheet = sleeve_sheet.question_sheet.answer_sheets.create
-        self.apply_sheets.create(:sleeve_sheet => sleeve_sheet, :answer_sheet => answer_sheet)
-      else
-        if create_new_answer_sheet
-          apply_sheet.answer_sheet = sleeve_sheet.question_sheet.answer_sheets.create
-          apply_sheet.save
-        end
-        answer_sheet = apply_sheet.answer_sheet
-      end
-    end
-    
-    answer_sheet
-  end
-  
-  # prepare "provide reference" page for editing (either new or existing data)
-  def reference_sheets
-    references = []
-    
-    # pre-defined template
-    sleeve_sheets = self.sleeve.sleeve_sheets.find(:all, :conditions => ['assign_to = ?', 'reference'])   # templates
-    
-    # any data?
-    data = self.references.find(:all).index_by(&:sleeve_sheet_id)
-    
-    sleeve_sheets.each do |ss|
-      reference = data[ss.id] || self.references.build(:sleeve_sheet_id => ss.id)   # existing data or an empty record
-      reference.title = ss.title  # reference title for easy access
-      reference.save! if reference.id.nil? 
-      references << reference
-    end
-    
-    references
-  end
-  
-  def complete
+
+  def complete(ref = nil)
     return true if self.completed?
     return false unless self.submitted?
     return false unless self.has_paid?
-    return false unless self.completed_references.length == self.sleeve.reference_sheets.length
+    references.each do |reference|
+      return false  unless reference.completed? || reference == ref
+    end
     return self.complete!
   end
 

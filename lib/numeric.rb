@@ -1,6 +1,6 @@
 class Numeric
   def dollars
-    val = sprintf("$%.0f",self)
+    val = self > 0 ? sprintf("$%.0f",self) : 0
   end
   
   def cents

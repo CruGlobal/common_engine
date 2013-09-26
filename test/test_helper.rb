@@ -1,16 +1,15 @@
-require File.expand_path(File.dirname(__FILE__) + '/../../../../test/test_helper') # the default rails helper
+# Configure Rails Environment
+ENV["RAILS_ENV"] = "test"
 
-# ensure that the Engines testing enhancements are loaded.
-require File.join(Engines.config(:root), "engines", "lib", "testing_extensions")
+require File.expand_path("../dummy/config/environment.rb",  __FILE__)
+require "rails/test_help"
 
-# force these config values
-module CommonEngine
-#  config :some_option, "some_value"
+Rails.backtrace_cleaner.remove_silencers!
+
+# Load support files
+Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
+
+# Load fixtures from the engine
+if ActiveSupport::TestCase.method_defined?(:fixture_path=)
+  ActiveSupport::TestCase.fixture_path = File.expand_path("../fixtures", __FILE__)
 end
-
-# Load the schema - if migrations have been performed, this will be up to date.
-load(File.dirname(__FILE__) + "/../db/schema.rb")
-
-# set up the fixtures location
-Test::Unit::TestCase.fixture_path = File.dirname(__FILE__)  + "/fixtures/"
-$LOAD_PATH.unshift(Test::Unit::TestCase.fixture_path)

@@ -1,0 +1,135 @@
+class Statistic < ActiveRecord::Base
+  unloadable
+  self.table_name = "ministry_statistic"
+  self.primary_key = "StatisticID"
+  belongs_to :activity, :foreign_key => "fk_Activity"
+  
+  validates_numericality_of :spiritual_conversations, :evangelisticOneOnOne, :evangelisticGroup, :exposuresViaMedia, 
+    :holySpiritConversations, :decisionsHelpedByOneOnOne, :decisionsHelpedByGroup, :decisionsHelpedByMedia, 
+    :laborersSent, :faculty_sent, :multipliers, :studentLeaders, :invldStudents, :faculty_involved, 
+    :faculty_engaged, :faculty_leaders, :ongoingEvangReln, :dollars_raised, :only_integer => true, :allow_nil => true
+
+  alias_attribute :activity_id, :fk_Activity
+  alias_attribute :period_begin, :periodBegin
+  alias_attribute :period_end, :periodEnd
+  #alias_attribute :spiritual_conversations, :spiritual_conversations
+  alias_attribute :personal_exposures, :evangelisticOneOnOne
+  alias_attribute :personal_evangelism, :evangelisticOneOnOne
+  alias_attribute :group_exposures, :evangelisticGroup
+  alias_attribute :group_evangelism, :evangelisticGroup
+  alias_attribute :media_exposures, :exposuresViaMedia
+  alias_attribute :holy_spirit_presentations, :holySpiritConversations
+  alias_attribute :personal_decisions, :decisionsHelpedByOneOnOne
+  alias_attribute :group_decisions, :decisionsHelpedByGroup
+  alias_attribute :media_decisions, :decisionsHelpedByMedia
+  alias_attribute :graduating_on_mission, :laborersSent
+  alias_attribute :faculty_on_mission, :faculty_sent
+  alias_attribute :laborers_sent, :laborersSent
+  alias_attribute :students_involved, :invldStudents
+  alias_attribute :students_engaged, :multipliers
+  alias_attribute :student_leaders, :studentLeaders
+  #alias_attribute :faculty_involved, :faculty_involved
+  #alias_attribute :faculty_engaged, :faculty_engaged
+  #alias_attribute :facutly_leaders, :facutly_leaders
+  alias_attribute :seekers, :ongoingEvangReln
+  
+  #Scopes
+  def self.before_date(date)
+    where(Statistic.table_name + ".periodBegin <= ?", date)
+  end
+  
+  def self.after_date(date)
+    where(Statistic.table_name + ".periodEnd >= ?", date)
+  end
+  
+  def self.between_dates(from_date, to_date)
+    after_date(from_date).before_date(to_date)
+  end
+  
+  #Constants
+  def self.weekly_stats # Order matters! Reports rely on correct order, if changed here, change Infobase app/views/reports/_report_header_bar.html.erb
+    ["evangelisticOneOnOne", "decisionsHelpedByOneOnOne", "evangelisticGroup", "decisionsHelpedByGroup", "exposuresViaMedia", "decisionsHelpedByMedia", "spiritual_conversations", "holySpiritConversations", "laborersSent", "faculty_sent"]
+  end
+  
+  def self.semester_stats # Order matters! Reports rely on correct order, if changed here, change Infobase app/views/reports/_report_header_bar.html.erb
+    ["invldStudents", "multipliers", "studentLeaders", "faculty_involved", "faculty_engaged", "faculty_leaders"]
+  end
+  
+  def self.all_stats
+    Statistic.weekly_stats + Statistic.semester_stats + ["dollars_raised"]
+  end
+  
+  def self.event_stats
+    Statistic.weekly_stats + ["invldStudents", "dollars_raised"]
+  end
+  
+  def self.people_groups
+    ["(Other Internationals)", "East Asian", "Ishmael Project", "Japanese", "South Asian"]
+  end
+  
+  def self.uses_seekers
+    []
+  end
+  
+  #Instance Methods
+  def prefill_semester_stats
+    prev_stat = get_previous_stat
+    if prev_stat
+      Statistic.semester_stats.each do |field|
+        self[field] = prev_stat[field]
+      end
+    end
+  end
+  
+  def add_stats(new_stat)
+    Statistic.event_stats.each do |stat|
+      old_stat = self[stat] || 0
+      self[stat] = old_stat + new_stat[stat].to_i
+      if self[stat] == 0
+        self[stat] = nil
+      end
+    end
+  end
+  
+  # Don't save if everything is nil
+  def save
+    attribs = attributes.clone
+    
+    # Don't care about these attributes
+    attribs.delete("periodBegin")
+    attribs.delete("periodEnd")
+    attribs.delete("fk_Activity")
+    attribs.delete("peopleGroup")
+    attribs.delete("updated_by")
+    
+    # Need to compare the semester/quarter stats to previous stat record
+    prev_stat = get_previous_stat
+    changed = false
+    if prev_stat
+      Statistic.semester_stats.each do |field|
+        changed = changed || self[field] != prev_stat[field]
+        attribs.delete(field)
+      end
+    end
+    
+    values = attribs.values.compact
+    if !values.empty? || changed
+      super
+    end
+  end
+  
+  # Will return nil if there isn't a previous stat
+  def get_previous_stat
+    result = nil
+    stats = activity.statistics
+    if activity.strategy == "BR"
+      stats = stats.where(:peopleGroup => peopleGroup)
+    end
+    index = stats.index(self)
+    if index == nil
+      result = stats.last
+    elsif index > 0
+      result = stats[index - 1]
+    end
+  end
+end
