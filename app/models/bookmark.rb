@@ -1,6 +1,5 @@
 class Bookmark < ActiveRecord::Base
-  unloadable
-  
+
   self.table_name = "infobase_bookmarks"
   
   belongs_to :user

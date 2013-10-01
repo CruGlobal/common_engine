@@ -1,13 +1,11 @@
 class TargetArea < ActiveRecord::Base
-  unloadable
-  
   self.table_name = "ministry_targetarea"
   self.primary_key = "targetAreaID"
   
   #override the inheritance column
   self.inheritance_column = "nothing"
   
-  has_many :activities, :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID", :conditions => "status != 'IN'"
+  has_many :activities, -> { where("status != 'IN'") }, :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID"
   has_many :all_activities, :class_name => "Activity", :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID"
   has_many :teams, :through => :activities
   
@@ -20,8 +18,8 @@ class TargetArea < ActiveRecord::Base
   validates_presence_of :region, :unless => :is_event?
   #validates_presence_of :state, :if => :country == "USA"
   
-  scope :open_school, where("isClosed is null or isClosed <> 'T'").where("eventType is null or eventType <=> ''")
-  scope :special_events, where("type = 'Event' AND ongoing_special_event = 1")
+  scope :open_school, -> { where("isClosed is null or isClosed <> 'T'").where("eventType is null or eventType <=> ''") }
+  scope :special_events, -> { where("type = 'Event' AND ongoing_special_event = 1") }
   
   before_save :stamp_changed
   before_create :stamp_changed

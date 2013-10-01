@@ -1,5 +1,4 @@
 class Activity < ActiveRecord::Base
-  unloadable
   self.table_name = "ministry_activity"
   self.primary_key = "ActivityID"
   belongs_to :target_area, :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID"

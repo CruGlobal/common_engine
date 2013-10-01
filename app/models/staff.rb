@@ -1,5 +1,4 @@
 class Staff < ActiveRecord::Base
-  unloadable
   self.table_name = "ministry_staff"
   belongs_to :person
   

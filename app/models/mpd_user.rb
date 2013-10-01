@@ -1,5 +1,4 @@
 class MpdUser < ActiveRecord::Base
-  unloadable
   belongs_to :mpd_letter
   belongs_to :user, :class_name => "User", :foreign_key => "user_id"#, :include => {:person => :current_application}
 

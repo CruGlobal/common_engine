@@ -1,14 +1,13 @@
 class Team < ActiveRecord::Base
-  unloadable
   self.table_name  = "ministry_locallevel"
   self.primary_key = "teamID"
 
-  has_many :team_members, :foreign_key => "teamID", :include => :person, :order => Person.table_name + ".lastName"
-  has_many :people, :through => :team_members, :order => Person.table_name + ".lastName"
-  has_many :activities, :foreign_key => 'fk_teamID', :primary_key => "teamID", :include => :target_area, :order => TargetArea.table_name + ".name"
-  has_many :target_areas, :through => :activities, :order => "name"
+  has_many :team_members, -> { order(Person.table_name + ".lastName").include(:person) }, :foreign_key => "teamID"
+  has_many :people, -> { order(Person.table_name + ".lastName") }, :through => :team_members
+  has_many :activities, -> { order(TargetArea.table_name + ".name").include(:target_area) }, :foreign_key => 'fk_teamID', :primary_key => "teamID"
+  has_many :target_areas, -> { order("name") }, :through => :activities
 
-  scope :active, where("isActive = 'T'")
+  scope :active, -> { where("isActive = 'T'") }
   scope :from_region, lambda {|region| active.where("region = ? or hasMultiRegionalAccess = 'T'", region).order(:name)}
 
   validates_uniqueness_of :name

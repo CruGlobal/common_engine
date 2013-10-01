@@ -1,5 +1,4 @@
 class WsnApplication < ActiveRecord::Base
-  unloadable
   self.table_name = "wsn_sp_WsnApplication"
 	self.primary_key = "WsnApplicationID"
 	

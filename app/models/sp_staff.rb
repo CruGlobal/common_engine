@@ -5,7 +5,6 @@ class SpStaff < ActiveRecord::Base
   include GlobalRegistryMethods
 
   DIRECTORSHIPS = ['PD', 'APD', 'OPD', 'Coordinator']
-  unloadable
   self.inheritance_column = 'fake_column'
   self.table_name = 'sp_staff'
   belongs_to :person
@@ -15,13 +14,13 @@ class SpStaff < ActiveRecord::Base
   after_create :create_or_reset_sp_user
   after_destroy :delete_or_reset_sp_user
 
-  scope :pd, where(:type => 'PD')
-  scope :apd, where(:type => 'APD')
-  scope :opd, where(:type => 'OPD')
+  scope :pd, -> { where(:type => 'PD') }
+  scope :apd, -> { where(:type => 'APD') }
+  scope :opd, -> { where(:type => 'OPD') }
   scope :year, proc {|year| where(:year => year)}
-  scope :most_recent, order('year desc').limit(1)
+  scope :most_recent, -> { order('year desc').limit(1) }
 
-  scope :other_involved, where("sp_staff.type NOT IN ('Kid','Evaluator','Coordinator','Staff')")
+  scope :other_involved, -> { where("sp_staff.type NOT IN ('Kid','Evaluator','Coordinator','Staff')") }
 
   delegate :email, :to => :person
 

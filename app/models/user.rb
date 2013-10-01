@@ -1,24 +1,20 @@
 require 'digest/md5'
 require 'base64'
 class User < ActiveRecord::Base
-  unloadable
   self.table_name = "simplesecuritymanager_user"
 	self.primary_key = "userID"
-
-	attr_accessible :username, :createdOn
 
 	# Relationships
 	has_one :person, :foreign_key => 'fk_ssmUserId'
 	has_many :authentications
-	has_many :activity_bookmarks, :class_name => 'Bookmark', :conditions => Bookmark.table_name + ".name = 'activity'"
-	has_many :activities, :through => :activity_bookmarks, :include => :target_area, :order => TargetArea.table_name + ".name"
-  has_one :balance_bookmark, :class_name => 'Bookmark', :conditions => Bookmark.table_name + ".name = 'balance'"
+	has_many :activity_bookmarks, -> { where(Bookmark.table_name + ".name = 'activity'") }, :class_name => 'Bookmark'
+	has_many :activities, -> { order(TargetArea.table_name + ".name").includes(:target_area) }, :through => :activity_bookmarks
+  has_one :balance_bookmark, -> { where(Bookmark.table_name + ".name = 'balance'") }, :class_name => 'Bookmark'
 
   # Virtual attribute for the unencrypted password
-  attr_accessible :plain_password, :plain_password_confirmation, :username, :globallyUniqueID
   attr_accessor :plain_password, :plain_password_confirmation
 
-  validates_format_of       :username, :message => "must be an email address", :with => /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i
+  validates_format_of       :username, :message => "must be an email address", :with => /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\z/i
   #validates_presence_of     :plain_password,                   :if => :password_required?
   #validates_presence_of     :plain_password_confirmation,      :if => :password_required?
   #validates_length_of       :plain_password, :within => 6..80, :if => :password_required?
@@ -82,11 +78,10 @@ class User < ActiveRecord::Base
     unless u.person
       # Try to find a person with the same email address.  If multiple people are found, use
       # the one who's logged in most recently
-      address = ::CurrentAddress.find(:first,
-                                      :joins => { :person => :user },
-                                      :conditions => {:email => email},
-                                      :order => "lastLogin DESC"
-                                     )
+      address = ::CurrentAddress.joins(:person => :user)
+                                .where(:email => email)
+                                .order("lastLogin DESC")
+                                .first
       person = address.try(:person)
 
       # Attach the found person to the user, or create a new person

@@ -1,5 +1,4 @@
 class PsEmployee < ActiveRecord::Base
-  unloadable
   establish_connection :peoplesoft
   self.table_name = "SYSADM.PS_CCC_CM_EMPL_VW"
   self.primary_key = "emplid"

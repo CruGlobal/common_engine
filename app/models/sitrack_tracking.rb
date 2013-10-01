@@ -79,9 +79,6 @@ class SitrackTracking < ActiveRecord::Base
   belongs_to                :hr_si_application, :foreign_key => 'application_id'
   belongs_to :team, foreign_key: 'asgTeam'
 
-  attr_accessible :application_id, :internType, :regionOfOrigin, :caringRegion,
-                  :asgTeam, :send_dept, :sendLane, :asgCity, :asgCountry, :asgContinent,
-                  :departureDate, :asgState
   def is_stint?
     return true if ['ICS','STINT'].include?(internType)
     return false

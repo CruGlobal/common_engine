@@ -1,12 +1,6 @@
 class Person < ActiveRecord::Base
-  unloadable
-
   self.table_name = "ministry_person"
   self.primary_key = "personID"
-
-  attr_accessible :firstName, :lastName, :isSecure, :birth_date, :maritalStatus,
-                  :accountNo, :first_name, :last_name, :gender, :preferredName, :current_address_attributes, :region,
-                  :sp_gcx_site
 
   # SP-298
   has_many                :sp_designation_numbers, dependent: :destroy
@@ -16,15 +10,15 @@ class Person < ActiveRecord::Base
   has_one                 :staff
   has_many                :team_members, :foreign_key => "personID", dependent: :destroy
   has_many                :teams, :through => :team_members
-  has_and_belongs_to_many :activities, :join_table => "ministry_movement_contact", :association_foreign_key => "ActivityID",
-    :foreign_key => "personID", :include => :target_area, :order => TargetArea.table_name + ".name"
+  has_and_belongs_to_many :activities, -> { order(TargetArea.table_name + ".name").includes(:target_area) }, :join_table => "ministry_movement_contact", :association_foreign_key => "ActivityID",
+    :foreign_key => "personID"
 
   # Addresses
   has_many                :email_addresses, :foreign_key => "person_id", :class_name => '::EmailAddress', dependent: :destroy
   has_many                :phone_numbers, :foreign_key => "person_id", :class_name => '::PhoneNumber', dependent: :destroy
-  has_one                 :current_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'current'", :class_name => '::Address'
-  has_one                 :permanent_address, :foreign_key => "fk_PersonID", :conditions => "addressType = 'permanent'", :class_name => '::Address'
-  has_one                 :emergency_address1, :foreign_key => "fk_PersonID", :conditions => "addressType = 'emergency1'", :class_name => '::Address'
+  has_one                 :current_address, -> { where("addressType = 'current'") }, :foreign_key => "fk_PersonID", :class_name => '::Address'
+  has_one                 :permanent_address, -> { where("addressType = 'permanent'") }, :foreign_key => "fk_PersonID", :class_name => '::Address'
+  has_one                 :emergency_address1, -> { where("addressType = 'emergency1'") }, :foreign_key => "fk_PersonID", :class_name => '::Address'
   has_many                :addresses, :foreign_key => "fk_PersonID", dependent: :destroy
 
   # Cru Commons
@@ -43,17 +37,17 @@ class Person < ActiveRecord::Base
   has_many                :sitrack_trackings, through: :hr_si_applications
   has_many                :applies, :foreign_key => "applicant_id"   # applicants applying
   has_many                :apply_sheets    # whoever, filling in a sheet
-  has_one                 :current_si_application, :foreign_key => "fk_PersonID", :conditions => "siYear = '#{HrSiApplication::YEAR}'", :class_name => '::HrSiApplication'
+  has_one                 :current_si_application, -> { where("siYear = '#{HrSiApplication::YEAR}'") }, :foreign_key => "fk_PersonID", :class_name => '::HrSiApplication'
 
   # Summer Project
   has_many                :sp_applications
 
-  has_one                 :current_application, :conditions => "year = '#{SpApplication.year}'", :class_name => '::SpApplication'
+  has_one                 :current_application, -> { where("year = '#{SpApplication.year}'") }, :class_name => '::SpApplication'
   has_many                :sp_staff, :class_name => "SpStaff", :foreign_key => "person_id"
-  has_many                :sp_directorships, :class_name => "SpStaff", :foreign_key => "person_id", :conditions => {:type => SpStaff::DIRECTORSHIPS}
+  has_many                :sp_directorships, -> { where({:type => SpStaff::DIRECTORSHIPS}) }, :class_name => "SpStaff", :foreign_key => "person_id"
   has_many                :directed_projects, :through => :sp_directorships, :source => :sp_project
   has_many                :staffed_projects, :through => :sp_staff, :source => :sp_project
-  has_many                :current_staffed_projects, :through => :sp_staff, :source => :sp_project, :select => "sp_projects.*", :conditions => "sp_staff.year = #{SpApplication.year}"
+  has_many                :current_staffed_projects, -> { where("sp_staff.year = #{SpApplication.year}").select("sp_projects.*") }, :through => :sp_staff, :source => :sp_project
 
   # General
   attr_accessor           :school
@@ -79,7 +73,7 @@ class Person < ActiveRecord::Base
   before_save :check_region, :stamp_changed
   before_create :stamp_created
 
-  scope :not_secure, where("isSecure != 'T' or isSecure IS NULL")
+  scope :not_secure, -> { where("isSecure != 'T' or isSecure IS NULL") }
 
   def emergency_address
     emergency_address1
@@ -119,11 +113,9 @@ class Person < ActiveRecord::Base
       self.school
     else
       if (campus? && universityState?)
-        self.school = TargetArea.find(:first,
-                    :conditions => ["name = ? AND state = ?", campus, universityState])
+        self.school = TargetArea.where(["name = ? AND state = ?", campus, universityState]).first
       elsif (campus?)
-        self.school = TargetArea.find(:first,
-                    :conditions => ["name = ?", campus])
+        self.school = TargetArea.where(["name = ?", campus]).first
       else
         self.school = nil
       end

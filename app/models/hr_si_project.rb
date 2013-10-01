@@ -1,5 +1,4 @@
 class HrSiProject < ActiveRecord::Base
-  unloadable
   self.table_name = "hr_si_project"
 	self.primary_key = "SIProjectID"
   

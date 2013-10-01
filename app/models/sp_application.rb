@@ -1,17 +1,16 @@
 require 'global_registry_methods'
 require 'aasm'
+require_dependency 'answer_sheet_concern'
 
 require 'digest/md5'
-class SpApplication < AnswerSheet
+class SpApplication < ActiveRecord::Base
+  include AnswerSheetConcern
   include Sidekiq::Worker
   include GlobalRegistryMethods
   include AASM
 
-  self.table_name = 'sp_applications'
   COST_BEFORE_DEADLINE = 25
   COST_AFTER_DEADLINE = 25
-
-  unloadable
 
   aasm :initial => :started, :column => :status do
 
@@ -21,7 +20,7 @@ class SpApplication < AnswerSheet
                                   # SpApplicationMailer.deliver_submitted(app)
                                   Notifier.notification(
                                     app.email, # RECIPIENTS
-                                    Questionnaire.from_email, # FROM
+                                    Qe.from_email, # FROM
                                     "Application Submitted"
                                   ).deliver if app.email.present? # LIQUID TEMPLATE NAME
                                   app.submitted_at = Time.now
@@ -32,7 +31,7 @@ class SpApplication < AnswerSheet
                               app.completed_at ||= Time.now
                               Notifier.notification(
                                 app.email, # RECIPIENTS
-                                Questionnaire.from_email, # FROM
+                                Qe.from_email, # FROM
                                 "Application Completed"
                               ).deliver if app.email.present?
                               app.previous_status = app.status
@@ -41,7 +40,7 @@ class SpApplication < AnswerSheet
     state :unsubmitted, :enter => Proc.new {|app|
                                     Notifier.notification(
                                       app.email, # RECIPIENTS
-                                      Questionnaire.from_email, # FROM
+                                      Qe.from_email, # FROM
                                       "Application Unsubmitted"
                                     ).deliver if app.email.present?
                                     app.previous_status = app.status
@@ -50,7 +49,7 @@ class SpApplication < AnswerSheet
     state :withdrawn, :enter => Proc.new {|app|
                                   Notifier.notification(
                                     app.email, # RECIPIENTS
-                                    Questionnaire.from_email, # FROM
+                                    Qe.from_email, # FROM
                                     "Application Withdrawn"
                                   ).deliver if app.email.present?
                                   app.withdrawn_at = Time.now
@@ -160,12 +159,12 @@ class SpApplication < AnswerSheet
   # end
   has_one :evaluation, :class_name => 'SpEvaluation', :foreign_key => :application_id
 
-  scope :for_year, proc {|year| {:conditions => {:year => year}}}
+  scope :for_year, proc {|year| where(:year => year)}
   scope :preferrenced_project, proc {|project_id| {:conditions => ["project_id = ? OR preference1_id = ? OR preference2_id = ? OR preference3_id = ?", project_id, project_id, project_id, project_id]}}
 
   scope :preferred_project, proc {|project_id| {:conditions => ["project_id = ?", project_id],
                                                       :include => :person }}
-  scope :not_staff, where("ministry_person.isStaff <> 1 OR ministry_person.isStaff Is Null").joins(:person)
+  scope :not_staff, -> { where("ministry_person.isStaff <> 1 OR ministry_person.isStaff Is Null").joins(:person) }
   before_create :set_su_code
   after_save :unsubmit_on_project_change, :complete, :send_acceptance_email, :log_changed_project, :update_project_counts
 
@@ -315,27 +314,27 @@ class SpApplication < AnswerSheet
     SpApplication.unsubmitted_statuses | SpApplication.not_ready_statuses | SpApplication.ready_statuses | SpApplication.accepted_statuses | SpApplication.not_going_statuses
   end
 
-  scope :ascend_by_accepted, order("sp_applications.accepted_at")
-  scope :descend_by_accepted, order("sp_applications.accepted_at desc")
-  scope :ascend_by_ready, order("sp_applications.completed_at")
-  scope :descend_by_ready, order("sp_applications.completed_at desc")
-  scope :ascend_by_submitted, order("sp_applications.submitted_at")
-  scope :descend_by_submitted, order("sp_applications.submitted_at desc")
-  scope :ascend_by_started, order("sp_applications.created_at")
-  scope :descend_by_started, order("sp_applications.created_at desc")
-  scope :ascend_by_name, order("lastName, firstName")
-  scope :descend_by_name, order("lastName desc, firstName desc")
-  scope :accepted, where('sp_applications.status' => SpApplication.accepted_statuses)
-  scope :accepted_participants, where('sp_applications.status' => 'accepted_as_participant')
-  scope :accepted_student_staff, where('sp_applications.status' => 'accepted_as_student_staff')
-  scope :ready_to_evaluate, where('sp_applications.status' => SpApplication.ready_statuses)
-  scope :submitted, where('sp_applications.status' => SpApplication.not_ready_statuses)
-  scope :not_submitted, where('sp_applications.status' => SpApplication.unsubmitted_statuses)
-  scope :not_going, where('sp_applications.status' => SpApplication.not_going_statuses)
-  scope :applicant, where('sp_applications.status' => SpApplication.applied_statuses)
+  scope :ascend_by_accepted, -> { order("sp_applications.accepted_at") }
+  scope :descend_by_accepted, -> { order("sp_applications.accepted_at desc") }
+  scope :ascend_by_ready, -> { order("sp_applications.completed_at") }
+  scope :descend_by_ready, -> { order("sp_applications.completed_at desc") }
+  scope :ascend_by_submitted, -> { order("sp_applications.submitted_at") }
+  scope :descend_by_submitted, -> { order("sp_applications.submitted_at desc") }
+  scope :ascend_by_started, -> { order("sp_applications.created_at") }
+  scope :descend_by_started, -> { order("sp_applications.created_at desc") }
+  scope :ascend_by_name, -> { joins(:person).order("lastName, firstName") }
+  scope :descend_by_name, -> { joins(:person).order("lastName desc, firstName desc") }
+  scope :accepted, -> { where('sp_applications.status' => SpApplication.accepted_statuses) }
+  scope :accepted_participants, -> { where('sp_applications.status' => 'accepted_as_participant') }
+  scope :accepted_student_staff, -> { where('sp_applications.status' => 'accepted_as_student_staff') }
+  scope :ready_to_evaluate, -> { where('sp_applications.status' => SpApplication.ready_statuses) }
+  scope :submitted, -> { where('sp_applications.status' => SpApplication.not_ready_statuses) }
+  scope :not_submitted, -> { where('sp_applications.status' => SpApplication.unsubmitted_statuses) }
+  scope :not_going, -> { where('sp_applications.status' => SpApplication.not_going_statuses) }
+  scope :applicant, -> { where('sp_applications.status' => SpApplication.applied_statuses) }
 
-  scope :male, where('ministry_person.gender = 1').includes(:person)
-  scope :female, where('ministry_person.gender <> 1').includes(:person)
+  scope :male, -> { where('ministry_person.gender = 1').includes(:person) }
+  scope :female, -> { where('ministry_person.gender <> 1').includes(:person) }
 
   delegate :campus, :to => :person
 

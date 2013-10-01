@@ -1,5 +1,4 @@
 class HrSiApplication < ActiveRecord::Base
-  unloadable
   self.table_name = "hr_si_applications"
   self.primary_key = "applicationID"
 

@@ -17,7 +17,7 @@ class UsersController < ApplicationController
   end
   
   def create
-    @user = User.new(params[:user])
+    @user = User.new(user_params)
     @user.username = params[:email]
     @person = Person.new(params[:person])
     if session[:omniauth]
@@ -39,7 +39,6 @@ class UsersController < ApplicationController
   
   def update
     if params[:c]
-      user_params = params[:user] || {}
       @user = User.find_by_password_reset_key(params[:c])
       unless user_params[:plain_password].to_s.strip.present?
         flash[:alert] = "You didn't provide a new password"
@@ -49,7 +48,7 @@ class UsersController < ApplicationController
         flash[:alert] = "Your confirmation didn't match the password you provided"
         redirect_to :back and return
       end
-      if @user.update_attributes(params[:user])
+      if @user.update_attributes(user_params)
         redirect_to '/', :notice => "Your password has been updated."
       else
         flash[:alert] = @user.errors.full_messages.join('<br>')
@@ -58,7 +57,7 @@ class UsersController < ApplicationController
     else
       redirect_to '/' and return unless logged_in?
       @user = current_user
-      @user.update_attributes(params[:user])
+      @user.update_attributes(user_params)
       if @user.valid?
         if omniauth = session[:omniauth]
           @user.apply_omniauth(omniauth)
@@ -80,6 +79,10 @@ class UsersController < ApplicationController
     unless @user
       redirect_to(send_password_email_session_path, :error => "That link isn't valid. It's possible it appears on two lines in your email. If you haven't already, please try copy/pasting the link instead of clicking on it.") and return
     end
+  end
+
+  def user_params
+    params.fetch(:user, {}).permit(:username, :password, :passwordQuestion, :passwordAnswer, :email, :locale, :settings, :password_plain, :plain_password, :plain_password_confirmation)
   end
 
 end

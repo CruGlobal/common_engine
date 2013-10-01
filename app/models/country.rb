@@ -1,6 +1,5 @@
 class Country < ActiveRecord::Base
-  unloadable
-  
+
   def self.to_hash_US_first
     result = {}
     top = where('country = ?', 'United States').first

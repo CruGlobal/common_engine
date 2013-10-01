@@ -8,7 +8,6 @@ class SpProject < ActiveRecord::Base
   include Sidekiq::Worker
   include GlobalRegistryMethods
 
-  unloadable
   has_attached_file :picture, :styles => { :medium => "500x300>", :thumb => "100x100>" },
     :storage => :s3,
     :s3_credentials => Rails.root.join("config/amazon_s3.yml"),
@@ -50,7 +49,7 @@ class SpProject < ActiveRecord::Base
 
   has_many :sp_applications, :dependent => :nullify, :foreign_key => :project_id
 
-  has_one :target_area, :foreign_key => :eventKeyID, :conditions => { :eventType => "SP" }
+  has_one :target_area, -> { where(:eventType => "SP") }, :foreign_key => :eventKeyID
 
   has_many :statistics, :finder_sql => proc { "select ministry_statistic.* from sp_projects " +
                                               'left join ministry_targetarea on sp_projects.id = ministry_targetarea.eventKeyID and eventType = "SP" ' +
@@ -82,23 +81,23 @@ class SpProject < ActiveRecord::Base
   validates_uniqueness_of :name
   validate :validate_partnership
 
-  scope :with_partner, proc {|partner| {:conditions => ["primary_partner IN(?) OR secondary_partner IN(?) OR tertiary_partner IN(?)", partner, partner, partner]}}
-  scope :show_on_website, where(:show_on_website => true, :project_status => 'open')
-  scope :uses_application, where(:use_provided_application => true)
-  scope :current, where("project_status = 'open' AND open_application_date <= ? AND start_date >= ?", Date.today, Date.today)
-  scope :open, where("project_status = 'open'")
-  scope :ascend_by_name, order(:name)
-  scope :descend_by_name, order("name desc")
-  scope :ascend_by_pd, order(Person.table_name + '.lastName, ' + Person.table_name + '.firstName').where('sp_staff.type' => 'PD').joins({:sp_staff => :person})
-  scope :descend_by_pd, order(Person.table_name + '.lastName desc, ' + Person.table_name + '.firstName desc').where('sp_staff.type' => 'PD').joins({:sp_staff => :person})
-  scope :ascend_by_apd, order(Person.table_name + '.lastName, ' + Person.table_name + '.firstName').where('sp_staff.type' => 'APD').joins({:sp_staff => :person})
-  scope :descend_by_apd, order(Person.table_name + '.lastName desc, ' + Person.table_name + '.firstName desc').where('sp_staff.type' => 'APD').joins({:sp_staff => :person})
-  scope :ascend_by_opd, order(Person.table_name + '.lastName, ' + Person.table_name + '.firstName').where('sp_staff.type' => 'OPD').joins({:sp_staff => :person})
-  scope :descend_by_opd, order(Person.table_name + '.lastName desc, ' + Person.table_name + '.firstName desc').where('sp_staff.type' => 'OPD').joins({:sp_staff => :person})
-  scope :not_full_men, where("current_students_men < max_accepted_men AND max_student_men_applicants > current_applicants_men")
-  scope :not_full_women, where("current_students_women < max_accepted_women AND max_student_women_applicants > current_applicants_women")
-  scope :has_chart_field, where("operating_business_unit is not null AND operating_business_unit <> '' AND operating_operating_unit is not null AND operating_operating_unit <> '' AND operating_department is not null AND operating_department <> ''")
-  scope :missing_chart_field, where("operating_business_unit is null OR operating_business_unit = '' OR operating_operating_unit is null OR operating_operating_unit = '' OR operating_department is null OR operating_department = ''")
+  scope :with_partner, proc {|partner| where(["primary_partner IN(?) OR secondary_partner IN(?) OR tertiary_partner IN(?)", partner, partner, partner])}
+  scope :show_on_website, -> { where(:show_on_website => true, :project_status => 'open') }
+  scope :uses_application, -> { where(:use_provided_application => true) }
+  scope :current, -> { where("project_status = 'open' AND open_application_date <= ? AND start_date >= ?", Date.today, Date.today) }
+  scope :open, -> { where("project_status = 'open'") }
+  scope :ascend_by_name, -> { order(:name) }
+  scope :descend_by_name, -> { order("name desc") }
+  scope :ascend_by_pd, -> { order(Person.table_name + '.lastName, ' + Person.table_name + '.firstName').where('sp_staff.type' => 'PD').joins({:sp_staff => :person}) }
+  scope :descend_by_pd, -> { order(Person.table_name + '.lastName desc, ' + Person.table_name + '.firstName desc').where('sp_staff.type' => 'PD').joins({:sp_staff => :person}) }
+  scope :ascend_by_apd, -> { order(Person.table_name + '.lastName, ' + Person.table_name + '.firstName').where('sp_staff.type' => 'APD').joins({:sp_staff => :person}) }
+  scope :descend_by_apd, -> { order(Person.table_name + '.lastName desc, ' + Person.table_name + '.firstName desc').where('sp_staff.type' => 'APD').joins({:sp_staff => :person}) }
+  scope :ascend_by_opd, -> { order(Person.table_name + '.lastName, ' + Person.table_name + '.firstName').where('sp_staff.type' => 'OPD').joins({:sp_staff => :person}) }
+  scope :descend_by_opd, -> { order(Person.table_name + '.lastName desc, ' + Person.table_name + '.firstName desc').where('sp_staff.type' => 'OPD').joins({:sp_staff => :person}) }
+  scope :not_full_men, -> { where("current_students_men < max_accepted_men AND max_student_men_applicants > current_applicants_men") }
+  scope :not_full_women, -> { where("current_students_women < max_accepted_women AND max_student_women_applicants > current_applicants_women") }
+  scope :has_chart_field, -> { where("operating_business_unit is not null AND operating_business_unit <> '' AND operating_operating_unit is not null AND operating_operating_unit <> '' AND operating_department is not null AND operating_department <> ''") }
+  scope :missing_chart_field, -> { where("operating_business_unit is null OR operating_business_unit = '' OR operating_operating_unit is null OR operating_operating_unit = '' OR operating_department is null OR operating_department = ''") }
 
   scope :pd_like, lambda {|name| where(Person.table_name + '.lastName LIKE ? OR ' + Person.table_name + '.firstName LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'PD').joins({:sp_staff => :person})}
   scope :apd_like, lambda {|name| where(Person.table_name + '.lastName LIKE ? OR ' + Person.table_name + '.firstName LIKE ?', "%#{name}%","%#{name}%").where('sp_staff.type' => 'APD').joins({:sp_staff => :person})}
@@ -492,7 +491,7 @@ class SpProject < ActiveRecord::Base
 
   def initialize_project_specific_question_sheet
     unless project_specific_question_sheet
-      update_attribute(:project_specific_question_sheet_id, QuestionSheet.find_or_create_by_label('Project - ' + self.to_s).id)
+      update_attribute(:project_specific_question_sheet_id, QuestionSheet.where(label: 'Project - ' + self.to_s).first_or_create.id)
     end
     if project_specific_question_sheet.pages.length == 0
       project_specific_question_sheet.pages.create!(:label => 'Project Specific Questions', :number => 1)

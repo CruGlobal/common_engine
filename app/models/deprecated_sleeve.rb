@@ -1,7 +1,6 @@
 # represents an "Application" which holds several QuestionSheets
 # think "manilla folder"
 class Sleeve < ActiveRecord::Base
-  unloadable
   self.table_name = "si_sleeves"
   
   has_many :sleeve_sheets

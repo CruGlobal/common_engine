@@ -1,9 +1,8 @@
 class Region < ActiveRecord::Base
-  unloadable
   self.table_name = "ministry_regionalteam"
   self.primary_key = "teamID"
   
-  default_scope order(:region)
+  default_scope -> { order(:region) }
 
   cattr_reader :standard_region_codes, :campus_region_codes
   @@standard_region_codes = ["GL", "GP", "MA", "MS", "NE", "NW", "RR", "SE", "SW", "UM"]

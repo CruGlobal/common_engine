@@ -1,5 +1,4 @@
 class ActivityHistory < ActiveRecord::Base
-  unloadable
   self.table_name = "ministry_activity_history"
   belongs_to :activity
   

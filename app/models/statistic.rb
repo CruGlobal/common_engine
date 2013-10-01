@@ -1,5 +1,4 @@
 class Statistic < ActiveRecord::Base
-  unloadable
   self.table_name = "ministry_statistic"
   self.primary_key = "StatisticID"
   belongs_to :activity, :foreign_key => "fk_Activity"
