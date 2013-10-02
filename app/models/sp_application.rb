@@ -504,7 +504,7 @@ class SpApplication < ActiveRecord::Base
       [old_project.pd, old_project.apd, new_project.pd, new_project.apd].compact.each do |contact|
         if contact.email.present?
           Notifier.notification(contact.email, # RECIPIENTS
-                                Questionnaire.from_email, # FROM
+                                Qe.from_email, # FROM
                                 "Application Moved", # LIQUID TEMPLATE NAME
                                 {'applicant_name' => name,
                                  'moved_by' => current_person.informal_full_name,
@@ -569,7 +569,7 @@ class SpApplication < ActiveRecord::Base
   def send_acceptance_email
       if changed.include?('applicant_notified') and applicant_notified? && status.starts_with?("accept")
         Notifier.notification(email_address, # RECIPIENTS
-                                  Questionnaire.from_email, # FROM
+                                  Qe.from_email, # FROM
                                   "Application Accepted", # LIQUID TEMPLATE NAME
                                   {'project_name' => project.try(:name)}).deliver
       end
