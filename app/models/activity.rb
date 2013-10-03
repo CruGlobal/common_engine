@@ -4,7 +4,7 @@ class Activity < ActiveRecord::Base
   belongs_to :target_area, :foreign_key => "fk_targetAreaID", :primary_key => "targetAreaID"
   belongs_to :team, :foreign_key => "fk_teamID", :primary_key => "teamID"
   has_many :activity_histories
-  has_many :statistics, :foreign_key => "fk_Activity", -> { order :periodBegin }
+  has_many :statistics, -> { order :periodBegin }, :foreign_key => "fk_Activity"
   has_many :last_fifteen_stats, :class_name => "Statistic", :foreign_key => "fk_Activity",
     :conditions => proc {"periodBegin > '#{(Date.today - 15.weeks).to_s(:db)}'"}, :order => "periodBegin"
   has_and_belongs_to_many :contacts, :join_table => "ministry_movement_contact", 
