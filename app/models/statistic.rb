@@ -131,4 +131,10 @@ class Statistic < ActiveRecord::Base
       result = stats[index - 1]
     end
   end
+
+  def to_ser_hash
+    serializer = active_model_serializer
+    serializable = serializer.new(self)
+    serializable.serializable_hash
+  end
 end
