@@ -5,15 +5,15 @@ class Activity < ActiveRecord::Base
   belongs_to :team, :foreign_key => "fk_teamID", :primary_key => "teamID"
   has_many :activity_histories
   has_many :statistics, -> { order :periodBegin }, :foreign_key => "fk_Activity"
-  has_many :last_fifteen_stats, :class_name => "Statistic", :foreign_key => "fk_Activity",
-    :conditions => proc {"periodBegin > '#{(Date.today - 15.weeks).to_s(:db)}'"}, :order => "periodBegin"
+  has_many :last_fifteen_stats, -> { where("periodBegin > '#{(Date.today - 15.weeks).to_s(:db)}'").order(:periodBegin) },
+    :class_name => "Statistic", :foreign_key => "fk_Activity"
   has_and_belongs_to_many :contacts, :join_table => "ministry_movement_contact", 
     :foreign_key => "ActivityID", :association_foreign_key => "personID", :class_name => "Person"
     
   validates_presence_of :status, :strategy, :periodBegin, :fk_targetAreaID, :fk_teamID
     
-  scope :inactive, where("status = 'IN'")
-  scope :active, where("status NOT IN ('IN', 'TN')")
+  scope :inactive, -> { where("status = 'IN'") }
+  scope :active, -> { where("status NOT IN ('IN', 'TN')") }
   scope :strategy, lambda {|strategy| where("strategy = ?", strategy)}
   
   def self.strategies
