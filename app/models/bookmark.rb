@@ -3,9 +3,9 @@ class Bookmark < ActiveRecord::Base
   self.table_name = "infobase_bookmarks"
   
   belongs_to :user
-  belongs_to :activity, :conditions => Bookmark.table_name + ".name = 'activity'", :foreign_key => "value"
+  belongs_to :activity, -> { where(Bookmark.table_name + ".name = 'activity'") }, :foreign_key => "value"
   
-  scope :activity_bookmark, where("name = 'activity'")
+  scope :activity_bookmark, -> { where("name = 'activity'") }
   
   def self.add_activity_bookmark_for(user, activity)
     unless Bookmark.get_activity_bookmark_for(user, activity)
