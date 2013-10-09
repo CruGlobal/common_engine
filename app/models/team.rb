@@ -81,6 +81,6 @@ class Team < ActiveRecord::Base
   end
   
   def find_member(person)
-    team_members.where(TeamMember.table_name + ".personID = ?", person.personID).first
+    TeamMember.where(TeamMember.table_name + ".personID = ?", person.personID).where(teamID: self.id).first
   end
 end
