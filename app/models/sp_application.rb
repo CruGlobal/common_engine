@@ -208,7 +208,7 @@ class SpApplication < ActiveRecord::Base
 
   # When changing this method, make sure the commit gets pulled into the MPD Tool as well
   def self.year
-    Time.now.month >= 9 && Time.now.day >= 15 ? Time.now.year + 1 : Time.now.year
+    Time.now.month >= 9 ? Time.now.year + 1 : Time.now.year
   end
 
   def self.deadline1
