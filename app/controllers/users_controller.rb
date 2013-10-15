@@ -3,7 +3,7 @@ class UsersController < ApplicationController
   def index
     redirect_to :action => 'new'
   end
-  
+
   def new
     @user = User.new
     @person = Person.new
@@ -15,11 +15,11 @@ class UsersController < ApplicationController
       @user.errors[:omniauth] = true if @user.errors.present? || @person.errors.present?
     end
   end
-  
+
   def create
     @user = User.new(user_params)
     @user.username = params[:email]
-    @person = Person.new(params[:person])
+    @person = Person.new(person_params)
     if session[:omniauth]
       @user.apply_omniauth(session[:omniauth])
       @person.apply_omniauth(session[:omniauth]["info"])
@@ -30,13 +30,13 @@ class UsersController < ApplicationController
       @person.save!
       Address.create(:person => @person, :email => @user.username, :addressType => 'current')
       login_user!(@user)
-      session[:omniauth] = nil 
+      session[:omniauth] = nil
       redirect_to(root_path)
     else
       render :new
     end
   end
-  
+
   def update
     if params[:c]
       @user = User.find_by_password_reset_key(params[:c])
@@ -73,7 +73,7 @@ class UsersController < ApplicationController
       end
     end
   end
-  
+
   def reset_password
     @user = User.find_by_password_reset_key(params[:c])
     unless @user
@@ -81,8 +81,13 @@ class UsersController < ApplicationController
     end
   end
 
+  def person_params
+    params.fetch(:person, {}).permit(:firstName, :lastName)
+  end
+
   def user_params
-    params.fetch(:user, {}).permit(:username, :password, :passwordQuestion, :passwordAnswer, :email, :locale, :settings, :password_plain, :plain_password, :plain_password_confirmation)
+    params.fetch(:user, {}).permit(:username, :password, :passwordQuestion, :passwordAnswer, :email, :locale, :settings, :password_plain,
+                                   :plain_password, :plain_password_confirmation)
   end
 
 end
