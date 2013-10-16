@@ -12,25 +12,45 @@ class SpDesignationNumber < ActiveRecord::Base
 
   # if this person is going to a secure location, mark them as secure in siebel
   def secure_designation_if_necessary
-
-    if sp_application && sp_application.is_secure? && APP_CONFIG['designation_base_url']
-      url = "#{APP_CONFIG['designation_base_url']}/designations/#{designation_number}/secureStatus"
-      parameters = {
-          startDate: "03-01-#{year}",
-          endDate: "09-01-#{year}",
-          access_token: APP_CONFIG['designation_access_token']}
+    if mark_necessary?
       logger.ap parameters
       RestClient::Request.execute(:method => :post, :url => url, :payload => parameters, :timeout => -1) { |res, request, result, &block|
         logger.ap res
         logger.ap request
         logger.ap result
-                                            # check for error response
-                                            if res.code.to_i != 200
-                                              raise res.inspect
-                                            end
-                                            res
+
+        if res.code.to_i >= 400
+          raise res.inspect
+        end
+        res
     }
     end
+  end
+
+  def mark_necessary?
+    #TODO: remove APP_CONFIG['designation_base_url'] check
+    sp_application && sp_application.is_secure? && APP_CONFIG['designation_base_url']
+  end
+
+  def url
+    base_url = get_required_config('designation_base_url')
+    "#{base_url}/designations/#{designation_number}/secureStatus"
+  end
+
+  def parameters
+    {
+      startDate: "#{year}-03-01",
+      endDate: "#{year}-09-01",
+      access_token: get_required_config('designation_access_token')
+    }
+  end
+
+  def get_required_config(key)
+    value = APP_CONFIG[key]
+    unless value
+      raise "'#{key}' not specified in APP_CONFIG!"
+    end
+    value
   end
 
 end
