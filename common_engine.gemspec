@@ -20,8 +20,8 @@ Gem::Specification.new do |s|
   s.add_dependency "sidekiq"
   s.add_dependency "global_registry"
   s.add_dependency 'aasm', '~> 3.0.9'
-  s.add_dependency 'qe'
   s.add_dependency 'acts_as_list', '~> 0.3.0'
   s.add_dependency 'rubycas-client'
+  s.add_dependency 'auto_strip_attributes', '~> 2.0'
 
 end
