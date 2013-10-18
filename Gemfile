@@ -1,14 +1,23 @@
 source "https://rubygems.org"
 
-# Declare your gem's dependencies in common_engine.gemspec.
-# Bundler will treat runtime dependencies like base dependencies, and
-# development dependencies will be added by default to the :development group.
 gemspec
 
-# Declare any dependencies that are still in development here instead of in
-# your gemspec. These might include edge Rails or gems from your path or
-# Git. Remember to move these dependencies to your gemspec before releasing
-# your gem to rubygems.org.
+# ensure these gems are present in spec/dummy
+gem 'jquery-rails'
+gem 'jquery-ui-rails'
+gem 'dynamic_form'
+gem 'aasm'
 
-# To use debugger
-# gem 'debugger'
+# TravisCI db drivers
+group :development, :test do
+  platforms :mri do
+    gem 'sqlite3'
+    gem 'mysql2'
+    gem 'pg'
+  end
+end
+
+gem 'database_cleaner', 
+  "~> 1.1.1", 
+  :git => 'https://github.com/tommeier/database_cleaner', 
+  :ref => 'b0c666e'
