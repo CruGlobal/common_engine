@@ -3,3 +3,4 @@ vendor/ruby
 .bundle/config
 .idea
 .project
+spec/dummy
