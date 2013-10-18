@@ -625,13 +625,16 @@ class SpApplication < ActiveRecord::Base
 
   def async_push_to_global_registry
     attributes_to_push['project'] = project.global_registry_id if project && project.global_registry_id
-    attributes_to_push.delete('project_id')
+    attributes_to_push['preference2_id'] = preference2.global_registry_id if preference2
+    attributes_to_push['preference3_id'] = preference3.global_registry_id if preference3
+    attributes_to_push['preference4_id'] = preference4.global_registry_id if preference4
+    attributes_to_push['preference5_id'] = preference5.global_registry_id if preference5
 
     super(person.global_registry_id)
   end
 
   def self.skip_fields_for_gr
-    %w[id old_id su_code account_balance applicant_notified current_project_queue_id person_id project_id global_registry_id]
+    %w[id old_id su_code account_balance applicant_notified current_project_queue_id person_id project_id preference1_id global_registry_id]
   end
 
   def self.global_registry_entity_type_name
