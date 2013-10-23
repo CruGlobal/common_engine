@@ -10,8 +10,7 @@ class Person < ActiveRecord::Base
   has_one                 :staff
   has_many                :team_members, :foreign_key => "personID", dependent: :destroy
   has_many                :teams, :through => :team_members
-  has_and_belongs_to_many :activities, -> { order(TargetArea.table_name + ".name").includes(:target_area) }, :join_table => "ministry_movement_contact", :association_foreign_key => "ActivityID",
-    :foreign_key => "personID"
+  has_and_belongs_to_many :activities, -> { order(TargetArea.table_name + ".name").includes(:target_area) }, :join_table => "ministry_movement_contact", :association_foreign_key => "ActivityID", :foreign_key => "personID"
 
   # Addresses
   has_many                :email_addresses, :foreign_key => "person_id", :class_name => '::EmailAddress', dependent: :destroy
@@ -28,9 +27,7 @@ class Person < ActiveRecord::Base
 
   # On Campus Now
   has_many                :orders
-
   has_one                 :spouse, :foreign_key => "fk_spouseID"
-
 
   # STINT
   has_many                :hr_si_applications, :foreign_key => "fk_PersonID"

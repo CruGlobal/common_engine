@@ -7,6 +7,8 @@ gem 'jquery-rails'
 gem 'jquery-ui-rails'
 gem 'dynamic_form'
 gem 'aasm'
+gem 'sidekiq'
+gem 'paperclip'
 
 # TravisCI db drivers
 group :development, :test do

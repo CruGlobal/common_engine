@@ -4,8 +4,7 @@ class MpdUser < ActiveRecord::Base
 
   has_and_belongs_to_many :mpd_roles
 
-  has_many :mpd_contacts,
-           :order => "full_name ASC"
+  has_many :mpd_contacts, -> { order "full_name ASC" }
   has_many :mpd_expenses  
   has_one  :prefs,
            :class_name => "MpdUserPref"

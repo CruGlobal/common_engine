@@ -1,6 +1,7 @@
 require_dependency 'global_registry_methods'
 
 class SpProjectMinistryFocus < ActiveRecord::Base
+  self.table_name = "sp_project_ministry_focuses"
   include Sidekiq::Worker
   include GlobalRegistryMethods
 
