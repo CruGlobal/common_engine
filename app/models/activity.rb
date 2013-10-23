@@ -225,7 +225,7 @@ class Activity < ActiveRecord::Base
     start_date = begin_date.traditional_beginning_of_week
     ending_date = end_date.traditional_end_of_week
     stat_rel = statistics.where("periodBegin >= ? AND periodEnd <= ?", start_date, ending_date)
-    stats = stat_rel.all
+    stats = stat_rel.load
     stats
   end
   
