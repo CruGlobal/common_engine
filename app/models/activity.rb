@@ -14,7 +14,13 @@ class Activity < ActiveRecord::Base
   scope :inactive, -> { where("status = 'IN'") }
   scope :active, -> { where("status NOT IN ('IN', 'TN')") }
   scope :strategy, lambda {|strategy| where("strategy = ?", strategy)}
-  
+
+  MULITPLYING_INVOLVEMENT_LEVEL = 49
+  MULITPLYING_LEADER_INVOLVEMENT_LEVEL = 5
+  LAUNCHED_LEADER_INVOLVEMENT_LEVEL = 4
+  KEYLEADER_LEADER_INVOLVEMENT_LEVEL = 1
+  PIONEERING_LEADER_INVOLVEMENT_LEVEL = 0
+
   def self.strategies
     {
       "FS" => "Campus Field Ministry",
