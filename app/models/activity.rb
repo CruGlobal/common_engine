@@ -15,6 +15,12 @@ class Activity < ActiveRecord::Base
   scope :active, -> { where("status NOT IN ('IN', 'TN')") }
   scope :strategy, lambda {|strategy| where("strategy = ?", strategy)}
 
+  alias_attribute :period_begin, :periodBegin
+  alias_attribute :period_end, :periodEnd
+  alias_attribute :target_area_id, :fk_targetAreaID
+  alias_attribute :team_id, :fk_teamID
+
+
   MULITPLYING_INVOLVEMENT_LEVEL = 49
   MULITPLYING_LEADER_INVOLVEMENT_LEVEL = 5
   LAUNCHED_LEADER_INVOLVEMENT_LEVEL = 4
@@ -211,7 +217,7 @@ class Activity < ActiveRecord::Base
   
   def get_stat_for(date, people_group = nil)
     stat = nil
-    sunday = date.traditional_beginning_of_week
+    sunday = date.beginning_of_week(:sunday)
     stat_rel = statistics.where("periodBegin = ?", sunday)
     stat_rel = stat_rel.where("peopleGroup = ?", people_group) if !people_group.blank?
     stat = stat_rel.first
@@ -219,7 +225,7 @@ class Activity < ActiveRecord::Base
       stat = Statistic.new
       stat.activity = self
       stat.periodBegin = sunday
-      stat.periodEnd = sunday.traditional_end_of_week
+      stat.periodEnd = sunday.end_of_week(:sunday)
       stat.prefill_semester_stats
     end
     stat
@@ -227,8 +233,8 @@ class Activity < ActiveRecord::Base
   
   def get_stats_for_dates(begin_date, end_date, people_group = nil)
     stats = nil
-    start_date = begin_date.traditional_beginning_of_week
-    ending_date = end_date.traditional_end_of_week
+    start_date = begin_date.beginning_of_week(:sunday)
+    ending_date = end_date.end_of_week(:sunday)
     stat_rel = statistics.where("periodBegin >= ? AND periodEnd <= ?", start_date, ending_date)
     stats = stat_rel.load
     stats

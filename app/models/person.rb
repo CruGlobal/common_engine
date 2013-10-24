@@ -72,6 +72,14 @@ class Person < ActiveRecord::Base
 
   scope :not_secure, -> { where("isSecure != 'T' or isSecure IS NULL") }
 
+  alias_attribute :account_no, :accountNo
+  alias_attribute :preferred_name, :preferredName
+  alias_attribute :university_state, :universityState
+  alias_attribute :year_in_school, :yearInSchool
+  alias_attribute :is_child, :isChild
+  alias_attribute :changed_by, :changedBy
+  alias_attribute :user_id, :fk_ssmUserId
+
   def emergency_address
     emergency_address1
   end
