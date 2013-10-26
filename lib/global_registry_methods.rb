@@ -27,12 +27,17 @@ module GlobalRegistryMethods
       GlobalRegistry::Entity.put(global_registry_id, {entity: attributes_to_push})
     else
       entity = GlobalRegistry::Entity.post(entity: {self.class.global_registry_entity_type_name => attributes_to_push.merge({client_integration_id: id}), parent_id: parent_id})
-      connection.update("update #{self.class.table_name} set global_registry_id = #{entity[self.class.global_registry_entity_type_name]['id']} where id = #{id}")
+      update_column(:global_registry_id, entity[self.class.global_registry_entity_type_name]['id'])
     end
   end
 
   def attributes_to_push
-    @attributes_to_push ||= attributes.select {|k, v| !self.class.skip_fields_for_gr.include?(k)}
+    unless @attributes_to_push
+      @attributes_to_push = {}
+      attributes.collect {|k, v| @attributes_to_push[k.underscore] = v}
+      @attributes_to_push.select! {|k, v| v.present? && !self.class.skip_fields_for_gr.include?(k)}
+    end
+    @attributes_to_push
   end
 
 
@@ -48,13 +53,15 @@ module GlobalRegistryMethods
         existing_fields = []
       end
 
-      columns.each do |column|
-        next if skip_fields_for_gr.include?(column.name)
-
-        unless existing_fields.include?(column.name)
-          GlobalRegistry::EntityType.post(entity_type: {name: column.name, parent_id: entity_type['id'], field_type: column.type})
+      columns_to_push.each do |column|
+        unless existing_fields.include?(column[:name])
+          GlobalRegistry::EntityType.post(entity_type: {name: column[:name], parent_id: entity_type['id'], field_type: column[:type]})
         end
       end
+    end
+
+    def columns_to_push
+      @columns_to_push ||= columns.select {|c| !skip_fields_for_gr.include?(c.name.underscore)}.collect {|c| {name: c.name.underscore, type: c.type}}
     end
 
     def async_delete_from_global_registry(registry_id)

@@ -1,4 +1,12 @@
+require_dependency 'global_registry_methods'
+require 'auto_strip_attributes'
+
 class Person < ActiveRecord::Base
+  include Sidekiq::Worker
+  include GlobalRegistryMethods
+
+  auto_strip_attributes :firstName, :lastName, :preferredName, :accountNo, :title
+
   self.table_name = "ministry_person"
   self.primary_key = "personID"
 
@@ -408,4 +416,25 @@ class Person < ActiveRecord::Base
   def updated_by() changedBy end
   def created_at() dateCreated end
   def created_by() createdBy end
+
+  def async_push_to_global_registry
+    @attributes_to_push['account_number'] = account_no
+    @attributes_to_push['user_id'] = user.global_registry_id if user
+
+    super
+  end
+
+  def self.skip_fields_for_gr
+    %w[person_id account_no minor number_children is_child bio image occupation blogfeed cru_commons_invite cru_commons_last_login date_created date_changed created_by changed_by fk_ssm_user_id fk_staff_site_profile_id fk_spouse_id fk_child_of level_of_school staff_notes donor_number url primary_campus_involvement_id mentor_id last_attended fb_uid date_attributes_updated balance_daily sp_gcx_site global_registry_id]
+  end
+
+  def self.columns_to_push
+    cols = super
+    cols += [{account_number: :string, user_id: :integer}]
+  end
+
+  def self.global_registry_entity_type_name
+    'person'
+  end
+
 end
