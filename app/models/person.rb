@@ -418,8 +418,8 @@ class Person < ActiveRecord::Base
   def created_by() createdBy end
 
   def async_push_to_global_registry
-    @attributes_to_push['account_number'] = account_no
-    @attributes_to_push['user_id'] = user.global_registry_id if user
+    attributes_to_push['account_number'] = account_no
+    attributes_to_push['user_id'] = user.global_registry_id if user
 
     super
   end
