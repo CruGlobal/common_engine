@@ -430,7 +430,7 @@ class Person < ActiveRecord::Base
 
   def self.columns_to_push
     cols = super
-    cols += [{account_number: :string, user_id: :integer}]
+    cols += [{name: 'account_number', type: :string}, {name: 'user_id', type: :integer}]
   end
 
   def self.global_registry_entity_type_name
