@@ -419,7 +419,11 @@ class Person < ActiveRecord::Base
 
   def async_push_to_global_registry
     attributes_to_push['account_number'] = account_no
-    attributes_to_push['user_id'] = user.global_registry_id if user
+    if user
+      attributes_to_push['globally_unique_id'] = user.globallyUniqueID
+      attributes_to_push['username'] = user.username
+      attributes_to_push['fb_uid'] = user.fb_user_id
+    end
 
     super
   end
@@ -430,7 +434,11 @@ class Person < ActiveRecord::Base
 
   def self.columns_to_push
     cols = super
-    cols += [{name: 'account_number', type: :string}, {name: 'user_id', type: :integer}]
+    cols += [{name: 'account_number', type: :string},
+             {name: 'username', type: :string},
+             {name: 'globally_unique_id', type: :integer},
+             {name: 'fb_uid', type: :string}
+            ]
   end
 
   def self.global_registry_entity_type_name

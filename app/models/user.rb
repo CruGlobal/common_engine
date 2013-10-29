@@ -1,11 +1,7 @@
 require 'digest/md5'
 require 'base64'
-require_dependency 'global_registry_methods'
 
 class User < ActiveRecord::Base
-  include Sidekiq::Worker
-  include GlobalRegistryMethods
-
   self.table_name = "simplesecuritymanager_user"
 	self.primary_key = "userID"
 
@@ -261,13 +257,4 @@ class User < ActiveRecord::Base
     def self.att_from_receipt(atts, key)
       atts[key] || atts[key.underscore]
     end
-
-    def self.skip_fields_for_gr
-      %w[user_id password password_question password_answer last_failure last_failure_cnt last_login created_on email_verified remember_token remember_token_expires_at developer facebook_hash facebook_username fb_user_id password_reset_key email encrypted_password remember_created_at sign_in_count current_sign_in_at current_sign_in_ip last_sign_in_ip last_sign_in_at locale checked_guid settings needs_merge password_plain global_registry_id]
-    end
-
-    def self.global_registry_entity_type_name
-      'user'
-    end
-
 end
