@@ -21,8 +21,8 @@ class SpDesignationNumber < ActiveRecord::Base
   # if this person is going to a secure location, mark them as secure in siebel
   def secure_designation
     parameters = {
-      startDate: "#{year}-03-01",
-      endDate: "#{year}-09-01",
+      startDate: Date.today.to_s(:db),
+      endDate: 1.year.from_now.to_date.to_s(:db),
       access_token: get_required_config('designation_access_token')
     }
 
