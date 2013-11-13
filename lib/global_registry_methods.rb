@@ -24,10 +24,17 @@ module GlobalRegistryMethods
     self.class.push_structure_to_global_registry
 
     if global_registry_id
-      GlobalRegistry::Entity.put(global_registry_id, {entity: attributes_to_push})
+      begin
+        update_on_global_registry
+      rescue => e
+        if e.response.code == 404
+          create_in_global_registry
+        else
+          raise
+        end
+      end
     else
-      entity = GlobalRegistry::Entity.post(entity: {self.class.global_registry_entity_type_name => attributes_to_push.merge({client_integration_id: id}), parent_id: parent_id})
-      update_column(:global_registry_id, entity[self.class.global_registry_entity_type_name]['id'])
+      create_in_global_registry
     end
   end
 
@@ -38,6 +45,15 @@ module GlobalRegistryMethods
       @attributes_to_push.select! {|k, v| v.present? && !self.class.skip_fields_for_gr.include?(k)}
     end
     @attributes_to_push
+  end
+
+  def update_in_global_registry
+    GlobalRegistry::Entity.put(global_registry_id, {entity: attributes_to_push})
+  end
+
+  def create_in_global_registry
+    entity = GlobalRegistry::Entity.post(entity: {self.class.global_registry_entity_type_name => attributes_to_push.merge({client_integration_id: id}), parent_id: parent_id})
+    update_column(:global_registry_id, entity[self.class.global_registry_entity_type_name]['id'])
   end
 
 
