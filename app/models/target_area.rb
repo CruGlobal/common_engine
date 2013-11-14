@@ -21,9 +21,9 @@ class TargetArea < ActiveRecord::Base
   scope :open_school, -> { where("isClosed is null or isClosed <> 'T'").where("eventType is null or eventType <=> ''") }
   scope :special_events, -> { where("type = 'Event' AND ongoing_special_event = 1") }
   
-  before_save :stamp_changed
+  before_save :stamp_changed, :set_coordinates
   before_create :stamp_changed
-  
+
   #Event Types
   @@summer_project = "SP"
   @@crs_conference = "C2"
@@ -60,7 +60,6 @@ class TargetArea < ActiveRecord::Base
   end
   
   def get_event_activity(date, strategy)
-    activity = nil
     if eventType == @@other_conference
       activity = all_activities.first
     else
@@ -75,7 +74,13 @@ class TargetArea < ActiveRecord::Base
   def stamp_changed
     self.modified = Time.now
   end
-  
+
+  def set_coordinates
+    if changed.include?('address1') || latitude.blank? || longitude.blank?
+      self.latitude, self.longitude = Geocoder.coordinates([address1, city, state, country].select(&:present?).join(','))
+    end
+  end
+
   def self.inactive_statuses
     ['IN']
   end

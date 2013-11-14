@@ -382,11 +382,10 @@ class SpProject < ActiveRecord::Base
   end
 
   def self.send_leader_reminder_emails
-    projects = SpProject.find(:all,
-                              :select => "project.*",
-                              :conditions => ["app.status IN(?) and app.year = ? and project.start_date > ?", SpApplication.ready_statuses, SpApplication.year, Time.now],
-                              :joins => "as project inner join sp_applications app on (app.current_project_queue_id = project.id)",
-                              :group => "project.id")
+    projects = SpProject.select("project.*")
+                        .where(["app.status IN(?) and app.year = ? and project.start_date > ?", SpApplication.ready_statuses, SpApplication.year, Time.now])
+                        .joins("as project inner join sp_applications app on (app.current_project_queue_id = project.id)")
+                        .group("project.id")
     projects.each do |project|
       if (project.pd || project.apd)
         SpProjectMailer.deliver_leader_reminder(project)
@@ -396,10 +395,9 @@ class SpProject < ActiveRecord::Base
 
   def self.send_stats_reminder_emails
     campus_ministry_types = ['Campus Ministry - US summer project', 'Campus Ministry - Global Missions summer project']
-    projects = SpProject.find(:all,
-                              :select => "project.*, stat.id as stat_id",
-                              :conditions => ["project.report_stats_to in (?) and project.project_status = ?", campus_ministry_types, 'open'],
-                              :joins => "as project left join sp_stats stat on (stat.project_id = project.id and stat.year = project.year)")
+    projects = SpProject.select("project.*, stat.id as stat_id")
+                        .where(["project.report_stats_to in (?) and project.project_status = ?", campus_ministry_types, 'open'])
+                        .joins("as project left join sp_stats stat on (stat.project_id = project.id and stat.year = project.year)")
     #at some point, may also need to search SpProjectVersions
 
     projects.each do |project|
@@ -418,18 +416,18 @@ class SpProject < ActiveRecord::Base
 
   # This method uses google geocodes to get longitude/latitude coordinates for
   # a project.
-  # http://maps.google.com/maps/geo?q=orlando,FL&output=xml&key=ABQIAAAA3_Rt6DOXqoqzxOdrpwwtvhSTzVfmYDnwpEGk65AEA3VA32K1ZBTjPtznyT3qg_teDdJYQqkNfMwI7w
+  # http://maps.googleapis.com/maps/api/geocode/json?address=orlando,FL&sensor=false
   def get_coordinates
     if self.country_status == 'closed'
       self.latitude = nil
       self.longitude = nil
     else
-      key = 'ABQIAAAA3_Rt6DOXqoqzxOdrpwwtvhSTzVfmYDnwpEGk65AEA3VA32K1ZBTjPtznyT3qg_teDdJYQqkNfMwI7w'
+      #key = 'ABQIAAAA3_Rt6DOXqoqzxOdrpwwtvhSTzVfmYDnwpEGk65AEA3VA32K1ZBTjPtznyT3qg_teDdJYQqkNfMwI7w'
       q = self.city || ''
       q += ','+self.state if self.state
       q += ','+self.country
       q.gsub!(' ','+')
-      gg = GoogleGeocode.new key
+      gg = GoogleGeocode.new
       begin
         location = gg.locate q
         self.latitude = location.coordinates[0]
@@ -437,7 +435,7 @@ class SpProject < ActiveRecord::Base
         # We need to make sure that that no 2 projects have exactly the same
         # coordinates. If they do, they will overlap on the flash map and
         # you won't be able to click on one of them.
-        while SpProject.find(:first, :conditions => ['latitude = ? and longitude = ?', self.latitude, self.longitude])
+        while SpProject.where(['latitude = ? and longitude = ?', self.latitude, self.longitude]).first
           delta_longitude, delta_latitude = 0,0
           delta_longitude = rand(6) - 3 while delta_longitude.abs < 2
           delta_latitude = rand(6) - 3 while delta_latitude.abs < 2
