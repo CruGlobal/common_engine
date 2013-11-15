@@ -422,16 +422,11 @@ class SpProject < ActiveRecord::Base
       self.latitude = nil
       self.longitude = nil
     else
-      #key = 'ABQIAAAA3_Rt6DOXqoqzxOdrpwwtvhSTzVfmYDnwpEGk65AEA3VA32K1ZBTjPtznyT3qg_teDdJYQqkNfMwI7w'
       q = self.city || ''
       q += ','+self.state if self.state
       q += ','+self.country
-      q.gsub!(' ','+')
-      gg = GoogleGeocode.new
       begin
-        location = gg.locate q
-        self.latitude = location.coordinates[0]
-        self.longitude = location.coordinates[1]
+        self.latitude, self.longitude = Geocoder.coordinates(q)
         # We need to make sure that that no 2 projects have exactly the same
         # coordinates. If they do, they will overlap on the flash map and
         # you won't be able to click on one of them.
@@ -443,8 +438,8 @@ class SpProject < ActiveRecord::Base
           self.longitude += delta_longitude.to_f/10
           self.latitude += delta_latitude.to_f/10
         end
-      rescue GoogleGeocode::AddressError
-      rescue
+      rescue => e
+        Airbrake.notify_or_ignore(e, :parameters => attributes)
       end
     end
     true
