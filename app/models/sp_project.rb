@@ -112,7 +112,7 @@ class SpProject < ActiveRecord::Base
 
 
   before_create :set_to_open
-  before_save :get_coordinates, :calculate_weeks, :set_year
+  before_save :get_coordinates, :calculate_weeks, :set_year, :set_default_apply_date
 
   begin
     date_setters :apply_by_date, :start_date, :end_date, :date_of_departure, :date_of_return, :staff_start_date, :staff_end_date, :pd_start_date, :pd_end_date,
@@ -497,6 +497,11 @@ class SpProject < ActiveRecord::Base
       project_specific_question_sheet.pages.create!(:label => 'Project Specific Questions', :number => 1)
     end
     project_specific_question_sheet
+  end
+
+  def set_default_apply_date
+    self.apply_by_date ||= Date.new(SpApplication.year, 4, 1)
+    true
   end
 
   def self.skip_fields_for_gr
