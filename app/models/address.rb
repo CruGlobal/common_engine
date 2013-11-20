@@ -8,8 +8,8 @@ class Address < ActiveRecord::Base
 
 	before_save :stamp
 
-  alias_attribute :created_at, :dateCreated
-  alias_attribute :updated_at, :dateChanged
+  #alias_attribute :created_at, :dateCreated
+  #alias_attribute :updated_at, :dateChanged
 
 	def home_phone; homePhone; end
 	def cell_phone; cellPhone; end
