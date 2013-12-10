@@ -88,6 +88,9 @@ class SpProject < ActiveRecord::Base
   validates_uniqueness_of :name
   validate :validate_partnership
 
+  # validate date ranges
+  validate :end_date_range
+
   scope :with_partner, proc {|partner| where(["primary_partner IN(?) OR secondary_partner IN(?) OR tertiary_partner IN(?)", partner, partner, partner])}
   scope :show_on_website, -> { where(:show_on_website => true, :project_status => 'open') }
   scope :uses_application, -> { where(:use_provided_application => true) }
@@ -222,9 +225,30 @@ class SpProject < ActiveRecord::Base
   end
 
   def validate_partnership
-    if partner_region_only && (primary_partner.length != 2 && secondary_partner.length != 2)
-      errors.add_to_base("You must choose a regional partnership if you want to accept from Partner Region only.")
-    end
+	  if partner_region_only && (primary_partner.length != 2 && secondary_partner.length != 2)
+		  errors[:base] << "You must choose a regional partnership if you want to accept from Partner Region only."
+	  end
+  end
+
+  def end_date_range
+	  if (end_date.present?)
+		  errors[:base] << "goSP.com tab: Student Start Date must be before Student End Date" unless start_date < end_date
+	  end
+	  if (pd_start_date.present? && pd_end_date.present?)
+		  errors[:base] << "Risk Management tab: PD Start Date must be before PD End Date" unless pd_start_date < pd_end_date
+	  end
+	  if (pd_close_start_date.present? && pd_close_end_date.present?)
+		  errors[:base] << "Risk Management tab: PD Start Date (for closing) must be before PD Close End Date (for closing)" unless pd_close_start_date < pd_close_end_date
+	  end
+	  if (staff_start_date.present? && staff_end_date.present?)
+		  errors[:base] << "Risk Management tab: Staff Start Date must be before Staff End Date" unless staff_start_date < staff_end_date
+	  end
+	  if (student_staff_start_date.present? && student_staff_end_date.present?)
+		  errors[:base] << "Risk Management tab: Student Staff Start Date must be before Student Staff End Date" unless student_staff_start_date < student_staff_end_date
+	  end
+	  if (date_of_departure.present? && date_of_return.present?)
+		  errors[:base] << "Risk Management tab: Departure (from the US) Date must be before Arrival (in the US) Date" unless date_of_departure < date_of_return
+	  end
   end
 
   def close!
