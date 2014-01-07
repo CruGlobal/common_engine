@@ -48,7 +48,7 @@ class SpStaff < ActiveRecord::Base
     attributes_to_push['person_id'] = person.global_registry_id
     attributes_to_push.delete('project_id')
 
-    super(project.global_registry_id)
+    super(sp_project.global_registry_id)
   end
 
   def self.skip_fields_for_gr
