@@ -28,13 +28,13 @@ module GlobalRegistryMethods
         update_on_global_registry
       rescue => e
         if e.response.code == 404
-          create_in_global_registry
+          create_in_global_registry(parent_id)
         else
           raise
         end
       end
     else
-      create_in_global_registry
+      create_in_global_registry(parent_id)
     end
   end
 
@@ -51,7 +51,7 @@ module GlobalRegistryMethods
     GlobalRegistry::Entity.put(global_registry_id, {entity: attributes_to_push})
   end
 
-  def create_in_global_registry
+  def create_in_global_registry(parent_id = nil)
     entity = GlobalRegistry::Entity.post(entity: {self.class.global_registry_entity_type_name => attributes_to_push.merge({client_integration_id: id}), parent_id: parent_id})
     update_column(:global_registry_id, entity[self.class.global_registry_entity_type_name]['id'])
   end
