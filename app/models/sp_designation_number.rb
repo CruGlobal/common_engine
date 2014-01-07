@@ -27,10 +27,6 @@ class SpDesignationNumber < ActiveRecord::Base
     }
 
     RestClient::Request.execute(:method => :post, :url => url, :payload => parameters, :timeout => -1) { |res, request, result, &block|
-      logger.ap res
-      logger.ap request
-      logger.ap result
-
       if res.code.to_i >= 400
         raise res.inspect
       end
