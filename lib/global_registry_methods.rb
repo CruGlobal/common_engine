@@ -25,8 +25,8 @@ module GlobalRegistryMethods
 
     if global_registry_id
       begin
-        update_on_global_registry
-      rescue => e
+        update_in_global_registry
+      rescue RestClient::Exception => e
         if e.response.code == 404
           create_in_global_registry(parent_id)
         else
