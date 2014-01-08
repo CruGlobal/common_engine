@@ -21,8 +21,8 @@ class TargetArea < ActiveRecord::Base
   scope :open_school, -> { where("isClosed is null or isClosed <> 'T'").where("eventType is null or eventType <=> ''") }
   scope :special_events, -> { where("type = 'Event' AND ongoing_special_event = 1") }
   
-  before_save :stamp_changed, :set_coordinates
-  before_create :stamp_changed
+  before_save :stamp_changed
+  before_update :set_coordinates
 
   #Event Types
   @@summer_project = "SP"
