@@ -7,12 +7,12 @@ class Staff < ActiveRecord::Base
   
   def self.get_staff(ssm_id)
     if ssm_id.nil? then raise "nil ssm_id!" end
-    ssm_user = User.find(:first, :conditions => ["userID = ?", ssm_id])
+    ssm_user = User.find_by(userID: ssm_id)
     if ssm_user.nil? then raise "ssm_id doesn't exist: #{ssm_id}" end
     username = ssm_user.username
-    profile = StaffsiteProfile.find(:first, :conditions => ["userName = ?", username])
+    profile = StaffsiteProfile.find_by(userName: username)
     account_no = profile.accountNo
-    staff = Staff.find(:first, :conditions => ["accountNo = ?", account_no])
+    staff = Staff.find_by(accountNo: account_no)
   end
   
   def self.field_roles
@@ -80,7 +80,11 @@ class Staff < ActiveRecord::Base
     end
     result
   end
-  
+
+  def email
+    self[:email].present? ? self[:email] : self.person.try(:email)
+  end
+
   # "first_name last_name"
   def full_name
     firstName.to_s  + " " + lastName.to_s
