@@ -26,12 +26,8 @@ module GlobalRegistryMethods
     if global_registry_id
       begin
         update_in_global_registry
-      rescue RestClient::Exception => e
-        if e.response.code == 404
-          create_in_global_registry(parent_id)
-        else
-          raise
-        end
+      rescue RestClient::ResourceNotFound
+        create_in_global_registry(parent_id)
       end
     else
       create_in_global_registry(parent_id)
@@ -81,7 +77,11 @@ module GlobalRegistryMethods
     end
 
     def async_delete_from_global_registry(registry_id)
-      GlobalRegistry::Entity.delete(registry_id)
+      begin
+        GlobalRegistry::Entity.delete(registry_id)
+      rescue RestClient::ResourceNotFound
+        # If the record doesn't exist, we don't care
+      end
     end
 
   end
