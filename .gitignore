@@ -1,6 +1,7 @@
 Gemfile.lock
 vendor/ruby
 .bundle/config
+.bundle/install.log
 .idea
 *.iml
 .project

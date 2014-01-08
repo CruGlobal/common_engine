@@ -38,7 +38,7 @@ class Person < ActiveRecord::Base
   has_one                 :spouse, :foreign_key => "fk_spouseID"
 
   # STINT
-  has_many                :hr_si_applications, :foreign_key => "fk_PersonID"
+  has_many                :hr_si_applications, :foreign_key => "fk_personID"
   has_many                :sitrack_trackings, through: :hr_si_applications
   has_many                :applies, :foreign_key => "applicant_id"   # applicants applying
   has_many                :apply_sheets    # whoever, filling in a sheet
@@ -350,10 +350,10 @@ class Person < ActiveRecord::Base
   # Find an exact match by email
   def self.find_exact(person, address)
     # try by address first
-    person = Person.find(:first, :conditions => ["#{Address.table_name}.email = ?", address.email], :include => :current_address)
+    person = Person.where("#{Address.table_name}.email = ?", address.email).includes(:current_address).references(:current_address).first
     # then try by username
-    person ||= Person.find(:first, :conditions => ["#{User.table_name}.username = ?", address.email], :include => :user)
-    return person
+    person ||= Person.where("#{User.table_name}.username = ?", address.email).includes(:user).references(:user).first
+    person
   end
 
   # Make sure account numbers are 9 or 10 digits long
