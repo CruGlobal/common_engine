@@ -7,14 +7,16 @@ class SpDesignationNumber < ActiveRecord::Base
   belongs_to :project, :class_name => 'SpProject'
   has_many :donations, -> { order('donation_date desc') }, :class_name => "SpDonation", :primary_key => "designation_number"
 
-  after_create :async_secure_designation_if_necessary
+  after_save :async_secure_designation_if_necessary
 
   def sp_application
     SpApplication.where(person_id: person_id, project_id: project_id, year: year).first
   end
 
   def async_secure_designation_if_necessary
-    async(:secure_designation) if mark_secure_necessary?
+    if changed.include?('designation_number')
+      async(:secure_designation) if mark_secure_necessary?
+    end
   end
 
   private
@@ -35,7 +37,7 @@ class SpDesignationNumber < ActiveRecord::Base
   end
 
   def mark_secure_necessary?
-    sp_application && sp_application.is_secure?
+    sp_application && sp_application.is_secure? && designation_number.present?
   end
 
   def url
