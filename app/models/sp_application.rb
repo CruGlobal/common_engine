@@ -630,6 +630,11 @@ class SpApplication < ActiveRecord::Base
     attributes_to_push['preference4_id'] = preference4.global_registry_id if preference4
     attributes_to_push['preference5_id'] = preference5.global_registry_id if preference5
 
+    # Make sure the related person has been pushed to the global registry
+    unless person.global_registry_id
+      person.async_push_to_global_registry
+    end
+
     super(person.global_registry_id)
   end
 
