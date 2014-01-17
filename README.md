@@ -1,7 +1,7 @@
 CommonEngine
 ============
 
-[![Build Status](https://travis-ci.org/CruGloabl/common_engine.png?branch=master)](https://travis-ci.org/CruGloabal/common_engine)
+[![Build Status](https://travis-ci.org/CruGlobal/common_engine.png?branch=master)](https://travis-ci.org/CruGlobal/common_engine)
 
 ## Testing
 Setup a testing environment that mimics the Travis CI setup:

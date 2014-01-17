@@ -119,8 +119,8 @@ class Activity < ActiveRecord::Base
       "KE" => "Key Leader",
       "LA" => "Launched",
       "AC" => "Launched",
-      "TR" => "Multiplying (formerly Transformational)",
-      "MU" => "Multiplying (formerly Transformational)",
+      "TR" => "Multiplying",
+      "MU" => "Multiplying",
       "TN" => "Transitioned"
     }
   end
