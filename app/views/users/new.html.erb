@@ -26,14 +26,7 @@
       <p><%= label_tag :email %>
       <%= text_field_tag :email, @user.username %></p>
     </div>
-  
-    <% if @user.password_required? %>
-      <p><%= f.label :plain_password, 'Password' %>
-      <%= f.password_field :plain_password %></p>
 
-      <p><%= f.label :plain_password_confirmation, 'Password Confirmation' %>
-      <%= f.password_field :plain_password_confirmation %></p>
-    <% end %>
     <br/>
     <button type="submit"><span>Sign up</span></button>
     &nbsp;&nbsp;

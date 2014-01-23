@@ -10,6 +10,8 @@ class SessionsController < ApplicationController
       return_to = session[:return_to]
       return_to ||= '/'
       redirect_to(return_to)
+    else
+      redirect_to '/authentications'
     end
   end
   
