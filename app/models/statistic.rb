@@ -2,10 +2,10 @@ class Statistic < ActiveRecord::Base
   self.table_name = "ministry_statistic"
   self.primary_key = "StatisticID"
   belongs_to :activity, :foreign_key => "fk_Activity"
-  
-  validates_numericality_of :spiritual_conversations, :evangelisticOneOnOne, :evangelisticGroup, :exposuresViaMedia, 
-    :holySpiritConversations, :decisionsHelpedByOneOnOne, :decisionsHelpedByGroup, :decisionsHelpedByMedia, 
-    :laborersSent, :faculty_sent, :multipliers, :studentLeaders, :invldStudents, :faculty_involved, 
+
+  validates_numericality_of :spiritual_conversations, :evangelisticOneOnOne, :evangelisticGroup, :exposuresViaMedia,
+    :holySpiritConversations, :decisionsHelpedByOneOnOne, :decisionsHelpedByGroup, :decisionsHelpedByMedia,
+    :laborersSent, :faculty_sent, :multipliers, :studentLeaders, :invldStudents, :faculty_involved,
     :faculty_engaged, :faculty_leaders, :ongoingEvangReln, :dollars_raised, :only_integer => true, :allow_nil => true
 
   alias_attribute :activity_id, :fk_Activity
@@ -31,45 +31,71 @@ class Statistic < ActiveRecord::Base
   #alias_attribute :faculty_engaged, :faculty_engaged
   #alias_attribute :facutly_leaders, :facutly_leaders
   alias_attribute :seekers, :ongoingEvangReln
-  
+
   #Scopes
   def self.before_date(date)
     where(Statistic.table_name + ".periodBegin <= ?", date)
   end
-  
+
   def self.after_date(date)
     where(Statistic.table_name + ".periodEnd >= ?", date)
   end
-  
+
   def self.between_dates(from_date, to_date)
     after_date(from_date).before_date(to_date)
   end
-  
+
+  def self.collate_values(from_date, to_date)
+    select("SUM(spiritual_conversations) as spiritual_conversations,
+            SUM(holySpiritConversations) as holySpiritConversations,
+            SUM(evangelisticOneOnOne) as evangelisticOneOnOne,
+            SUM(decisionsHelpedByOneOnOne) as decisionsHelpedByOneOnOne,
+            SUM(evangelisticGroup) as evangelisticGroup,
+            SUM(decisionsHelpedByGroup) as decisionsHelpedByGroup,
+            SUM(exposuresViaMedia) as exposuresViaMedia,
+            SUM(decisionsHelpedByMedia) as decisionsHelpedByMedia,
+            SUM(laborersSent) as laborersSent,
+            SUM(faculty_sent) as faculty_sent,
+            SUM(invldStudents) as invldStudents,
+            SUM(multipliers) as multipliers,
+            SUM(studentLeaders) as studentLeaders,
+            SUM(faculty_involved) as faculty_involved,
+            SUM(faculty_engaged) as faculty_engaged,
+            SUM(faculty_leaders) as faculty_leaders,
+            fk_Activity,
+            '#{from_date.to_s(:db)}' as periodBegin,
+            '#{to_date.to_s(:db)}' as periodEnd")
+  end
+
   #Constants
   def self.weekly_stats # Order matters! Reports rely on correct order, if changed here, change Infobase app/views/reports/_report_header_bar.html.erb
     ["evangelisticOneOnOne", "decisionsHelpedByOneOnOne", "evangelisticGroup", "decisionsHelpedByGroup", "exposuresViaMedia", "decisionsHelpedByMedia", "spiritual_conversations", "holySpiritConversations", "laborersSent", "faculty_sent"]
   end
-  
+
   def self.semester_stats # Order matters! Reports rely on correct order, if changed here, change Infobase app/views/reports/_report_header_bar.html.erb
     ["invldStudents", "multipliers", "studentLeaders", "faculty_involved", "faculty_engaged", "faculty_leaders"]
   end
-  
+
   def self.all_stats
     Statistic.weekly_stats + Statistic.semester_stats + ["dollars_raised"]
   end
-  
+
   def self.event_stats
     Statistic.weekly_stats + ["invldStudents", "dollars_raised"]
   end
-  
+
   def self.people_groups
     ["(Other Internationals)", "East Asian", "Ishmael Project", "Japanese", "South Asian"]
   end
-  
+
   def self.uses_seekers
     []
   end
-  
+
+  def target_area
+    activity.try(:target_area)
+  end
+
   #Instance Methods
   def prefill_semester_stats
     prev_stat = get_previous_stat
@@ -79,7 +105,7 @@ class Statistic < ActiveRecord::Base
       end
     end
   end
-  
+
   def add_stats(new_stat)
     Statistic.event_stats.each do |stat|
       old_stat = self[stat] || 0
@@ -89,18 +115,18 @@ class Statistic < ActiveRecord::Base
       end
     end
   end
-  
+
   # Don't save if everything is nil
   def save
     attribs = attributes.clone
-    
+
     # Don't care about these attributes
     attribs.delete("periodBegin")
     attribs.delete("periodEnd")
     attribs.delete("fk_Activity")
     attribs.delete("peopleGroup")
     attribs.delete("updated_by")
-    
+
     # Need to compare the semester/quarter stats to previous stat record
     prev_stat = get_previous_stat
     changed = false
@@ -110,13 +136,13 @@ class Statistic < ActiveRecord::Base
         attribs.delete(field)
       end
     end
-    
+
     values = attribs.values.compact
     if !values.empty? || changed
       super
     end
   end
-  
+
   # Will return nil if there isn't a previous stat
   def get_previous_stat
     result = nil
