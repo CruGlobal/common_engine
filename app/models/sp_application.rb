@@ -463,6 +463,22 @@ class SpApplication < ActiveRecord::Base
     @willing_for_other_projects ||= Element.find(88)
   end
 
+  def start_date
+    result = read_attribute(:start_date)
+    unless result.present?
+      result = project.start_date
+    end
+    result
+  end
+
+  def end_date
+    result = read_attribute(:end_date)
+    unless result.present?
+      result = project.end_date
+    end
+    result
+  end
+
   def willing_for_other_projects_answer
     is_true(get_answer(88))
   end
