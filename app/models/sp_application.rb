@@ -17,7 +17,6 @@ class SpApplication < ActiveRecord::Base
     # State machine stuff
     state :started
     state :submitted, :enter => Proc.new {|app|
-                                  # SpApplicationMailer.deliver_submitted(app)
                                   Notifier.notification(
                                     app.email, # RECIPIENTS
                                     Qe.from_email, # FROM
@@ -57,14 +56,12 @@ class SpApplication < ActiveRecord::Base
                                 }
 
     state :accepted_as_student_staff, :enter => Proc.new {|app|
-                                  app.accepted_at = Time.now
-                                  app.previous_status = app.status
-                               }
+      app.accept
+    }
 
     state :accepted_as_participant, :enter => Proc.new {|app|
-                                  app.accepted_at = Time.now
-                                  app.previous_status = app.status
-                               }
+      app.accept
+    }
 
     state :declined, :enter => Proc.new {|app|
                                   app.previous_status = app.status
@@ -198,7 +195,86 @@ class SpApplication < ActiveRecord::Base
     SpDonation.where(:designation_number => SpDesignationNumber.where(:person_id => self.person_id, :project_id => self.project_id).collect(&:designation_number))
   end
 
+  def accept
+    self.accepted_at = Time.now
+    self.previous_status = app.status
+    async(:create_relay_account_if_needed)
+  end
 
+  def set_up_give_site
+    create_relay_account_if_needed
+    create_give_site
+    push_content_to_give_site
+  end
+
+  def create_relay_account_if_needed
+    unless person.user.globallyUniqueID.present?
+      password = SecureRandom.hex(5) + 'a'
+      person.user.password_plain = password
+      person.user.globallyUniqueID = RelayApiClient::Base.create_account(person.email_address.strip, password, person.nickname, person.lastName)
+      begin
+        person.user.save(validate: false)
+      rescue ActiveRecord::RecordNotUnique
+        # This means we have a duplicate person that we need to merge
+        other_user = Ccc::SimplesecuritymanagerUser.where(globallyUniqueID: person.user.globallyUniqueID).first
+        this_user = Ccc::SimplesecuritymanagerUser.find(person.user.id)
+        this_user.merge(other_user)
+        person.reload
+      end
+    end
+
+    # make sure we have the right username
+    l = IdentityLinker::Linker.find_linked_identity('ssoguid',person.user.globallyUniqueID,'relay_username')
+    username = l[:identity][:id_value]
+    if username != person.user.username
+      person.user.username = username
+      person.user.save
+    end
+  end
+
+  def create_give_site(postfix = '')
+    # Try to create a unique gcx community
+    unless person.sp_gcx_site.present?
+      name = person.informal_full_name.downcase.gsub(/\s+/,'-').gsub(/[^a-z0-9_\-]/,'') + postfix
+      site_attributes = {name: name, title: 'My Summer Project', privacy: 'public', theme: 'cru-spkick', sitetype: 'campus'}
+      site = GcxApi::Site.new(site_attributes)
+      unless site.valid?
+        # try a different name
+        if postfix.blank?
+          create_give_site('-' + project.state.downcase)
+        else
+          create_give_site(postfix + '-')
+        end
+        return
+      end
+      puts site_attributes[:name].inspect
+
+      site.create
+
+      person.update_attributes(sp_gcx_site: site_attributes[:name])
+
+      puts "Created #{site_attributes[:name]}"
+
+      GcxApi::User.create(person.sp_gcx_site, [{relayGuid: person.user.globallyUniqueID, role: 'administrator'}])
+
+      push_content_to_give_site
+    end
+  end
+
+  def push_content_to_give_site
+    site = GcxApi::Site.new(name: person.sp_gcx_site)
+
+    site.set_option_values(
+        'cru_spkick[spkick_goal]' => project.student_cost,
+        'cru_spkick[spkick_current_amount]' => account_balance,
+        'cru_spkick[spkick_deadline]' => project.start_date.strftime("%m/%d/%y"),
+        'cru_spkick[spkick_tripname]' => project.name,
+        'cru_spkick[spkick_description]' => project.project_summary,
+        'cru_spkick[spkick_fulldescription]' => project.full_project_description,
+        'cru_spkick[spkick_person_name]' => person.informal_full_name,
+        'cru_spkick[spkick_designation]' => get_designation_number
+    )
+  end
 
   def validates
     if ((status == 'accepted_as_student_staff' || status == 'accepted_as_participant') && project_id.nil?)
@@ -570,11 +646,10 @@ class SpApplication < ActiveRecord::Base
 
 
   def self.send_status_emails
-    logger.info("Sending application reminder emails")
-    uncompleted_apps = SpApplication.find(:all,
-    :select => "app.*",
-    :joins => "as app inner join sp_projects as proj on (proj.id = app.preference1_id)",
-    :conditions => ["app.status in (?) and app.year = ? and proj.start_date > ?", SpApplication.uncompleted_statuses, SpApplication.year, Time.now])
+    logger.info('Sending application reminder emails')
+    uncompleted_apps = SpApplication.select('app.*')
+                                    .where(['app.status in (?) and app.year = ? and proj.start_date > ?', SpApplication.uncompleted_statuses, SpApplication.year, Time.now])
+                                    .joins('as app inner join sp_projects as proj on (proj.id = app.preference1_id)')
     uncompleted_apps.each do |app|
       if (app.person.informal_full_name && app.email_address && app.email_address != "")
         SpApplicationMailer.deliver_status(app)

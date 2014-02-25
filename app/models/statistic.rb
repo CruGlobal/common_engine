@@ -9,8 +9,6 @@ class Statistic < ActiveRecord::Base
     :faculty_engaged, :faculty_leaders, :ongoingEvangReln, :dollars_raised, :only_integer => true, :allow_nil => true
 
   alias_attribute :activity_id, :fk_Activity
-  alias_attribute :period_begin, :periodBegin
-  alias_attribute :period_end, :periodEnd
   #alias_attribute :spiritual_conversations, :spiritual_conversations
   alias_attribute :personal_exposures, :evangelisticOneOnOne
   alias_attribute :personal_evangelism, :evangelisticOneOnOne
@@ -63,8 +61,9 @@ class Statistic < ActiveRecord::Base
             SUM(faculty_engaged) as faculty_engaged,
             SUM(faculty_leaders) as faculty_leaders,
             fk_Activity,
-            '#{from_date.to_s(:db)}' as periodBegin,
-            '#{to_date.to_s(:db)}' as periodEnd")
+            '#{from_date.to_s(:db)}' as period_begin,
+            '#{to_date.to_s(:db)}' as period_end")
+    .between_dates(from_date, to_date)
   end
 
   #Constants
@@ -90,6 +89,14 @@ class Statistic < ActiveRecord::Base
 
   def self.uses_seekers
     []
+  end
+
+  def period_begin
+    self[:period_begin] || periodBegin
+  end
+
+  def period_end
+    self[:period_end] || periodEnd
   end
 
   def target_area

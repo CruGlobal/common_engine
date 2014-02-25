@@ -128,6 +128,15 @@ class SpDonation < ActiveRecord::Base
 
         total_donations += donations.length
       end
+
+      # If there is a give site for this designation number, update it
+      if dn.person.sp_gcx_site.present?
+        site = GcxApi::Site.new(name: dn.person.sp_gcx_site)
+
+        site.set_option_values(
+            'cru_spkick[spkick_current_amount]' => get_balance(da.designation_number, SpApplication.year)
+        )
+      end
     end
 
     total_donations
