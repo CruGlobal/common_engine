@@ -528,6 +528,12 @@ class SpProject < ActiveRecord::Base
     true
   end
 
+  def async_push_to_global_registry
+    attributes_to_push['primary_ministry_focus_id'] = primary_ministry_focus.global_registry_id if primary_ministry_focus
+
+    super
+  end
+
   def self.skip_fields_for_gr
     %w[id global_registry_id]
   end

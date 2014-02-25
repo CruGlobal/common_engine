@@ -7,6 +7,7 @@ class SpDesignationNumber < ActiveRecord::Base
   belongs_to :project, :class_name => 'SpProject'
   has_many :donations, -> { order('donation_date desc') }, :class_name => "SpDonation", :primary_key => "designation_number"
 
+  before_save :ensure_correct_number_length
   after_save :async_secure_designation_if_necessary
 
   def sp_application
@@ -51,6 +52,14 @@ class SpDesignationNumber < ActiveRecord::Base
       raise "'#{key}' not specified in APP_CONFIG!"
     end
     value
+  end
+
+  def ensure_correct_number_length
+    if designation_number.present?
+      while designation_number.length < 7
+        self.designation_number = '0' + designation_number
+      end
+    end
   end
 
 end
