@@ -197,7 +197,7 @@ class SpApplication < ActiveRecord::Base
 
   def accept
     self.accepted_at = Time.now
-    self.previous_status = app.status
+    self.previous_status = self.status
     async(:create_relay_account_if_needed)
   end
 
