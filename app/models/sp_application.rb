@@ -236,7 +236,7 @@ class SpApplication < ActiveRecord::Base
     # Try to create a unique gcx community
     unless person.sp_gcx_site.present?
       name = person.informal_full_name.downcase.gsub(/\s+/,'-').gsub(/[^a-z0-9_\-]/,'') + postfix
-      site_attributes = {name: name, title: 'My Summer Project', privacy: 'public', theme: 'cru-spkick', sitetype: 'campus'}
+      site_attributes = {name: name, domain: "#{APP_CONFIG['spgive_url']}/#{name}", title: 'My Summer Project', privacy: 'public', theme: 'cru-spkick', sitetype: 'campus'}
       site = GcxApi::Site.new(site_attributes)
       unless site.valid?
         # try a different name
@@ -262,7 +262,7 @@ class SpApplication < ActiveRecord::Base
   end
 
   def push_content_to_give_site
-    site = GcxApi::Site.new(name: person.sp_gcx_site)
+    site = GcxApi::Site.new(name: person.sp_gcx_site, domain: APP_CONFIG['spgive_url'])
 
     site.set_option_values(
         'cru_spkick[spkick_goal]' => project.student_cost,
