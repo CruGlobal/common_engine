@@ -233,31 +233,41 @@ class SpApplication < ActiveRecord::Base
   end
 
   def create_give_site(postfix = '')
-    # Try to create a unique gcx community
-    unless person.sp_gcx_site.present?
-      name = person.informal_full_name.downcase.gsub(/\s+/,'-').gsub(/[^a-z0-9_\-]/,'') + postfix
-      site_attributes = {name: name, domain: "#{APP_CONFIG['spgive_url']}/#{name}", title: 'My Summer Project', privacy: 'public', theme: 'cru-spkick', sitetype: 'campus'}
-      site = GcxApi::Site.new(site_attributes)
-      unless site.valid?
-        # try a different name
-        if postfix.blank?
-          create_give_site('-' + project.state.downcase)
-        else
-          create_give_site(postfix + '-')
+    if !is_secure? && project.project_summary.present? && project.full_project_description.present?
+      # Try to create a unique gcx community
+      unless person.sp_gcx_site.present?
+        name = person.informal_full_name.downcase.gsub(/\s+/,'-').gsub(/[^a-z0-9_\-]/,'') + postfix
+        site_attributes = {name: name, domain: "#{APP_CONFIG['spgive_url']}/#{name}", title: 'My Summer Project', privacy: 'public', theme: 'cru-spkick', sitetype: 'campus'}
+        site = GcxApi::Site.new(site_attributes)
+        unless site.valid?
+          # try a different name
+          if postfix.blank?
+            create_give_site('-' + project.state.downcase)
+          else
+            create_give_site(postfix + '-')
+          end
+          return
         end
-        return
+        puts site_attributes[:name].inspect
+
+        site.create
+
+        person.update_attributes(sp_gcx_site: site_attributes[:name])
+
+        puts "Created #{site_attributes[:name]}"
+
+        GcxApi::User.create(person.sp_gcx_site, [{relayGuid: person.user.globallyUniqueID, role: 'administrator'}])
+
+        push_content_to_give_site
+
+        Notifier.notification(person.email_address, # RECIPIENTS
+                              Qe.from_email, # FROM
+                              "Giving site created", # LIQUID TEMPLATE NAME
+                              {'first_name' => person.nickname,
+                               'site_url' => APP_CONFIG['spgive_url'],
+                               'username' => person.user.username,
+                               'password' => person.user.password_plain}).deliver
       end
-      puts site_attributes[:name].inspect
-
-      site.create
-
-      person.update_attributes(sp_gcx_site: site_attributes[:name])
-
-      puts "Created #{site_attributes[:name]}"
-
-      GcxApi::User.create(person.sp_gcx_site, [{relayGuid: person.user.globallyUniqueID, role: 'administrator'}])
-
-      push_content_to_give_site
     end
   end
 
@@ -272,7 +282,8 @@ class SpApplication < ActiveRecord::Base
         'cru_spkick[spkick_description]' => project.project_summary,
         'cru_spkick[spkick_fulldescription]' => project.full_project_description,
         'cru_spkick[spkick_person_name]' => person.informal_full_name,
-        'cru_spkick[spkick_designation]' => get_designation_number
+        'cru_spkick[spkick_designation]' => get_designation_number,
+        'cru_spkick[spkick_motivation]' => 'STU000'
     )
   end
 
