@@ -264,7 +264,7 @@ class SpApplication < ActiveRecord::Base
                               Qe.from_email, # FROM
                               "Giving site created", # LIQUID TEMPLATE NAME
                               {'first_name' => person.nickname,
-                               'site_url' => APP_CONFIG['spgive_url'],
+                               'site_url' => "#{APP_CONFIG['spgive_url']}/#{person.sp_gcx_site}/",
                                'username' => person.user.username,
                                'password' => person.user.password_plain}).deliver
       end
