@@ -5,8 +5,8 @@ module GlobalRegistryMethods
   extend ActiveSupport::Concern
 
   included do
-    after_commit :push_to_global_registry
-    after_destroy :delete_from_global_registry
+    #after_commit :push_to_global_registry
+    #after_destroy :delete_from_global_registry
   end
 
   def delete_from_global_registry
