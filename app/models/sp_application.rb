@@ -204,7 +204,6 @@ class SpApplication < ActiveRecord::Base
   def set_up_give_site
     create_relay_account_if_needed
     create_give_site
-    push_content_to_give_site
   end
 
   def create_relay_account_if_needed
