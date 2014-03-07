@@ -116,6 +116,7 @@ class SpProject < ActiveRecord::Base
 
   before_create :set_to_open
   before_save :get_coordinates, :calculate_weeks, :set_year, :set_default_apply_date
+  after_save :async_secure_designations_if_necessary
 
   begin
     date_setters :apply_by_date, :start_date, :end_date, :date_of_departure, :date_of_return, :staff_start_date, :staff_end_date, :pd_start_date, :pd_end_date,
@@ -125,6 +126,42 @@ class SpProject < ActiveRecord::Base
 
 
   @@regions = {}
+
+
+  def async_secure_designations_if_necessary
+    if changed.include?('secure')
+      if secure?
+        async(:secure_designations)
+      else
+        async(:unsecure_designations)
+      end
+    end
+  end
+
+  def secure_designations
+    parameters = {
+      startDate: Date.today.to_s(:db),
+      endDate: 1.year.from_now.to_date.to_s(:db)
+    }
+    update_designations_security(parameters)
+  end
+
+  def unsecure_designations
+    parameters = {
+      startDate: Date.today.to_s(:db),
+      endDate: Date.today.to_s(:db)
+    }
+    update_designations_security(parameters)
+  end
+
+
+  def update_designations_security(parameters)
+    sp_applications.accepted.for_year(SpApplication.year).collect(&:designation_number).each do |designation_number|
+      if designation_number.present?
+        SpDesignationNumber.update_designation_security(designation_number, parameters)
+      end
+    end
+  end
 
   def current?
     !!SpProject.current.find_by_id(id)

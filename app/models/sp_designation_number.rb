@@ -25,12 +25,24 @@ class SpDesignationNumber < ActiveRecord::Base
   def secure_designation
     parameters = {
       startDate: Date.today.to_s(:db),
-      endDate: 1.year.from_now.to_date.to_s(:db),
-      access_token: get_required_config('designation_access_token')
+      endDate: 1.year.from_now.to_date.to_s(:db)
     }
 
-    RestClient::Request.execute(:method => :post, :url => url, :payload => parameters, :timeout => -1) { |res, request, result, &block|
+    SpDesignationNumber.update_designation_security(designation_number, parameters)
+  end
+
+
+  def self.wsapi_url(designation_number)
+    base_url = APP_CONFIG['designation_base_url']
+    "#{base_url}/designations/#{designation_number}/secureStatus"
+  end
+
+  def self.update_designation_security(designation_number, parameters)
+    RestClient::Request.execute(:method => :post, :url => wsapi_url(designation_number), :payload => parameters, headers: {'Authorization' => "Bearer #{APP_CONFIG['designation_access_token']}"}, :timeout => -1) { |res, request, result, &block|
       if res.code.to_i >= 400
+        puts res.inspect
+        puts request.inspect
+        puts result.inspect
         raise res.inspect
       end
       res
@@ -39,19 +51,6 @@ class SpDesignationNumber < ActiveRecord::Base
 
   def mark_secure_necessary?
     sp_application && sp_application.is_secure? && designation_number.present?
-  end
-
-  def url
-    base_url = get_required_config('designation_base_url')
-    "#{base_url}/designations/#{designation_number}/secureStatus"
-  end
-
-  def get_required_config(key)
-    value = APP_CONFIG[key]
-    unless value
-      raise "'#{key}' not specified in APP_CONFIG!"
-    end
-    value
   end
 
   def ensure_correct_number_length
