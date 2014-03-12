@@ -116,7 +116,7 @@ class SpProject < ActiveRecord::Base
 
   before_create :set_to_open
   before_save :get_coordinates, :calculate_weeks, :set_year, :set_default_apply_date
-  after_save :async_secure_designations_if_necessary
+  after_save :async_secure_designations_if_necessary, :async_set_up_give_sites
 
   begin
     date_setters :apply_by_date, :start_date, :end_date, :date_of_departure, :date_of_return, :staff_start_date, :staff_end_date, :pd_start_date, :pd_end_date,
@@ -127,6 +127,17 @@ class SpProject < ActiveRecord::Base
 
   @@regions = {}
 
+  def async_set_up_give_sites
+    if (project_summary_changed? || full_project_description_changed?) &&
+       full_project_description.present? &&
+       project_summary.present?
+      async(:set_up_give_sites)
+    end
+  end
+
+  def set_up_give_sites
+    sp_applications.accepted.for_year(2014).map(&:set_up_give_site)
+  end
 
   def async_secure_designations_if_necessary
     if changed.include?('secure')

@@ -8,16 +8,19 @@ class SpDesignationNumber < ActiveRecord::Base
   has_many :donations, -> { order('donation_date desc') }, :class_name => "SpDonation", :primary_key => "designation_number"
 
   before_save :ensure_correct_number_length
-  after_save :async_secure_designation_if_necessary
+  after_save :async_secure_designation, if: :mark_secure_necessary?
+  after_save :async_set_up_give_site, if: :designation_number_changed?
 
   def sp_application
-    SpApplication.where(person_id: person_id, project_id: project_id, year: year).first
+    @sp_application ||= SpApplication.where(person_id: person_id, project_id: project_id, year: year).first
   end
 
-  def async_secure_designation_if_necessary
-    if changed.include?('designation_number')
-      async(:secure_designation) if mark_secure_necessary?
-    end
+  def async_secure_designation
+    async(:secure_designation)
+  end
+
+  def async_set_up_give_site
+    sp_application.async(:set_up_give_site) if sp_application
   end
 
   private
