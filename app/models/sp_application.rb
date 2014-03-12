@@ -232,7 +232,7 @@ class SpApplication < ActiveRecord::Base
   end
 
   def create_give_site(postfix = '')
-    if !is_secure? && project.project_summary.present? && project.full_project_description.present?
+    if !is_secure? && designation_number.present? && project.project_summary.present? && project.full_project_description.present?
       # Try to create a unique gcx community
       unless person.sp_gcx_site.present?
         name = person.informal_full_name.downcase.gsub(/\s+/,'-').gsub(/[^a-z0-9_\-]/,'') + postfix
