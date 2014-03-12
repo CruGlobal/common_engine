@@ -2,6 +2,7 @@ require 'async'
 class SpDesignationNumber < ActiveRecord::Base
   include Async
   include Sidekiq::Worker
+  sidekiq_options unique: true
 
   belongs_to :person
   belongs_to :project, :class_name => 'SpProject'

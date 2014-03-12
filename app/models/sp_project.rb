@@ -9,6 +9,8 @@ class SpProject < ActiveRecord::Base
   include Sidekiq::Worker
   include GlobalRegistryMethods
 
+  sidekiq_options unique: true
+
   auto_strip_attributes :name, :city, :state, :country, :operating_business_unit, :operating_operating_unit, :operating_department,
                         :operating_project, :operating_designation, :scholarship_business_unit, :scholarship_operating_unit, :scholarship_department,
                         :scholarship_project, :scholarship_designation, :departure_city, :destination_city, :medical_clinic, :medical_clinic_location,

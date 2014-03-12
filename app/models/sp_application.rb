@@ -12,6 +12,8 @@ class SpApplication < ActiveRecord::Base
   COST_BEFORE_DEADLINE = 25
   COST_AFTER_DEADLINE = 25
 
+  sidekiq_options unique: true
+
   aasm :initial => :started, :column => :status do
 
     # State machine stuff

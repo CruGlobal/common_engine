@@ -18,6 +18,8 @@ Gem::Specification.new do |s|
 
   s.add_dependency "rails", ">= 3.0.0"
   s.add_dependency "sidekiq"
+  s.add_dependency "sidekiq-failures"
+  s.add_dependency "sidekiq-unique-jobs"
   s.add_dependency "global_registry"
   s.add_dependency 'aasm', '~> 3.0.9'
   s.add_dependency 'acts_as_list', '~> 0.3.0'
