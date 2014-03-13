@@ -156,22 +156,18 @@ class SpProject < ActiveRecord::Base
       startDate: Date.today.to_s(:db),
       endDate: 1.year.from_now.to_date.to_s(:db)
     }
-    update_designations_security(parameters)
+    update_designations_security(parameters, :secure)
   end
 
   def unsecure_designations
-    parameters = {
-      startDate: Date.today.to_s(:db),
-      endDate: Date.today.to_s(:db)
-    }
-    update_designations_security(parameters)
+    update_designations_security({}, :unsecure)
   end
 
 
-  def update_designations_security(parameters)
+  def update_designations_security(parameters, security)
     sp_applications.accepted.for_year(SpApplication.year).collect(&:designation_number).each do |designation_number|
       if designation_number.present?
-        SpDesignationNumber.update_designation_security(designation_number, parameters)
+        SpDesignationNumber.update_designation_security(designation_number, parameters, security)
       end
     end
   end

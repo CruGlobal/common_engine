@@ -41,16 +41,29 @@ class SpDesignationNumber < ActiveRecord::Base
     "#{base_url}/designations/#{designation_number}/secureStatus"
   end
 
-  def self.update_designation_security(designation_number, parameters)
-    RestClient::Request.execute(:method => :post, :url => wsapi_url(designation_number), :payload => parameters, headers: {'Authorization' => "Bearer #{APP_CONFIG['designation_access_token']}"}, :timeout => -1) { |res, request, result, &block|
-      if res.code.to_i >= 400
+  def self.update_designation_security(designation_number, parameters, security = :secure)
+    case security
+    when :secure
+      RestClient::Request.execute(:method => :post, :url => wsapi_url(designation_number), :payload => parameters, headers: {'Authorization' => "Bearer #{APP_CONFIG['designation_access_token']}"}, :timeout => -1) { |res, request, result, &block|
         puts res.inspect
         puts request.inspect
         puts result.inspect
-        raise res.inspect
-      end
-      res
-    }
+        if res.code.to_i >= 400
+          raise res.inspect
+        end
+        res
+      }
+    when :unsecure
+      RestClient::Request.execute(:method => :delete, :url => wsapi_url(designation_number), headers: {'Authorization' => "Bearer #{APP_CONFIG['designation_access_token']}"}, :timeout => -1) { |res, request, result, &block|
+        puts res.inspect
+        puts request.inspect
+        puts result.inspect
+        if res.code.to_i >= 400
+          raise res.inspect
+        end
+        res
+      }
+    end
   end
 
   def mark_secure_necessary?
