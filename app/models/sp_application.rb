@@ -251,24 +251,35 @@ class SpApplication < ActiveRecord::Base
         end
 
         puts site_attributes[:name].inspect
+        SpApplication.transaction do
+          begin
+            site.create
 
-        site.create
-        
-        person.update_attributes(sp_gcx_site: site_attributes[:name])
+            person.update_attributes(sp_gcx_site: site_attributes[:name])
 
-        puts "Created #{site_attributes[:name]}"
+            puts "Created #{site_attributes[:name]}"
 
-        GcxApi::User.create(person.sp_gcx_site, [{relayGuid: person.user.globallyUniqueID, role: 'administrator'}])
+            GcxApi::User.create(person.sp_gcx_site, [{relayGuid: person.user.globallyUniqueID, role: 'administrator'}])
 
-        push_content_to_give_site
+            push_content_to_give_site
 
-        Notifier.notification(person.email_address, # RECIPIENTS
-                              Qe.from_email, # FROM
-                              "Giving site created", # LIQUID TEMPLATE NAME
-                              {'first_name' => person.nickname,
-                               'site_url' => "#{APP_CONFIG['spgive_url']}/#{person.sp_gcx_site}/",
-                               'username' => person.user.username,
-                               'password' => person.user.password_plain}).deliver
+            Notifier.notification(person.email_address, # RECIPIENTS
+                                  Qe.from_email, # FROM
+                                  "Giving site created", # LIQUID TEMPLATE NAME
+                                  {'first_name' => person.nickname,
+                                   'site_url' => "#{APP_CONFIG['spgive_url']}/#{person.sp_gcx_site}/",
+                                   'username' => person.user.username,
+                                   'password' => person.user.password_plain}).deliver
+          rescue => e
+            # If any part of creating the give site fails, trash the site so we can start over.
+            begin
+              GcxApi::Site.new.destroy(site_attributes[:name])
+            rescue
+              # Don't alert if delete fails
+            end
+            raise e
+          end
+        end
       end
     end
   end
