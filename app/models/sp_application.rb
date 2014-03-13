@@ -259,7 +259,7 @@ class SpApplication < ActiveRecord::Base
 
             puts "Created #{site_attributes[:name]}"
 
-            response = GcxApi::User.create(person.sp_gcx_site, [{relayGuid: person.user.globallyUniqueID, role: 'administrator'}])
+            response = GcxApi::User.create(person.sp_gcx_site, [{relayGuid: person.user.globallyUniqueID, role: 'administrator'}]).first
 
             unless response['added'] || ["User is already a member.", "User is already pending."].include?(response['error'])
               raise response.inspect
