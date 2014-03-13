@@ -249,11 +249,12 @@ class SpApplication < ActiveRecord::Base
           end
           return
         end
-        person.update_attributes(sp_gcx_site: site_attributes[:name])
 
         puts site_attributes[:name].inspect
 
         site.create
+        
+        person.update_attributes(sp_gcx_site: site_attributes[:name])
 
         puts "Created #{site_attributes[:name]}"
 
