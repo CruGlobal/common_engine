@@ -131,13 +131,13 @@ class SpDonation < ActiveRecord::Base
 
       # If there is a give site for this designation number, update it
       if dn.person.sp_gcx_site.present?
-        site = GcxApi::Site.new(name: dn.person.sp_gcx_site)
+        site = GcxApi::Site.new(name: dn.person.sp_gcx_site, domain: APP_CONFIG['spgive_url'])
 
         begin
           site.set_option_values(
               'cru_spkick[spkick_current_amount]' => get_balance(dn.designation_number, SpApplication.year)
           )
-        rescue => e
+        rescue RuntimeError => e
           # Keep going even if updating gcx failed
           Airbrake.notify(e)
         end
