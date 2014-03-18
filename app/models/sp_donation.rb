@@ -133,9 +133,14 @@ class SpDonation < ActiveRecord::Base
       if dn.person.sp_gcx_site.present?
         site = GcxApi::Site.new(name: dn.person.sp_gcx_site)
 
-        site.set_option_values(
-            'cru_spkick[spkick_current_amount]' => get_balance(dn.designation_number, SpApplication.year)
-        )
+        begin
+          site.set_option_values(
+              'cru_spkick[spkick_current_amount]' => get_balance(dn.designation_number, SpApplication.year)
+          )
+        rescue => e
+          # Keep going even if updating gcx failed
+          Airbrake.notify(e)
+        end
       end
     end
 
