@@ -134,7 +134,7 @@ class SpDonation < ActiveRecord::Base
         site = GcxApi::Site.new(name: dn.person.sp_gcx_site)
 
         site.set_option_values(
-            'cru_spkick[spkick_current_amount]' => get_balance(da.designation_number, SpApplication.year)
+            'cru_spkick[spkick_current_amount]' => get_balance(dn.designation_number, SpApplication.year)
         )
       end
     end
