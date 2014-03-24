@@ -583,6 +583,22 @@ class SpApplication < ActiveRecord::Base
     result
   end
 
+  def start_date=(date)
+    if project.start_date != date
+      write_attribute(:start_date, date)
+    elsif date == project.start_date
+      write_attribute(:start_date, nil)
+    end
+  end
+
+  def end_date=(date)
+    if project.end_date != date
+      write_attribute(:end_date, date)
+    elsif date == project.end_date
+      write_attribute(:end_date, nil)
+    end
+  end
+
   def willing_for_other_projects_answer
     is_true(get_answer(88))
   end
