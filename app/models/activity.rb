@@ -33,7 +33,8 @@ class Activity < ActiveRecord::Base
       "AA" => "Athletes In Action",
       "BR" => "Bridges",
       "SV" => "Cru High School",
-      "ID" => "Destino", 
+      "ID" => "Destino",
+      "SA" => "Design",
       "IC" => "Ethnic Field Ministry",
       "IE" => "Epic",
       "EV" => "Events",
@@ -48,7 +49,6 @@ class Activity < ActiveRecord::Base
       "ND" => "National",
       "IN" => "Nations",
       "OP" => "Operations",
-      "SA" => "SALT",
       "VL" => "Valor",
       "OT" => "Other"
     }
