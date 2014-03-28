@@ -420,6 +420,14 @@ class SpProject < ActiveRecord::Base
     end
   end
 
+  def scholarship_chartfield
+    self.scholarship_business_unit.to_s + "/" + self.scholarship_operating_unit.to_s + "/" + self.scholarship_department.to_s + "/" + self.scholarship_project.to_s
+  end
+
+  def operating_chartfield
+    self.operating_business_unit.to_s + "/" + self.operating_operating_unit.to_s + "/" + self.operating_department.to_s + "/" + self.operating_project.to_s
+  end
+
   def self.get_region(region)
     @@regions[region] ||= Region.find_by_region(region)
   end

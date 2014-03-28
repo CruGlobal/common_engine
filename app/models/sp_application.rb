@@ -18,56 +18,56 @@ class SpApplication < ActiveRecord::Base
 
     # State machine stuff
     state :started
-    state :submitted, :enter => Proc.new {|app|
-                                  Notifier.notification(
-                                    app.email, # RECIPIENTS
-                                    Qe.from_email, # FROM
-                                    "Application Submitted"
-                                  ).deliver if app.email.present? # LIQUID TEMPLATE NAME
-                                  app.submitted_at = Time.now
-                                  app.previous_status = app.status
-                                }
+    state :submitted, :enter => Proc.new { |app|
+      Notifier.notification(
+          app.email, # RECIPIENTS
+          Qe.from_email, # FROM
+          "Application Submitted"
+      ).deliver if app.email.present? # LIQUID TEMPLATE NAME
+      app.submitted_at = Time.now
+      app.previous_status = app.status
+    }
 
-    state :ready, :enter => Proc.new {|app|
-                              app.completed_at ||= Time.now
-                              Notifier.notification(
-                                app.email, # RECIPIENTS
-                                Qe.from_email, # FROM
-                                "Application Completed"
-                              ).deliver if app.email.present?
-                              app.previous_status = app.status
-                            }
+    state :ready, :enter => Proc.new { |app|
+      app.completed_at ||= Time.now
+      Notifier.notification(
+          app.email, # RECIPIENTS
+          Qe.from_email, # FROM
+          "Application Completed"
+      ).deliver if app.email.present?
+      app.previous_status = app.status
+    }
 
-    state :unsubmitted, :enter => Proc.new {|app|
-                                    Notifier.notification(
-                                      app.email, # RECIPIENTS
-                                      Qe.from_email, # FROM
-                                      "Application Unsubmitted"
-                                    ).deliver if app.email.present?
-                                    app.previous_status = app.status
-                                  }
+    state :unsubmitted, :enter => Proc.new { |app|
+      Notifier.notification(
+          app.email, # RECIPIENTS
+          Qe.from_email, # FROM
+          "Application Unsubmitted"
+      ).deliver if app.email.present?
+      app.previous_status = app.status
+    }
 
-    state :withdrawn, :enter => Proc.new {|app|
-                                  Notifier.notification(
-                                    app.email, # RECIPIENTS
-                                    Qe.from_email, # FROM
-                                    "Application Withdrawn"
-                                  ).deliver if app.email.present?
-                                  app.withdrawn_at = Time.now
-                                  app.previous_status = app.status
-                                }
+    state :withdrawn, :enter => Proc.new { |app|
+      Notifier.notification(
+          app.email, # RECIPIENTS
+          Qe.from_email, # FROM
+          "Application Withdrawn"
+      ).deliver if app.email.present?
+      app.withdrawn_at = Time.now
+      app.previous_status = app.status
+    }
 
-    state :accepted_as_student_staff, :enter => Proc.new {|app|
+    state :accepted_as_student_staff, :enter => Proc.new { |app|
       app.accept
     }
 
-    state :accepted_as_participant, :enter => Proc.new {|app|
+    state :accepted_as_participant, :enter => Proc.new { |app|
       app.accept
     }
 
-    state :declined, :enter => Proc.new {|app|
-                                  app.previous_status = app.status
-                               }
+    state :declined, :enter => Proc.new { |app|
+      app.previous_status = app.status
+    }
 
     event :submit do
       transitions :to => :submitted, :from => :started
@@ -142,7 +142,6 @@ class SpApplication < ActiveRecord::Base
   has_many :answers, :class_name => 'Answer', :foreign_key => 'answer_sheet_id', :dependent => :destroy
 
 
-
   #has_many :sp_designation_numbers
   #has_many :donations, through: :sp_designation_numbers
   belongs_to :preference1, :class_name => 'SpProject', :foreign_key => :preference1_id
@@ -158,18 +157,18 @@ class SpApplication < ActiveRecord::Base
   # end
   has_one :evaluation, :class_name => 'SpEvaluation', :foreign_key => :application_id
 
-  scope :for_year, proc {|year| where(:year => year)}
-  scope :preferrenced_project, proc {|project_id| {:conditions => ["project_id = ? OR preference1_id = ? OR preference2_id = ? OR preference3_id = ?", project_id, project_id, project_id, project_id]}}
+  scope :for_year, proc { |year| where(:year => year) }
+  scope :preferrenced_project, proc { |project_id| {:conditions => ["project_id = ? OR preference1_id = ? OR preference2_id = ? OR preference3_id = ?", project_id, project_id, project_id, project_id]} }
 
-  scope :preferred_project, proc {|project_id| {:conditions => ["project_id = ?", project_id],
-                                                      :include => :person }}
+  scope :preferred_project, proc { |project_id| {:conditions => ["project_id = ?", project_id],
+                                                 :include => :person} }
   scope :not_staff, -> { where("ministry_person.isStaff <> 1 OR ministry_person.isStaff Is Null").joins(:person) }
   before_create :set_su_code
   after_save :unsubmit_on_project_change, :complete, :send_acceptance_email, :log_changed_project, :update_project_counts
 
   def next_states_for_events
     self.class.aasm_events.values.select { |event| event.transitions_from_state?(status.to_sym) && send(("may_" + event.name.to_s + "?").to_sym) }.collect {
-      |e| [e.transitions_from_state(status.to_sym).first.to.to_s.humanize, e.name] }
+        |e| [e.transitions_from_state(status.to_sym).first.to.to_s.humanize, e.name] }
   end
 
   def designation_number=(val)
@@ -177,10 +176,10 @@ class SpApplication < ActiveRecord::Base
       designation.designation_number = val
     else
       designation = SpDesignationNumber.new(
-                      :person_id => self.person_id,
-                      :project_id => self.project_id,
-                      :designation_number => val,
-                      :year => SpApplication.year)
+          :person_id => self.person_id,
+          :project_id => self.project_id,
+          :designation_number => val,
+          :year => SpApplication.year)
     end
     designation.save!
   end
@@ -225,7 +224,7 @@ class SpApplication < ActiveRecord::Base
     end
 
     # make sure we have the right username
-    l = IdentityLinker::Linker.find_linked_identity('ssoguid',person.user.globallyUniqueID,'relay_username')
+    l = IdentityLinker::Linker.find_linked_identity('ssoguid', person.user.globallyUniqueID, 'relay_username')
     username = l[:identity][:id_value]
     if username != person.user.username
       person.user.username = username
@@ -237,7 +236,7 @@ class SpApplication < ActiveRecord::Base
     if !is_secure? && designation_number.present? && project.project_summary.present? && project.full_project_description.present?
       # Try to create a unique gcx community
       unless person.sp_gcx_site.present?
-        name = person.informal_full_name.downcase.gsub(/\s+/,'-').gsub(/[^a-z0-9_\-]/,'') + postfix
+        name = person.informal_full_name.downcase.gsub(/\s+/, '-').gsub(/[^a-z0-9_\-]/, '') + postfix
         site_attributes = {name: name, domain: "#{APP_CONFIG['spgive_url']}/#{name}", title: 'My Summer Project', privacy: 'public', theme: 'cru-spkick', sitetype: 'campus'}
         site = GcxApi::Site.new(site_attributes)
         unless site.valid?
@@ -457,7 +456,7 @@ class SpApplication < ActiveRecord::Base
 
   def has_paid?
     return true if self.payments.detect(&:approved?)
-    return true unless question_sheets.collect(&:questions).flatten.detect {|q| q.is_a?(PaymentQuestion) && q.required?}
+    return true unless question_sheets.collect(&:questions).flatten.detect { |q| q.is_a?(PaymentQuestion) && q.required? }
     return false
   end
 
@@ -486,7 +485,7 @@ class SpApplication < ActiveRecord::Base
     # Make sure all required references are copmleted
     sp_references.each do |reference|
       if reference.required?
-        return false  unless reference.completed? || reference == ref
+        return false unless reference.completed? || reference == ref
       end
     end
     return false unless self.has_paid?
@@ -608,7 +607,7 @@ class SpApplication < ActiveRecord::Base
   end
 
   def is_true(val)
-    [1,'1',true,'true'].include?(val)
+    [1, '1', true, 'true'].include?(val)
   end
 
   def get_answer(q_id)
@@ -625,7 +624,7 @@ class SpApplication < ActiveRecord::Base
   end
 
   def get_answer_object(q_id)
-    answers.detect {|a| a.question_id == q_id}
+    answers.detect { |a| a.question_id == q_id }
   end
 
   def log_changed_project
@@ -634,24 +633,30 @@ class SpApplication < ActiveRecord::Base
       old_project = SpProject.find(changes['project_id'].first)
       new_project = SpProject.find(changes['project_id'].last)
       SpApplicationMove.create!(:application_id => id, :old_project_id => old_project.id, :new_project_id => new_project.id,
-                                      :moved_by_person_id => current_person.id)
+                                :moved_by_person_id => current_person.id)
+
+      # Move designation number
+      dn = SpDesignationNumber.where(:person_id => person_id, :project_id => old_project.id, :year => year).first
+      dn.update_attribute(:project_id, new_project.id) if dn
 
       # Notify old and new directors
-      [old_project.pd, old_project.apd, new_project.pd, new_project.apd].compact.each do |contact|
-        if contact.email.present?
-          Notifier.notification(contact.email, # RECIPIENTS
+      old_pds = [old_project.pd, old_project.apd, old_project.opd]
+      new_pds = [new_project.pd, new_project.apd, new_project.opd]
+      recipients = old_pds.compact.empty? ? ["summer.projects@cru.org"] : old_pds.compact.collect(&:email)
+      recipients += new_pds.compact.empty? ? ["summer.projects@cru.org"] : new_pds.compact.collect(&:email)
+      recipients << "summerprojectdonations@cru.org"
+          Notifier.notification(recipients.compact, # RECIPIENTS
                                 Qe.from_email, # FROM
                                 "Application Moved", # LIQUID TEMPLATE NAME
                                 {'applicant_name' => name,
                                  'moved_by' => current_person.informal_full_name,
                                  'original_project' => old_project.name,
-                                 'new_project' => new_project.name}).deliver
-        end
-      end
-
-      # Move designation number
-      dn = SpDesignationNumber.where(:person_id => person_id, :project_id => old_project.id, :year => year).first
-      dn.update_attribute(:project_id, new_project.id) if dn
+                                 'new_project' => new_project.name,
+                                 'designation_number' => dn,
+                                 'original_chartfield' => old_project.scholarship_chartfield,
+                                 'original_designation' => old_project.scholarship_designation,
+                                 'new_chartfield' => new_project.scholarship_chartfield,
+                                 'new_designation' => new_project.scholarship_designation}).deliver
 
       # Update project counts
       old_project.update_counts(person)
@@ -681,6 +686,7 @@ class SpApplication < ActiveRecord::Base
   def email_address
     person.current_address.email if person && person.current_address
   end
+
   alias_method :email, :email_address
 
   def account_balance
@@ -692,8 +698,8 @@ class SpApplication < ActiveRecord::Base
   def self.send_status_emails
     logger.info('Sending application reminder emails')
     uncompleted_apps = SpApplication.select('app.*')
-                                    .where(['app.status in (?) and app.year = ? and proj.start_date > ?', SpApplication.uncompleted_statuses, SpApplication.year, Time.now])
-                                    .joins('as app inner join sp_projects as proj on (proj.id = app.preference1_id)')
+    .where(['app.status in (?) and app.year = ? and proj.start_date > ?', SpApplication.uncompleted_statuses, SpApplication.year, Time.now])
+    .joins('as app inner join sp_projects as proj on (proj.id = app.preference1_id)')
     uncompleted_apps.each do |app|
       if (app.person.informal_full_name && app.email_address && app.email_address != "")
         SpApplicationMailer.deliver_status(app)
@@ -702,12 +708,12 @@ class SpApplication < ActiveRecord::Base
   end
 
   def send_acceptance_email
-      if changed.include?('applicant_notified') and applicant_notified? && status.starts_with?("accept")
-        Notifier.notification(email_address, # RECIPIENTS
-                                  Qe.from_email, # FROM
-                                  "Application Accepted", # LIQUID TEMPLATE NAME
-                                  {'project_name' => project.try(:name)}).deliver
-      end
+    if changed.include?('applicant_notified') and applicant_notified? && status.starts_with?("accept")
+      Notifier.notification(email_address, # RECIPIENTS
+                            Qe.from_email, # FROM
+                            "Application Accepted", # LIQUID TEMPLATE NAME
+                            {'project_name' => project.try(:name)}).deliver
+    end
   end
 
   def unsubmit_on_project_change
@@ -717,8 +723,8 @@ class SpApplication < ActiveRecord::Base
         old_project, new_project = SpProject.find_by_id(changes['project_id'][0]), SpProject.find_by_id(changes['project_id'][1])
         if old_project && new_project
           if old_project.basic_info_question_sheet != new_project.basic_info_question_sheet ||
-                 old_project.template_question_sheet != new_project.template_question_sheet ||
-                 (new_project.project_specific_question_sheet && new_project.project_specific_question_sheet.questions.present?)
+              old_project.template_question_sheet != new_project.template_question_sheet ||
+              (new_project.project_specific_question_sheet && new_project.project_specific_question_sheet.questions.present?)
             if submitted? || ready? || withdrawn?
               unsubmit!
             end
@@ -733,19 +739,19 @@ class SpApplication < ActiveRecord::Base
     # Do any necessary cleanup of references to match new project's requirements
     if project
       logger.debug('has project')
-      reference_questions = project.template_question_sheet.questions.select {|q| q.is_a?(ReferenceQuestion)}
+      reference_questions = project.template_question_sheet.questions.select { |q| q.is_a?(ReferenceQuestion) }
       if sp_references.length > reference_questions.length
         sp_references.each do |reference|
           # See if this reference's question_id matches any of the questions for the new project
-          if question = reference_questions.detect {|rq| rq.id == reference.question_id}
+          if question = reference_questions.detect { |rq| rq.id == reference.question_id }
             logger.debug('matched question: ' + question.id.to_s)
             next
           end
           # If the question_id doesn't match, but the reference question is based on the same reference template (question sheet)
           # AND we don't already have a reference for that question
           # update the reference with the new question_id
-          if (reference_question = reference_questions.detect {|rq| rq.related_question_sheet_id == reference.question.related_question_sheet_id}) &&
-              !sp_references.detect {|r| r.question_id == reference_question.id}
+          if (reference_question = reference_questions.detect { |rq| rq.related_question_sheet_id == reference.question.related_question_sheet_id }) &&
+              !sp_references.detect { |r| r.question_id == reference_question.id }
             reference.update_attribute(:question_id, reference_question.id)
             logger.debug("matched question sheet")
             next
