@@ -9,6 +9,8 @@ class Statistic < ActiveRecord::Base
     :faculty_engaged, :faculty_leaders, :ongoingEvangReln, :dollars_raised, :only_integer => true, :allow_nil => true
 
   alias_attribute :activity_id, :fk_Activity
+  alias_attribute :period_begin, :periodBegin
+  alias_attribute :period_end, :periodEnd
   #alias_attribute :spiritual_conversations, :spiritual_conversations
   alias_attribute :personal_exposures, :evangelisticOneOnOne
   alias_attribute :personal_evangelism, :evangelisticOneOnOne
