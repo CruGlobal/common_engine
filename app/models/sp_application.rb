@@ -638,13 +638,14 @@ class SpApplication < ActiveRecord::Base
       # Move designation number
       dn = SpDesignationNumber.where(:person_id => person_id, :project_id => old_project.id, :year => year).first
       dn.update_attribute(:project_id, new_project.id) if dn
+      designation_number = dn.present? ? dn.designation_number : nil
 
       # Notify old and new directors
       old_pds = [old_project.pd, old_project.apd, old_project.opd]
       new_pds = [new_project.pd, new_project.apd, new_project.opd]
       recipients = old_pds.compact.empty? ? ["summer.projects@cru.org"] : old_pds.compact.collect(&:email)
       recipients += new_pds.compact.empty? ? ["summer.projects@cru.org"] : new_pds.compact.collect(&:email)
-      recipients << "summerprojectdonations@cru.org"
+      recipients << "summerprojectdonations@cru.org" if designation_number.present?
           Notifier.notification(recipients.compact, # RECIPIENTS
                                 Qe.from_email, # FROM
                                 "Application Moved", # LIQUID TEMPLATE NAME
@@ -652,7 +653,7 @@ class SpApplication < ActiveRecord::Base
                                  'moved_by' => current_person.informal_full_name,
                                  'original_project' => old_project.name,
                                  'new_project' => new_project.name,
-                                 'designation_number' => dn,
+                                 'designation_number' => designation_number,
                                  'original_chartfield' => old_project.scholarship_chartfield,
                                  'original_designation' => old_project.scholarship_designation,
                                  'new_chartfield' => new_project.scholarship_chartfield,
