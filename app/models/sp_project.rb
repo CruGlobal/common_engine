@@ -180,6 +180,13 @@ class SpProject < ActiveRecord::Base
     self.gospel_in_actions = SpGospelInAction.find(ids)
   end
 
+  def applicants(yr = nil)
+    yr ||= year
+    @applicants ||= {}
+    @applicants[yr] ||= Person.where(:personid => sp_applications.accepted.for_year(yr).collect(&:person_id)).
+      order('lastName, firstName')
+  end
+
   # Leadership
   def pd(yr = nil)
     yr ||= year
