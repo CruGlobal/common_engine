@@ -198,14 +198,20 @@ class Activity < ActiveRecord::Base
   def is_bridges?
     ['BR'].include?(strategy)
   end
+
+  def name
+    target_area.name.to_s + " - " + Activity.strategies[strategy].to_s
+  end
   
   # If status changes, create an ActivityHistory record
   def update_attributes_add_history(attributes, user)
     new_status = attributes[:status]
     if new_status && new_status != status
-      ActivityHistory.create(:activity => self, :status => new_status, :period_begin => convert_date(attributes, :periodBegin), :trans_username => user.userID)
+      begin_date = attributes[:periodBegin]
+      begin_date = convert_date(attributes, :periodBegin) if begin_date.class != Time
+      ActivityHistory.create(:activity => self, :status => new_status, :period_begin => begin_date, :trans_username => user)
     end
-    attributes[:transUsername] = user.userID
+    attributes[:transUsername] = user
     update_attributes(attributes)
   end
   

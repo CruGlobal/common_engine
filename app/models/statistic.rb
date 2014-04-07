@@ -4,9 +4,11 @@ class Statistic < ActiveRecord::Base
   belongs_to :activity, :foreign_key => "fk_Activity"
 
   validates_numericality_of :spiritual_conversations, :evangelisticOneOnOne, :evangelisticGroup, :exposuresViaMedia,
-    :holySpiritConversations, :decisionsHelpedByOneOnOne, :decisionsHelpedByGroup, :decisionsHelpedByMedia,
-    :laborersSent, :faculty_sent, :multipliers, :studentLeaders, :invldStudents, :faculty_involved,
-    :faculty_engaged, :faculty_leaders, :ongoingEvangReln, :dollars_raised, :only_integer => true, :allow_nil => true
+                            :holySpiritConversations, :decisionsHelpedByOneOnOne, :decisionsHelpedByGroup, :decisionsHelpedByMedia,
+                            :laborersSent, :faculty_sent, :multipliers, :studentLeaders, :invldStudents, :faculty_involved,
+                            :faculty_engaged, :faculty_leaders, :ongoingEvangReln, :dollars_raised, :only_integer => true, :allow_nil => true
+
+  after_save :change_activity_status
 
   alias_attribute :activity_id, :fk_Activity
   alias_attribute :period_begin, :periodBegin
@@ -171,5 +173,32 @@ class Statistic < ActiveRecord::Base
     serializer = active_model_serializer
     serializable = serializer.new(self)
     serializable.serializable_hash
+  end
+
+  protected
+
+  def change_activity_status
+    # Check to make sure this is the last stat record
+    if activity.statistics.order(:periodBegin).last == self
+      total_involvement = self.students_involved.to_i + self.faculty_involved.to_i
+      total_leader_involvement = self.student_leaders.to_i + self.faculty_leaders.to_i
+      case
+        when total_involvement > Activity::MULITPLYING_INVOLVEMENT_LEVEL && total_leader_involvement > Activity::MULITPLYING_LEADER_INVOLVEMENT_LEVEL
+          new_status = "MU"
+        when total_leader_involvement > Activity::LAUNCHED_LEADER_INVOLVEMENT_LEVEL
+          new_status = "LA"
+        when total_leader_involvement >= Activity::KEYLEADER_LEADER_INVOLVEMENT_LEVEL
+          new_status = "KE"
+        when total_leader_involvement == Activity::PIONEERING_LEADER_INVOLVEMENT_LEVEL
+          new_status = "PI"
+        else
+          new_status = nil
+      end
+      if new_status != activity.status
+        user = User.find(session[:user_id]).userID if session[:user_id].present?
+        user ||= session[:api_user] if session[:api_user].present?
+        activity.update_attributes_add_history({status: new_status, periodBegin: Time.now}, user)
+      end
+    end
   end
 end
