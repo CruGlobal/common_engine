@@ -1,4 +1,8 @@
+require 'global_registry_methods'
 class Activity < ActiveRecord::Base
+  include Sidekiq::Worker
+  include GlobalRegistryMethods
+
   self.table_name = "ministry_activity"
   self.primary_key = "ActivityID"
   
@@ -305,7 +309,53 @@ class Activity < ActiveRecord::Base
   def get_bookmark_for(user)
     Bookmark.get_activity_bookmark_for(user, self)
   end
-  
+
+  def async_push_to_global_registry
+
+    super unless global_registry_id.present?
+
+    team.async_push_to_global_registry unless team.global_registry_id.present?
+    target_area.async_push_to_global_registry unless target_area.global_registry_id.present?
+
+    attributes_to_push['team:relationship'] = {team: team.global_registry_id}
+    attributes_to_push['target_area:relationship'] = {target_area: target_area.global_registry_id}
+
+    super
+  end
+
+  def self.push_structure_to_global_registry
+    super
+
+    # Make sure relationships are defined
+    team_entity_type = GlobalRegistry::EntityType.get({'filters[name]' => 'team'})['entity_types'].first
+    activity_entity_type = GlobalRegistry::EntityType.get({'filters[name]' => 'activity'})['entity_types'].first
+    target_area_entity_type = GlobalRegistry::EntityType.get({'filters[name]' => 'target_area'})['entity_types'].first
+
+    activity_team_relationship_type = GlobalRegistry::RelationshipType.get({'filters[between]' => "#{team_entity_type['id']},#{activity_entity_type['id']}"})['relationship_types'].first
+    unless activity_team_relationship_type
+      GlobalRegistry::RelationshipType.post(relationship_type: {
+          entity_type1_id: activity_entity_type['id'],
+          entity_type2_id: team_entity_type['id'],
+          relationship1: 'activity',
+          relationship2: 'team'
+      })
+    end
+
+    activity_target_area_relationship_type = GlobalRegistry::RelationshipType.get({'filters[between]' => "#{target_area_entity_type['id']},#{activity_entity_type['id']}"})['relationship_types'].first
+    unless activity_target_area_relationship_type
+      GlobalRegistry::RelationshipType.post(relationship_type: {
+          entity_type1_id: activity_entity_type['id'],
+          entity_type2_id: target_area_entity_type['id'],
+          relationship1: 'activity',
+          relationship2: 'target_area'
+      })
+    end
+  end
+
+  def self.skip_fields_for_gr
+    super + ["activity_id", "period_end_deprecated", "trans_username", "fk_target_area_id", "fk_team_id", "status_history_deprecated", "url", "facebook", "sent_team_id", "gcx_site"]
+  end
+
   private
   
   def convert_date(hash, date_symbol_or_string)

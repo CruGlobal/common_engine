@@ -1,4 +1,9 @@
+require_dependency 'global_registry_methods'
+
 class TargetArea < ActiveRecord::Base
+  include Sidekiq::Worker
+  include GlobalRegistryMethods
+
   self.table_name = "ministry_targetarea"
   self.primary_key = "targetAreaID"
   
@@ -118,4 +123,20 @@ class TargetArea < ActiveRecord::Base
     result
   end
 
+  def async_push_to_global_registry
+    attributes_to_push['is_secure'] = isSecure == 'T'
+
+    super
+  end
+
+  def self.columns_to_push
+    super
+    @columns_to_push.each do |column|
+      column[:type] = 'boolean' if ['is_secure'].include?(column[:name])
+    end
+  end
+
+  def self.skip_fields_for_gr
+    super + ["target_area_id", "is_closed", "mpta", "url_to_logo", "enrollment", "month_school_starts", "month_school_stops", "is_semester", "is_approved", "aoa_priority", "aoa", "cia_url", "info_url", "calendar", "program1", "program2", "program3", "program4", "program5", "emphasis", "sex", "institution_type", "highest_offering", "affiliation", "carnegie_classification", "irs_status", "established_date", "tuition", "modified", "event_type", "event_key_id", "type", "county", "ongoing_special_event", "created_at", "updated_at"]
+  end
 end

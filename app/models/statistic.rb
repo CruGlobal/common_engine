@@ -1,4 +1,8 @@
+require 'global_registry_measurement_methods'
 class Statistic < ActiveRecord::Base
+  include Sidekiq::Worker
+  include GlobalRegistryMeasurementMethods
+
   self.table_name = "ministry_statistic"
   self.primary_key = "StatisticID"
   belongs_to :activity, :foreign_key => "fk_Activity"
@@ -167,12 +171,48 @@ class Statistic < ActiveRecord::Base
     elsif index > 0
       result = stats[index - 1]
     end
+
+    result
   end
 
   def to_ser_hash
     serializer = active_model_serializer
     serializable = serializer.new(self)
     serializable.serializable_hash
+  end
+
+  def self.gr_measurement_type_mappings
+    {
+        exposuresViaMedia: 'Media Exposures',
+        evangelisticOneOnOne: 'Personal Evangelism',
+        evangelisticGroup: 'Group Evangelism',
+        invldStudents: 'Students Involved',
+        studentLeaders: 'Student Leaders',
+        multipliers: 'Engaged Student Disciples',
+        laborersSent: 'Graduating on Mission',
+        decisionsHelpedByMedia: 'Media Exposure Decisions',
+        decisionsHelpedByOneOnOne: 'Personal Evangelism Decisions',
+        decisionsHelpedByGroup: 'Group Evangelism Decisions',
+        holySpiritConversations: 'Holy Spirit Presentations',
+        spiritual_conversations: 'Spiritual Conversations',
+        faculty_sent: 'Faculty on Mission',
+        faculty_involved: 'Faculty Involved',
+        faculty_engaged: 'Engaged Faculty Disciples',
+        faculty_leaders: 'Faculty Leaders'
+    }
+  end
+
+  def self.gr_related_entity_type_id
+    gr_team = GlobalRegistry::EntityType.get({'filters[name]' => 'team'})['entity_types'].first
+    gr_team['id']
+  end
+
+  def self.gr_category
+    'LMI'
+  end
+
+  def self.gr_unit
+    'people'
   end
 
   protected

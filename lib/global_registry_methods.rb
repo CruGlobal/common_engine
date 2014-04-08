@@ -49,19 +49,18 @@ module GlobalRegistryMethods
 
   def create_in_global_registry(parent_id = nil)
     entity = GlobalRegistry::Entity.post(entity: {self.class.global_registry_entity_type_name => attributes_to_push.merge({client_integration_id: id}), parent_id: parent_id})
+    entity = entity['entity']
     update_column(:global_registry_id, entity[self.class.global_registry_entity_type_name]['id'])
   end
 
-
   module ClassMethods
-    def push_structure_to_global_registry
+    def push_structure_to_global_registry(parent_id = nil)
       # Make sure all columns exist
       entity_type = GlobalRegistry::EntityType.get({'filters[name]' => global_registry_entity_type_name})['entity_types'].first
       if entity_type
         existing_fields = entity_type['fields'].collect {|f| f['name']}
       else
-        entity_type = GlobalRegistry::EntityType.post(entity_type: {name: global_registry_entity_type_name, field_type: 'entity'})['entity_type']
-        GlobalRegistry::EntityType.post(entity_type: {name: 'client_integration_id', parent_id: entity_type['id'], field_type: 'integer'})
+        entity_type = GlobalRegistry::EntityType.post(entity_type: {name: global_registry_entity_type_name, field_type: 'entity', parent_id: parent_id})['entity_type']
         existing_fields = []
       end
 
@@ -82,6 +81,14 @@ module GlobalRegistryMethods
       rescue RestClient::ResourceNotFound
         # If the record doesn't exist, we don't care
       end
+    end
+
+    def global_registry_entity_type_name
+      to_s.underscore
+    end
+
+    def skip_fields_for_gr
+      %w[id global_registry_id created_at updated_at]
     end
 
   end

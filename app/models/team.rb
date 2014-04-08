@@ -1,4 +1,8 @@
+require 'global_registry_methods'
 class Team < ActiveRecord::Base
+  include Sidekiq::Worker
+  include GlobalRegistryMethods
+
   self.table_name  = "ministry_locallevel"
   self.primary_key = "teamID"
 
@@ -91,5 +95,30 @@ class Team < ActiveRecord::Base
   
   def find_member(person)
     TeamMember.where(TeamMember.table_name + ".personID = ?", person.personID).where(teamID: self.id).first
+  end
+
+  def async_push_to_global_registry(parent_id = nil)
+    unless parent_id
+      region_object = Region.find_by(abbrv: region)
+      parent_id = region_object.global_registry_id
+    end
+
+    attributes_to_push['abbreviation'] = abbrv
+    attributes_to_push['is_active'] = is_active?
+
+    super(parent_id)
+  end
+
+  def self.columns_to_push
+    super
+    @columns_to_push += [{name: 'abbreviation', type: 'string'}]
+    @columns_to_push.each do |column|
+      column[:type] = 'boolean' if column[:name] == 'is_active'
+    end
+  end
+
+  # @return [Array]
+  def self.skip_fields_for_gr
+    super + ["team_id", "note", "region", "address1", "address2", "city", "state", "zip", "country", "fax", "email", "startdate", "stopdate", "fk_org_rel", "no", "abbrv", "has_multi_regional_access", "dept_id", "created_at", "updated_at", "global_registry_id"]
   end
 end
