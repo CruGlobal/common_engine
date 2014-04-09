@@ -27,6 +27,8 @@ module GlobalRegistryMeasurementMethods
   end
 
   def async_push_to_global_registry
+    return unless activity
+
     activity.async_push_to_global_registry unless activity.global_registry_id.present?
 
     detailed_mappings = self.class.gr_measurement_types
