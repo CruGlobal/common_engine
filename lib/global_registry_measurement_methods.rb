@@ -63,26 +63,26 @@ module GlobalRegistryMeasurementMethods
 
   module ClassMethods
     def gr_measurement_types(measurement_type_mappings = gr_measurement_type_mappings, related_entity_type_id = gr_related_entity_type_id, category = gr_category, unit = gr_unit, description = '', frequency = 'monthly')
-      detailed_mappings = {}
+      Rails.cache.fetch(:detailed_mappings, expires_in: 1.hour) do
+        mappings = {}
+        measurement_type_mappings.each do |column_name, type_name|
+          gr_type = GlobalRegistry::MeasurementType.get({'filters[name]' => type_name})['measurement_types'].first
 
-      measurement_type_mappings.each do |column_name, type_name|
-        gr_type = GlobalRegistry::MeasurementType.get({'filters[name]' => type_name})['measurement_types'].first
+          unless gr_type
+            gr_type = GlobalRegistry::MeasurementType.post(measurement_type: {
+              name: type_name,
+              related_entity_type_id: related_entity_type_id,
+              category: category,
+              unit: unit,
+              description: description,
+              frequency: frequency
+             })
+          end
 
-        unless gr_type
-          gr_type = GlobalRegistry::MeasurementType.post(measurement_type: {
-            name: type_name,
-            related_entity_type_id: related_entity_type_id,
-            category: category,
-            unit: unit,
-            description: description,
-            frequency: frequency
-           })
+          mappings[column_name] = gr_type
         end
-
-        detailed_mappings[column_name] = gr_type
+        mappings
       end
-
-      detailed_mappings
     end
   end
 end
