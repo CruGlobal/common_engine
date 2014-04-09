@@ -48,8 +48,7 @@ module GlobalRegistryMeasurementMethods
       end
     end
 
-    # raise ({measurements: measurements}).inspect
-    GlobalRegistry::Measurement.post(measurements: measurements)
+    GlobalRegistry::Measurement.post(measurements: measurements) if measurements.present?
   end
 
   def update_in_global_registry
