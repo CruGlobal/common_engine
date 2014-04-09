@@ -27,6 +27,7 @@ class TargetArea < ActiveRecord::Base
   scope :special_events, -> { where("type = 'Event' AND ongoing_special_event = 1") }
   
   before_save :stamp_changed
+  before_save :ensure_urls_http
   before_update :set_coordinates
 
   #Event Types
@@ -127,6 +128,15 @@ class TargetArea < ActiveRecord::Base
     attributes_to_push['is_secure'] = isSecure == 'T'
 
     super
+  end
+
+  def ensure_urls_http
+    [ :url, :urlToLogo, :ciaUrl, :infoUrl ].each do |c|
+      val = self.send(c)
+      if url.present? && !url.starts_with?("http://") && !url.starts_with?("https://")
+        self.url = "http://#{val}"
+      end
+    end
   end
 
   def self.columns_to_push

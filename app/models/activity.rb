@@ -24,6 +24,7 @@ class Activity < ActiveRecord::Base
   alias_attribute :target_area_id, :fk_targetAreaID
   alias_attribute :team_id, :fk_teamID
 
+  before_save :fix_url_http
 
   MULITPLYING_INVOLVEMENT_LEVEL = 49
   MULITPLYING_LEADER_INVOLVEMENT_LEVEL = 5
@@ -377,4 +378,9 @@ class Activity < ActiveRecord::Base
     return Date.new(hash[attribute + '(1i)'].to_i, hash[attribute + '(2i)'].to_i, hash[attribute + '(3i)'].to_i)   
   end
 
+  def ensure_url_http
+    if url.present? && !url.starts_with?("http://") && !url.starts_with?("https://")
+      self.url = "http://#{self.url}"
+    end
+  end
 end
