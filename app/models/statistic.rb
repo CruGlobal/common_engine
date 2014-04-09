@@ -203,8 +203,10 @@ class Statistic < ActiveRecord::Base
   end
 
   def self.gr_related_entity_type_id
-    gr_team = GlobalRegistry::EntityType.get({'filters[name]' => 'team'})['entity_types'].first
-    gr_team['id']
+    team_entity_type = Rails.cache.fetch(:team_entity_type, expires_in: 1.hour) do
+      GlobalRegistry::EntityType.get({'filters[name]' => 'team'})['entity_types'].first
+    end
+    team_entity_type['id']
   end
 
   def self.gr_category

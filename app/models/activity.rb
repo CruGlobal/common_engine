@@ -331,11 +331,19 @@ class Activity < ActiveRecord::Base
     super
 
     # Make sure relationships are defined
-    team_entity_type = GlobalRegistry::EntityType.get({'filters[name]' => 'team'})['entity_types'].first
-    activity_entity_type = GlobalRegistry::EntityType.get({'filters[name]' => 'activity'})['entity_types'].first
-    target_area_entity_type = GlobalRegistry::EntityType.get({'filters[name]' => 'target_area'})['entity_types'].first
+    team_entity_type = Rails.cache.fetch(:team_entity_type, expires_in: 1.hour) do
+      GlobalRegistry::EntityType.get({'filters[name]' => 'team'})['entity_types'].first
+    end
+    activity_entity_type = Rails.cache.fetch(:activity_entity_type, expires_in: 1.hour) do
+      GlobalRegistry::EntityType.get({'filters[name]' => 'activity'})['entity_types'].first
+    end
+    target_area_entity_type = Rails.cache.fetch(:target_area_entity_type, expires_in: 1.hour) do
+      GlobalRegistry::EntityType.get({'filters[name]' => 'target_area'})['entity_types'].first
+    end
 
-    activity_team_relationship_type = GlobalRegistry::RelationshipType.get({'filters[between]' => "#{team_entity_type['id']},#{activity_entity_type['id']}"})['relationship_types'].first
+    activity_team_relationship_type = Rails.cache.fetch(:activity_team_relationship_type, expires_in: 1.hour) do
+      GlobalRegistry::RelationshipType.get({'filters[between]' => "#{team_entity_type['id']},#{activity_entity_type['id']}"})['relationship_types'].first
+    end
     unless activity_team_relationship_type
       GlobalRegistry::RelationshipType.post(relationship_type: {
           entity_type1_id: activity_entity_type['id'],
@@ -345,7 +353,9 @@ class Activity < ActiveRecord::Base
       })
     end
 
-    activity_target_area_relationship_type = GlobalRegistry::RelationshipType.get({'filters[between]' => "#{target_area_entity_type['id']},#{activity_entity_type['id']}"})['relationship_types'].first
+    activity_target_area_relationship_type = Rails.cache.fetch(:activity_target_area_relationship_type, expires_in: 1.hour) do
+      GlobalRegistry::RelationshipType.get({'filters[between]' => "#{target_area_entity_type['id']},#{activity_entity_type['id']}"})['relationship_types'].first
+    end
     unless activity_target_area_relationship_type
       GlobalRegistry::RelationshipType.post(relationship_type: {
           entity_type1_id: activity_entity_type['id'],
