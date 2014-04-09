@@ -314,11 +314,15 @@ class Activity < ActiveRecord::Base
 
     super unless global_registry_id.present?
 
-    team.async_push_to_global_registry unless team.global_registry_id.present?
-    target_area.async_push_to_global_registry unless target_area.global_registry_id.present?
+    if target_area
+      target_area.async_push_to_global_registry unless target_area.global_registry_id.present?
+      attributes_to_push['target_area:relationship'] = {target_area: target_area.global_registry_id}
+    end
 
-    attributes_to_push['team:relationship'] = {team: team.global_registry_id}
-    attributes_to_push['target_area:relationship'] = {target_area: target_area.global_registry_id}
+    if team
+      team.async_push_to_global_registry unless team.global_registry_id.present?
+      attributes_to_push['team:relationship'] = {team: team.global_registry_id}
+    end
 
     super
   end
