@@ -380,7 +380,7 @@ class Activity < ActiveRecord::Base
 
   def ensure_url_http
     if url.present? && !url.starts_with?("http://") && !url.starts_with?("https://")
-      self.url = "http://#{self.url}"
+      self.url = "http://#{url}"
     end
   end
 end
