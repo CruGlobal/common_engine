@@ -24,7 +24,7 @@ class Activity < ActiveRecord::Base
   alias_attribute :target_area_id, :fk_targetAreaID
   alias_attribute :team_id, :fk_teamID
 
-  before_save :fix_url_http
+  before_save :ensure_url_http
 
   MULITPLYING_INVOLVEMENT_LEVEL = 49
   MULITPLYING_LEADER_INVOLVEMENT_LEVEL = 5
