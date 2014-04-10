@@ -133,8 +133,8 @@ class TargetArea < ActiveRecord::Base
   def ensure_urls_http
     [ :url, :urlToLogo, :ciaUrl, :infoUrl ].each do |c|
       val = self.send(c)
-      if url.present? && !url.starts_with?("http://") && !url.starts_with?("https://")
-        self.url = "http://#{val}"
+      if val.present? && !val.starts_with?("http://") && !val.starts_with?("https://")
+        self.send("#{c}=", "http://#{val}")
       end
     end
   end
