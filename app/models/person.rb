@@ -423,22 +423,28 @@ class Person < ActiveRecord::Base
       attributes_to_push['globally_unique_id'] = user.globallyUniqueID
       attributes_to_push['username'] = user.username
       attributes_to_push['fb_uid'] = user.fb_user_id
+      attributes_to_push['gender'] = human_gender
+      attributes_to_push['marital_status'] = marital_status
+      attributes_to_push['is_secure'] = is_secure?
     end
 
     super
   end
 
   def self.skip_fields_for_gr
-    %w[person_id account_no minor number_children is_child bio image occupation blogfeed cru_commons_invite cru_commons_last_login date_created date_changed created_by changed_by fk_ssm_user_id fk_staff_site_profile_id fk_spouse_id fk_child_of level_of_school staff_notes donor_number url primary_campus_involvement_id mentor_id last_attended fb_uid date_attributes_updated balance_daily sp_gcx_site global_registry_id]
+    %w[person_id ministry strategy account_no minor number_children is_child bio image occupation blogfeed cru_commons_invite cru_commons_last_login date_created date_changed created_by changed_by fk_ssm_user_id fk_staff_site_profile_id fk_spouse_id fk_child_of level_of_school staff_notes donor_number url primary_campus_involvement_id mentor_id last_attended fb_uid date_attributes_updated balance_daily sp_gcx_site global_registry_id]
   end
 
   def self.columns_to_push
-    cols = super
-    cols += [{name: 'account_number', type: :string},
-             {name: 'username', type: :string},
-             {name: 'globally_unique_id', type: :integer},
-             {name: 'fb_uid', type: :string}
-            ]
+    super
+    @columns_to_push += [{name: 'account_number', type: :string},
+                         {name: 'username', type: :string},
+                         {name: 'globally_unique_id', type: :integer},
+                         {name: 'fb_uid', type: :string}
+                        ]
+    @columns_to_push.each do |column|
+      column[:type] = 'boolean' if column[:name] == 'is_secure'
+    end
   end
 
   def self.global_registry_entity_type_name
