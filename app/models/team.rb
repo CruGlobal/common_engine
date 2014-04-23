@@ -120,7 +120,7 @@ class Team < ActiveRecord::Base
 
   # @return [Array]
   def self.skip_fields_for_gr
-    super + ["team_id", "note", "region", "address1", "address2", "city", "state", "zip", "country", "fax", "email", "startdate", "stopdate", "fk_org_rel", "no", "abbrv", "has_multi_regional_access", "dept_id", "created_at", "updated_at", "global_registry_id"]
+    super + ["team_id", "note", "region", "fax", "email", "startdate", "stopdate", "fk_org_rel", "no", "abbrv", "has_multi_regional_access", "dept_id", "created_at", "updated_at", "global_registry_id"]
   end
 
   def ensure_url_http
