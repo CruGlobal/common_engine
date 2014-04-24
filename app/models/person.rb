@@ -419,13 +419,14 @@ class Person < ActiveRecord::Base
 
   def async_push_to_global_registry
     attributes_to_push['account_number'] = account_no
+    attributes_to_push['gender'] = human_gender
+    attributes_to_push['marital_status'] = marital_status
+    attributes_to_push['is_secure'] = is_secure?
+
     if user
       attributes_to_push['globally_unique_id'] = user.globallyUniqueID
       attributes_to_push['username'] = user.username
       attributes_to_push['fb_uid'] = user.fb_user_id
-      attributes_to_push['gender'] = human_gender
-      attributes_to_push['marital_status'] = marital_status
-      attributes_to_push['is_secure'] = is_secure?
     end
 
     super
