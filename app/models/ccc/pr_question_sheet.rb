@@ -4,7 +4,7 @@ class Ccc::PrQuestionSheet < ActiveRecord::Base
   has_many :reviews, class_name: 'Ccc::PrReview'
   has_many :personal_forms, class_name: "Ccc::PrPersonalForm"
 
-  default_scope where(:fake_deleted => false)
+  default_scope { where(:fake_deleted => false) }
 
   def self.fake_deleted
     unscoped.where(:fake_deleted => true)

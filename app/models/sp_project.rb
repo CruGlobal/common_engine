@@ -60,12 +60,14 @@ class SpProject < ActiveRecord::Base
 
   has_one :target_area, -> { where(:eventType => "SP") }, :foreign_key => :eventKeyID
 
-  has_many :statistics, :finder_sql => proc { "select ministry_statistic.* from sp_projects " +
-                                              'left join ministry_targetarea on sp_projects.id = ministry_targetarea.eventKeyID and eventType = "SP" ' +
-                                              'left join ministry_activity on ministry_activity.fk_targetAreaID = ministry_targetarea.`targetAreaID` ' +
-                                              'left join ministry_statistic on ministry_statistic.`fk_Activity` = ministry_activity.`ActivityID` ' +
-                                              "where sp_projects.id = #{id} and ministry_statistic.sp_year is not null " +
-  'order by periodBegin desc' }
+  def statistics
+    Statistic.joins('left join ministry_activity on ministry_statistic.`fk_Activity` = ministry_activity.`ActivityID` ' +
+                    'left join ministry_targetarea on ministry_activity.fk_targetAreaID = ministry_targetarea.`targetAreaID` ' +
+                    'left join sp_projects on sp_projects.id = ministry_targetarea.eventKeyID and eventType = "SP" '
+                    )
+             .where("sp_projects.id = #{id} and ministry_statistic.sp_year is not null")
+             .order("periodBegin desc")
+  end
 
   validates_presence_of :name, :display_location, :start_date, :end_date, :student_cost, :max_accepted_men, :max_accepted_women,
     :project_contact_name,
