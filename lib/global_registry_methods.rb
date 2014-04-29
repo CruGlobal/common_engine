@@ -37,7 +37,8 @@ module GlobalRegistryMethods
   def attributes_to_push
     unless @attributes_to_push
       @attributes_to_push = {}
-      attributes.collect {|k, v| @attributes_to_push[k.underscore] = v}
+        attributes_to_push['client_integration_id'] = id unless self.class.skip_fields_for_gr.include?('client_integration_id')
+        attributes.collect {|k, v| @attributes_to_push[k.underscore] = v}
       @attributes_to_push.select! {|k, v| v.present? && !self.class.skip_fields_for_gr.include?(k)}
     end
     @attributes_to_push
@@ -48,7 +49,7 @@ module GlobalRegistryMethods
   end
 
   def create_in_global_registry(parent_id = nil)
-    entity = GlobalRegistry::Entity.post(entity: {self.class.global_registry_entity_type_name => attributes_to_push.merge({client_integration_id: id}), parent_id: parent_id})
+    entity = GlobalRegistry::Entity.post(entity: {self.class.global_registry_entity_type_name => attributes_to_push, parent_id: parent_id})
     entity = entity['entity']
     update_column(:global_registry_id, entity[self.class.global_registry_entity_type_name]['id'])
   end
