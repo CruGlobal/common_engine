@@ -333,7 +333,7 @@ class Activity < ActiveRecord::Base
 
     # Make sure relationships are defined
     team_entity_type = Rails.cache.fetch(:team_entity_type, expires_in: 1.hour) do
-      GlobalRegistry::EntityType.get({'filters[name]' => 'team'})['entity_types'].first
+      GlobalRegistry::EntityType.get({'filters[name]' => 'ministry'})['entity_types'].first
     end
     activity_entity_type = Rails.cache.fetch(:activity_entity_type, expires_in: 1.hour) do
       GlobalRegistry::EntityType.get({'filters[name]' => 'activity'})['entity_types'].first
@@ -350,7 +350,7 @@ class Activity < ActiveRecord::Base
           entity_type1_id: activity_entity_type['id'],
           entity_type2_id: team_entity_type['id'],
           relationship1: 'activity',
-          relationship2: 'team'
+          relationship2: 'ministry'
       })
     end
 

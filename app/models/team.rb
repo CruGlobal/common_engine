@@ -128,4 +128,8 @@ class Team < ActiveRecord::Base
       self.url = "http://#{url}"
     end
   end
+
+  def self.global_registry_entity_type_name
+    'ministry'
+  end
 end

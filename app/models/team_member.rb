@@ -17,11 +17,15 @@ class TeamMember < ActiveRecord::Base
     if team && person
       team.async_push_to_global_registry unless team.global_registry_id.present?
       person.async_push_to_global_registry unless person.global_registry_id.present?
+      team_relationships = []
+      person.teams.each do |team|
+        team_relationships << {
+            ministry: team.global_registry_id,
+            role: is_leader? ? 'Leader' : 'Member'
+        }
+      end
       @attributes_to_push = {
-        'team:relationship' => {
-          team: team.global_registry_id,
-          role: is_leader? ? 'Leader' : 'Member'
-        },
+        'ministry:relationship' => team_relationships,
       }
 
       update_in_global_registry
@@ -34,7 +38,7 @@ class TeamMember < ActiveRecord::Base
 
     # Make sure relationships are defined
     team_entity_type = Rails.cache.fetch(:team_entity_type, expires_in: 1.hour) do
-      GlobalRegistry::EntityType.get({'filters[name]' => 'team'})['entity_types'].first
+      GlobalRegistry::EntityType.get({'filters[name]' => 'ministry'})['entity_types'].first
     end
     person_entity_type = Rails.cache.fetch(:activity_entity_type, expires_in: 1.hour) do
       GlobalRegistry::EntityType.get({'filters[name]' => 'person'})['entity_types'].first
@@ -52,7 +56,7 @@ class TeamMember < ActiveRecord::Base
           entity_type1_id: person_entity_type['id'],
           entity_type2_id: team_entity_type['id'],
           relationship1: 'person',
-          relationship2: 'team',
+          relationship2: 'ministry',
           enum_entity_type_id: role_enum_entity_type['id']
       })
     end

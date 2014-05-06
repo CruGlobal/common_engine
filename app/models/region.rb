@@ -66,4 +66,8 @@ class Region < ActiveRecord::Base
   def self.skip_fields_for_gr
     super + ["team_id", "is_active", 'stopdate', 'startdate', 'hrd', "abbrv", "region", "address1", "address2", "city", "state", "zip", "phone", "fax", "email", "url", "no"]
   end
+
+  def self.global_registry_entity_type_name
+    'ministry'
+  end
 end
