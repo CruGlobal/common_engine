@@ -140,9 +140,9 @@ class SpDonation < ActiveRecord::Base
             site.set_option_values(
                 'cru_spkick[spkick_current_amount]' => get_balance(dn.designation_number, SpApplication.year)
             )
-          rescue RuntimeError => e
+          rescue RuntimeError
             # Keep going even if updating gcx failed
-            Airbrake.notify(e)
+            #Airbrake.notify(e)
           end
         end
       end
