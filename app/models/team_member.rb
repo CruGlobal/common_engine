@@ -40,7 +40,7 @@ class TeamMember < ActiveRecord::Base
     team_entity_type = Rails.cache.fetch(:team_entity_type, expires_in: 1.hour) do
       GlobalRegistry::EntityType.get({'filters[name]' => 'ministry'})['entity_types'].first
     end
-    person_entity_type = Rails.cache.fetch(:activity_entity_type, expires_in: 1.hour) do
+    person_entity_type = Rails.cache.fetch(:person_entity_type, expires_in: 1.hour) do
       GlobalRegistry::EntityType.get({'filters[name]' => 'person'})['entity_types'].first
     end
     role_enum_entity_type = Rails.cache.fetch(:role_enum_entity_type, expires_in: 1.hour) do
