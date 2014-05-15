@@ -37,8 +37,8 @@ module GlobalRegistryMethods
   def attributes_to_push
     unless @attributes_to_push
       @attributes_to_push = {}
-        attributes_to_push['client_integration_id'] = id unless self.class.skip_fields_for_gr.include?('client_integration_id')
-        attributes.collect {|k, v| @attributes_to_push[k.underscore] = v}
+      attributes_to_push['client_integration_id'] = id unless self.class.skip_fields_for_gr.include?('client_integration_id')
+      attributes.collect {|k, v| @attributes_to_push[k.underscore] = v}
       @attributes_to_push.select! {|k, v| v.present? && !self.class.skip_fields_for_gr.include?(k)}
     end
     @attributes_to_push

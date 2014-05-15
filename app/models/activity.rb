@@ -311,60 +311,69 @@ class Activity < ActiveRecord::Base
     Bookmark.get_activity_bookmark_for(user, self)
   end
 
-  def async_push_to_global_registry
-
-    super unless global_registry_id.present?
-
-    if target_area
+  def async_push_to_global_registry(parent = nil)
+    if target_area && team
       target_area.async_push_to_global_registry unless target_area.global_registry_id.present?
-      attributes_to_push['target_area:relationship'] = {target_area: target_area.global_registry_id}
-    end
-
-    if team
       team.async_push_to_global_registry unless team.global_registry_id.present?
-      attributes_to_push['team:relationship'] = {team: team.global_registry_id}
+      super
     end
+  end
 
-    super
+  def attributes_to_push
+    if global_registry_id
+      attributes_to_push = {}
+      attributes.collect {|k, v| attributes_to_push[k.underscore] = v}
+      attributes_to_push.select! {|k, v| v.present? && !self.class.skip_fields_for_gr.include?(k)}
+    else
+      {
+        'activity:relationship' => {
+          client_integration_id: id,
+          target_area: target_area.global_registry_id
+        }
+      }
+    end
+  end
+
+  def create_in_global_registry(parent_id = nil)
+    entity = GlobalRegistry::Entity.put(
+      team.global_registry_id,
+      entity: {self.class.global_registry_entity_type_name => attributes_to_push, parent_id: parent_id}
+    )
+    entity = entity['entity']
+    update_column(:global_registry_id, entity[self.class.global_registry_entity_type_name]['activity:relationship']['relationship_entity_id'])
+    update_in_global_registry
   end
 
   def self.push_structure_to_global_registry
-    super
-
-    # Make sure relationships are defined
+    # An activity is a join table between teams and target areas
     team_entity_type = Rails.cache.fetch(:team_entity_type, expires_in: 1.hour) do
       GlobalRegistry::EntityType.get({'filters[name]' => 'ministry'})['entity_types'].first
-    end
-    activity_entity_type = Rails.cache.fetch(:activity_entity_type, expires_in: 1.hour) do
-      GlobalRegistry::EntityType.get({'filters[name]' => 'activity'})['entity_types'].first
     end
     target_area_entity_type = Rails.cache.fetch(:target_area_entity_type, expires_in: 1.hour) do
       GlobalRegistry::EntityType.get({'filters[name]' => 'target_area'})['entity_types'].first
     end
 
-    activity_team_relationship_type = Rails.cache.fetch(:activity_team_relationship_type, expires_in: 1.hour) do
-      GlobalRegistry::RelationshipType.get({'filters[between]' => "#{team_entity_type['id']},#{activity_entity_type['id']}"})['relationship_types'].first
+    ministry_target_area_relationship_type = Rails.cache.fetch(:ministry_target_area_relationship_type, expires_in: 1.hour) do
+      GlobalRegistry::RelationshipType.get({'filters[between]' => "#{team_entity_type['id']},#{target_area_entity_type['id']}"})['relationship_types'].first
     end
-    unless activity_team_relationship_type
+    unless ministry_target_area_relationship_type
       GlobalRegistry::RelationshipType.post(relationship_type: {
-          entity_type1_id: activity_entity_type['id'],
+          entity_type1_id: target_area_entity_type['id'],
           entity_type2_id: team_entity_type['id'],
           relationship1: 'activity',
-          relationship2: 'ministry'
+          relationship2: 'activity',
+          fields: fields_for_gr
       })
     end
+  end
 
-    activity_target_area_relationship_type = Rails.cache.fetch(:activity_target_area_relationship_type, expires_in: 1.hour) do
-      GlobalRegistry::RelationshipType.get({'filters[between]' => "#{target_area_entity_type['id']},#{activity_entity_type['id']}"})['relationship_types'].first
-    end
-    unless activity_target_area_relationship_type
-      GlobalRegistry::RelationshipType.post(relationship_type: {
-          entity_type1_id: activity_entity_type['id'],
-          entity_type2_id: target_area_entity_type['id'],
-          relationship1: 'activity',
-          relationship2: 'target_area'
-      })
-    end
+  def self.fields_for_gr
+    [
+      { name: 'status' },
+      { name: 'strategy' },
+      { name: 'period_begin', field_type: 'date' },
+      { name: 'client_integration_id' }
+    ]
   end
 
   def self.skip_fields_for_gr
@@ -382,5 +391,9 @@ class Activity < ActiveRecord::Base
     if url.present? && !url.starts_with?("http://") && !url.starts_with?("https://")
       self.url = "http://#{url}"
     end
+  end
+
+  def self.global_registry_entity_type_name
+    'ministry'
   end
 end
