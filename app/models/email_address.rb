@@ -5,6 +5,7 @@ class EmailAddress < ActiveRecord::Base
 	belongs_to :person
 
   def async_push_to_global_registry(parent_id = nil)
+    person.async_push_to_global_registry unless person.global_registry_id.present?
     parent_id = person.global_registry_id unless parent_id
 
     super(parent_id)
