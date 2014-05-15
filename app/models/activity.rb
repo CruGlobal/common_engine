@@ -321,7 +321,7 @@ class Activity < ActiveRecord::Base
 
   def attributes_to_push
     if global_registry_id
-      attributes_to_push = {}
+      attributes_to_push = { client_integration_id: id }
       attributes.collect {|k, v| attributes_to_push[k.underscore] = v}
       attributes_to_push.select! {|k, v| v.present? && !self.class.skip_fields_for_gr.include?(k)}
     else

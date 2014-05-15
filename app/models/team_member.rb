@@ -43,9 +43,6 @@ class TeamMember < ActiveRecord::Base
     person_entity_type = Rails.cache.fetch(:person_entity_type, expires_in: 1.hour) do
       GlobalRegistry::EntityType.get({'filters[name]' => 'person'})['entity_types'].first
     end
-    role_enum_entity_type = Rails.cache.fetch(:role_enum_entity_type, expires_in: 1.hour) do
-      GlobalRegistry::EntityType.get({'filters[name]' => 'role'})['entity_types'].first
-    end
 
     person_team_relationship_type = Rails.cache.fetch(:person_team_relationship_type, expires_in: 1.hour) do
       GlobalRegistry::RelationshipType.get({'filters[between]' => "#{team_entity_type['id']},#{person_entity_type['id']}"})['relationship_types'].first
@@ -56,8 +53,7 @@ class TeamMember < ActiveRecord::Base
           entity_type1_id: person_entity_type['id'],
           entity_type2_id: team_entity_type['id'],
           relationship1: 'person',
-          relationship2: 'ministry',
-          enum_entity_type_id: role_enum_entity_type['id']
+          relationship2: 'ministry'
       })
     end
   end

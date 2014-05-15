@@ -203,10 +203,14 @@ class Statistic < ActiveRecord::Base
   end
 
   def self.gr_related_entity_type_id
-    team_entity_type = Rails.cache.fetch(:team_entity_type, expires_in: 1.hour) do
-      GlobalRegistry::EntityType.get({'filters[name]' => 'team'})['entity_types'].first
+    activity_entity_type = Rails.cache.fetch(:activity_entity_type, expires_in: 1.hour) do
+      GlobalRegistry::EntityType.get(
+        {'filters[name]' => '_relationship'}
+      )['entity_types'].first['fields'].detect {
+        |f| f['name'] == 'target_area_activity_ministry_activity'
+      }
     end
-    team_entity_type['id']
+    activity_entity_type['id']
   end
 
   def self.gr_category
