@@ -1,12 +1,12 @@
-require 'global_registry_methods'
+require 'global_registry_relationship_methods'
 require 'aasm'
 require_dependency 'answer_sheet_concern'
 
 require 'digest/md5'
 class SpApplication < ActiveRecord::Base
   include AnswerSheetConcern
+  include GlobalRegistryRelationshipMethods
   include Sidekiq::Worker
-  include GlobalRegistryMethods
   include AASM
 
   COST_BEFORE_DEADLINE = 25
@@ -568,7 +568,7 @@ class SpApplication < ActiveRecord::Base
 
   def start_date
     result = read_attribute(:start_date)
-    unless result.present?
+    if result.blank? && project
       result = project.start_date
     end
     result
@@ -576,7 +576,7 @@ class SpApplication < ActiveRecord::Base
 
   def end_date
     result = read_attribute(:end_date)
-    unless result.present?
+    if result.blank? && project
       result = project.end_date
     end
     result
@@ -702,17 +702,17 @@ class SpApplication < ActiveRecord::Base
     .where(['app.status in (?) and app.year = ? and proj.start_date > ?', SpApplication.uncompleted_statuses, SpApplication.year, Time.now])
     .joins('as app inner join sp_projects as proj on (proj.id = app.preference1_id)')
     uncompleted_apps.each do |app|
-      if (app.person.informal_full_name && app.email_address && app.email_address != "")
+      if app.person.informal_full_name && app.email_address && app.email_address != ''
         SpApplicationMailer.deliver_status(app)
       end
     end
   end
 
   def send_acceptance_email
-    if changed.include?('applicant_notified') and applicant_notified? && status.starts_with?("accept")
+    if changed.include?('applicant_notified') and applicant_notified? && status.starts_with?('accept')
       Notifier.notification(email_address, # RECIPIENTS
                             Qe.from_email, # FROM
-                            "Application Accepted", # LIQUID TEMPLATE NAME
+                            'Application Accepted', # LIQUID TEMPLATE NAME
                             {'project_name' => project.try(:name)}).deliver
     end
   end
@@ -754,11 +754,9 @@ class SpApplication < ActiveRecord::Base
           if (reference_question = reference_questions.detect { |rq| rq.related_question_sheet_id == reference.question.related_question_sheet_id }) &&
               !sp_references.detect { |r| r.question_id == reference_question.id }
             reference.update_attribute(:question_id, reference_question.id)
-            logger.debug("matched question sheet")
             next
           end
           # If we get here, the reference isn't needed anymore on this application, so we should delete it.
-          logger.debug "destroy: #{reference.id}"
           reference.destroy unless reference.completed? # no point in deleting a completed reference
         end
       end
@@ -766,25 +764,38 @@ class SpApplication < ActiveRecord::Base
   end
 
   def async_push_to_global_registry
-    attributes_to_push['project'] = project.global_registry_id if project && project.global_registry_id
-    attributes_to_push['preference2_id'] = preference2.global_registry_id if preference2
-    attributes_to_push['preference3_id'] = preference3.global_registry_id if preference3
-    attributes_to_push['preference4_id'] = preference4.global_registry_id if preference4
-    attributes_to_push['preference5_id'] = preference5.global_registry_id if preference5
+    return unless person && project
 
-    # Make sure the related person has been pushed to the global registry
-    unless person.global_registry_id
-      person.async_push_to_global_registry
+    person.async_push_to_global_registry unless person.global_registry_id.present?
+    project.async_push_to_global_registry unless project.global_registry_id.present?
+    super
+  end
+
+  def attributes_to_push
+    if global_registry_id
+      attributes_to_push = super
+      attributes_to_push['preference1_id'] = preference1 ? preference1.global_registry_id : nil
+      attributes_to_push['preference2_id'] = preference2 ? preference2.global_registry_id : nil
+      attributes_to_push['preference3_id'] = preference3 ? preference3.global_registry_id : nil
+      attributes_to_push['preference4_id'] = preference4 ? preference4.global_registry_id : nil
+      attributes_to_push['preference5_id'] = preference5 ? preference5.global_registry_id : nil
+      attributes_to_push.reject! { |a| a.blank? }
+      attributes_to_push
+    else
+      super('summer_project_application', 'summer_project', project)
     end
+  end
 
-    super(person.global_registry_id)
+  def create_in_global_registry(parent_id = nil)
+    super(person, 'summer_project_application')
+  end
+
+  def self.push_structure_to_global_registry
+    super(Person, SpProject, 'applicant', 'summer_project_application')
   end
 
   def self.skip_fields_for_gr
-    %w[id old_id su_code account_balance applicant_notified current_project_queue_id person_id project_id preference1_id global_registry_id]
-  end
-
-  def self.global_registry_entity_type_name
-    'summer_project_application'
+    super +
+      %w(id old_id su_code account_balance current_project_queue_id person_id project_id)
   end
 end

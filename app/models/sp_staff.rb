@@ -1,8 +1,8 @@
-require_dependency 'global_registry_methods'
+require_dependency 'global_registry_relationship_methods'
 
 class SpStaff < ActiveRecord::Base
+  include GlobalRegistryRelationshipMethods
   include Sidekiq::Worker
-  include GlobalRegistryMethods
 
   DIRECTORSHIPS = ['PD', 'APD', 'OPD', 'Coordinator']
   self.inheritance_column = 'fake_column'
@@ -45,18 +45,35 @@ class SpStaff < ActiveRecord::Base
   end
 
   def async_push_to_global_registry
-    attributes_to_push['person_id'] = person.global_registry_id
-    attributes_to_push.delete('project_id')
+    return unless person && sp_project
 
-    super(sp_project.global_registry_id)
+    person.async_push_to_global_registry unless person.global_registry_id
+    sp_project.async_push_to_global_registry unless sp_project.global_registry_id
+
+    super
+  end
+
+  def attributes_to_push
+    if global_registry_id
+      attributes_to_push = super
+      attributes_to_push['role'] = type
+
+      attributes_to_push
+    else
+      super('summer_project_staff', 'summer_project', sp_project)
+    end
+  end
+
+  def create_in_global_registry(parent_id = nil)
+    super(person, 'summer_project_staff')
+  end
+
+  def self.push_structure_to_global_registry
+    super(Person, SpProject, 'staff', 'summer_project_staff')
   end
 
   def self.skip_fields_for_gr
-    %w[id project_id global_registry_id]
-  end
-
-  def self.global_registry_entity_type_name
-    'summer_project_staff'
+    super + %w(person_id project_id type)
   end
 
   protected
@@ -78,7 +95,7 @@ class SpStaff < ActiveRecord::Base
       else
         SpUser.create_max_role(person.id) unless type == 'Kid' # Kids don't need users
       end
-      return true
+      true
     end
 
     def delete_or_reset_sp_user
@@ -94,6 +111,6 @@ class SpStaff < ActiveRecord::Base
           sp_user.destroy
         end
       end
-      return true
+      true
     end
 end

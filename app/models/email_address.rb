@@ -1,8 +1,8 @@
 require 'global_registry_methods'
 class EmailAddress < ActiveRecord::Base
-  include Sidekiq::Worker
   include GlobalRegistryMethods
-	belongs_to :person
+  include Sidekiq::Worker
+  belongs_to :person
 
   def async_push_to_global_registry(parent_id = nil)
     person.async_push_to_global_registry unless person.global_registry_id.present?

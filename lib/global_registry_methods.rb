@@ -1,8 +1,8 @@
 require_dependency 'async'
 module GlobalRegistryMethods
+  extend ActiveSupport::Concern
   include Async
 
-  extend ActiveSupport::Concern
 
   included do
     #after_commit :push_to_global_registry
@@ -34,10 +34,11 @@ module GlobalRegistryMethods
     end
   end
 
-  def attributes_to_push
+  def attributes_to_push(*args)
     unless @attributes_to_push
       @attributes_to_push = {}
       attributes_to_push['client_integration_id'] = id unless self.class.skip_fields_for_gr.include?('client_integration_id')
+      attributes_to_push['client_updated_at'] = updated_at if respond_to?(:updated_at)
       attributes.collect {|k, v| @attributes_to_push[k.underscore] = v}
       @attributes_to_push.select! {|k, v| v.present? && !self.class.skip_fields_for_gr.include?(k)}
     end
@@ -49,7 +50,9 @@ module GlobalRegistryMethods
   end
 
   def create_in_global_registry(parent_id = nil)
-    entity = GlobalRegistry::Entity.post(entity: {self.class.global_registry_entity_type_name => attributes_to_push, parent_id: parent_id})
+    entity_attributes = { self.class.global_registry_entity_type_name => attributes_to_push }
+    entity_attributes.merge!(parent_id: parent_id) if parent_id.present?
+    entity = GlobalRegistry::Entity.post(entity: entity_attributes)
     entity = entity['entity']
     update_column(:global_registry_id, entity[self.class.global_registry_entity_type_name]['id'])
   end
@@ -63,7 +66,7 @@ module GlobalRegistryMethods
       if entity_type
         existing_fields = entity_type['fields'].collect {|f| f['name']}
       else
-        entity_type = GlobalRegistry::EntityType.post(entity_type: {name: global_registry_entity_type_name, field_type: 'entity', parent_id: parent_id})['entity_type']
+        entity_type = GlobalRegistry::EntityType.post(entity_type: {name: global_registry_entity_type_name, field_type: 'entity'})['entity_type']
         existing_fields = []
       end
 
@@ -75,7 +78,22 @@ module GlobalRegistryMethods
     end
 
     def columns_to_push
-      @columns_to_push ||= columns.select {|c| !skip_fields_for_gr.include?(c.name.underscore)}.collect {|c| {name: c.name.underscore, type: c.type}}
+      @columns_to_push ||= columns.select { |c|
+        !skip_fields_for_gr.include?(c.name.underscore)
+      }.collect {|c|
+        { name: c.name.underscore, type: normalize_column_type(c.type, c.name.underscore) }
+      }
+    end
+
+    def normalize_column_type(column_type, name)
+      case
+      when column_type.to_s == 'text'
+        'string'
+      when name.ends_with?('_id')
+        'uuid'
+      else
+        column_type
+      end
     end
 
     def async_delete_from_global_registry(registry_id)
@@ -91,7 +109,7 @@ module GlobalRegistryMethods
     end
 
     def skip_fields_for_gr
-      %w[id global_registry_id created_at updated_at]
+      %w(id global_registry_id created_at updated_at)
     end
 
   end

@@ -184,14 +184,14 @@ class Person < ActiveRecord::Base
     if preferredName.present? && preferredName.strip != firstName.strip
       name += " (#{preferredName.strip}) "
     end
-    name += ' ' + lastName.to_s
+    name + ' ' + lastName.to_s
   end
 
   # "first_name middle_name last_name"
   def long_name
     l = first_name.to_s + " "
     l += middle_name.to_s + " " if middle_name
-    l += last_name.to_s
+    l + last_name.to_s
   end
 
   # an alias for firstName using standard ruby/rails conventions

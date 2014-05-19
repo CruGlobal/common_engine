@@ -92,7 +92,6 @@ class TargetArea < ActiveRecord::Base
   end
   
   def self.target_area_for_event(type, event_id, name, region, is_secure, email, ta_id = nil)
-    ta = nil
     if !ta_id.blank?
       ta = TargetArea.find(ta_id)
     else
@@ -126,6 +125,14 @@ class TargetArea < ActiveRecord::Base
 
   def async_push_to_global_registry
     attributes_to_push['is_secure'] = isSecure == 'T'
+    case eventType
+    when 'SP'
+      project = SpProject.find(eventKeyID)
+      if  project
+        project.async_push_to_global_registry unless project.global_registry_id
+        attributes_to_push['event_id'] = project.global_registry_id
+      end
+    end
 
     super
   end
@@ -144,9 +151,10 @@ class TargetArea < ActiveRecord::Base
     @columns_to_push.each do |column|
       column[:type] = 'boolean' if ['is_secure'].include?(column[:name])
     end
+    @columns_to_push << { name: 'event_id', type: 'uuid' }
   end
 
   def self.skip_fields_for_gr
-    super + ["target_area_id", "is_closed", "mpta", "url_to_logo", "enrollment", "month_school_starts", "month_school_stops", "is_semester", "is_approved", "aoa_priority", "aoa", "cia_url", "info_url", "calendar", "program1", "program2", "program3", "program4", "program5", "emphasis", "sex", "institution_type", "highest_offering", "affiliation", "carnegie_classification", "irs_status", "established_date", "tuition", "modified", "event_type", "event_key_id", "type", "county", "ongoing_special_event", "created_at", "updated_at"]
+    super + ["target_area_id", "is_closed", "mpta", "url_to_logo", "enrollment", "month_school_starts", "month_school_stops", "is_semester", "is_approved", "aoa_priority", "aoa", "cia_url", "info_url", "calendar", "program1", "program2", "program3", "program4", "program5", "emphasis", "sex", "institution_type", "highest_offering", "affiliation", "carnegie_classification", "irs_status", "established_date", "tuition", "modified", "event_key_id", "county", "created_at", "updated_at"]
   end
 end

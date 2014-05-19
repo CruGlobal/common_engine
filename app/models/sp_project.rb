@@ -592,13 +592,27 @@ class SpProject < ActiveRecord::Base
   end
 
   def async_push_to_global_registry
-    attributes_to_push['primary_ministry_focus_id'] = primary_ministry_focus.global_registry_id if primary_ministry_focus
+    if primary_ministry_focus
+      primary_ministry_focus.async_push_to_global_registry unless primary_ministry_focus.global_registry_id
+      attributes_to_push['primary_ministry_focus_id'] = primary_ministry_focus.global_registry_id
+    end
 
     super
   end
 
+  def self.columns_to_push
+    super
+    @columns_to_push.each do |column|
+      column[:type] = 'uuid' if column[:name] == 'primary_ministry_focus_id'
+    end
+  end
+
   def self.skip_fields_for_gr
-    %w[id global_registry_id]
+    %w[id global_registry_id pd_id apd_id opd_id basic_info_question_sheet_id template_question_sheet_id
+       project_specific_question_sheet_id logo_updated_at logo_file_size logo_content_type logo_file_name
+       picture_updated_at picture_file_size picture_content_type picture_file_name version current_applicants_women
+       current_applicants_men current_students_women current_students_men max_student_women_applicants
+       max_student_men_applicants]
   end
 
   def self.global_registry_entity_type_name

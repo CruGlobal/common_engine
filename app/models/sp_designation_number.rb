@@ -1,4 +1,4 @@
-require 'async'
+require_dependency 'async'
 class SpDesignationNumber < ActiveRecord::Base
   include Async
   include Sidekiq::Worker

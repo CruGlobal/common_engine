@@ -1,4 +1,8 @@
+require 'global_registry_methods'
 class Address < ActiveRecord::Base
+  include GlobalRegistryMethods
+  include Sidekiq::Worker
+
   self.table_name = "ministry_newaddress"
 	self.primary_key = "addressID"
 
@@ -47,5 +51,24 @@ class Address < ActiveRecord::Base
 	    @phone_numbers << work_phone + ' (work)' unless work_phone.blank?
     end
   	@phone_numbers
-	end
+  end
+
+  def async_push_to_global_registry(parent_id = nil)
+    person.async_push_to_global_registry unless person.global_registry_id.present?
+    parent_id = person.global_registry_id unless parent_id
+
+    super(parent_id)
+  end
+
+  def self.columns_to_push
+    super
+    @columns_to_push << [{ name: 'line1' },
+                        { name: 'line2' },
+                        { name: 'line3' },
+                        { name: 'line4' }]
+  end
+
+  def self.skip_fields_for_gr
+    super + %w(address_id address1 address2 address3 address4 home_phone work_phone cell_phone fax skype email url date_created date_changed created_by changed_by fk_person_id email2 start_date end_date facebook_link myspace_link title preferred_phone phone1_type phone2_type phone3_type)
+  end
 end

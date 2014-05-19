@@ -339,7 +339,9 @@ class Activity < ActiveRecord::Base
       team.global_registry_id,
       entity: {self.class.global_registry_entity_type_name => attributes_to_push, parent_id: parent_id}
     )
-    entity = entity['entity']
+    id = entity['entity'][self.class.global_registry_entity_type_name]['id']
+
+    entity = GlobalRegistry::Entity.find(id)['entity']
     update_column(:global_registry_id, entity[self.class.global_registry_entity_type_name]['activity:relationship']['relationship_entity_id'])
     update_in_global_registry
   end
@@ -377,7 +379,7 @@ class Activity < ActiveRecord::Base
   end
 
   def self.skip_fields_for_gr
-    super + ["activity_id", "period_end_deprecated", "trans_username", "fk_target_area_id", "fk_team_id", "status_history_deprecated", "url", "facebook", "sent_team_id", "gcx_site"]
+    super + %w(activity_id period_end_deprecated trans_username fk_target_area_id fk_team_id status_history_deprecated url facebook sent_team_id gcx_site)
   end
 
   private
