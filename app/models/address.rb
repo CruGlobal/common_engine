@@ -62,7 +62,7 @@ class Address < ActiveRecord::Base
 
   def self.columns_to_push
     super
-    @columns_to_push << [{ name: 'line1' },
+    @columns_to_push + [{ name: 'line1' },
                         { name: 'line2' },
                         { name: 'line3' },
                         { name: 'line4' }]
