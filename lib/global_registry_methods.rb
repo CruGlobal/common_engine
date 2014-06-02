@@ -20,17 +20,17 @@ module GlobalRegistryMethods
     async(:async_push_to_global_registry)
   end
 
-  def async_push_to_global_registry(parent_id = nil)
+  def async_push_to_global_registry(parent_id = nil, parent_type = nil)
     self.class.push_structure_to_global_registry
 
     if global_registry_id
       begin
         update_in_global_registry
       rescue RestClient::ResourceNotFound
-        create_in_global_registry(parent_id)
+        create_in_global_registry(parent_id, parent_type)
       end
     else
-      create_in_global_registry(parent_id)
+      create_in_global_registry(parent_id, parent_type)
     end
   end
 
@@ -49,12 +49,19 @@ module GlobalRegistryMethods
     GlobalRegistry::Entity.put(global_registry_id, {entity: attributes_to_push})
   end
 
-  def create_in_global_registry(parent_id = nil)
+  def create_in_global_registry(parent_id = nil, parent_type = nil)
     entity_attributes = { self.class.global_registry_entity_type_name => attributes_to_push }
-    entity_attributes.merge!(parent_id: parent_id) if parent_id.present?
-    entity = GlobalRegistry::Entity.post(entity: entity_attributes)
-    entity = entity['entity']
-    update_column(:global_registry_id, entity[self.class.global_registry_entity_type_name]['id'])
+    if parent_id.present?
+      entity_attributes = {parent_type => entity_attributes}
+      entity = GlobalRegistry::Entity.put(parent_id, {entity: entity_attributes})
+      global_registry_id = entity['entity'][parent_type][self.class.global_registry_entity_type_name].detect { |hash|
+        hash['client_integration_id'] == id.to_s
+      }['id']
+    else
+      entity = GlobalRegistry::Entity.post(entity: entity_attributes)
+      global_registry_id = entity['entity'][self.class.global_registry_entity_type_name]['id']
+    end
+    update_column(:global_registry_id, global_registry_id)
   end
 
   module ClassMethods

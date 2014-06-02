@@ -4,11 +4,11 @@ class EmailAddress < ActiveRecord::Base
   include Sidekiq::Worker
   belongs_to :person
 
-  def async_push_to_global_registry(parent_id = nil)
+  def async_push_to_global_registry(parent_id = nil, parent_type = 'person')
     person.async_push_to_global_registry unless person.global_registry_id.present?
     parent_id = person.global_registry_id unless parent_id
 
-    super(parent_id)
+    super(parent_id, parent_type)
   end
 
   def self.skip_fields_for_gr

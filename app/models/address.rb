@@ -53,19 +53,19 @@ class Address < ActiveRecord::Base
   	@phone_numbers
   end
 
-  def async_push_to_global_registry(parent_id = nil)
+  def async_push_to_global_registry(parent_id = nil, parent_type = 'person')
     person.async_push_to_global_registry unless person.global_registry_id.present?
     parent_id = person.global_registry_id unless parent_id
 
-    super(parent_id)
+    super(parent_id, parent_type)
   end
 
   def self.columns_to_push
     super
-    @columns_to_push + [{ name: 'line1' },
-                        { name: 'line2' },
-                        { name: 'line3' },
-                        { name: 'line4' }]
+    @columns_to_push + [{ name: 'line1', type: 'string' },
+                        { name: 'line2', type: 'string' },
+                        { name: 'line3', type: 'string' },
+                        { name: 'line4', type: 'string' }]
   end
 
   def self.skip_fields_for_gr
