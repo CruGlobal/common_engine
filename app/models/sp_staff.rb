@@ -76,6 +76,11 @@ class SpStaff < ActiveRecord::Base
     super + %w(person_id project_id type)
   end
 
+  def self.columns_to_push
+    super
+    @columns_to_push + [{ name: 'role', type: 'string' }]
+  end
+
   protected
     def only_one_of_each_director
       return true unless DIRECTORSHIPS.include?(type)

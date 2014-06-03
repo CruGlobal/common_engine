@@ -786,8 +786,8 @@ class SpApplication < ActiveRecord::Base
     end
   end
 
-  def create_in_global_registry(parent_id = nil, parent_type = nil)
-    super(person.id, 'summer_project_application')
+  def create_in_global_registry(base_object = nil, relationship_name = nil)
+    super(person, 'summer_project_application')
   end
 
   def self.push_structure_to_global_registry
