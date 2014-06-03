@@ -35,14 +35,16 @@ module GlobalRegistryRelationshipMethods
       entity: {base_object.class.global_registry_entity_type_name => attributes_to_push}
     )
 
-    id = entity['entity'][base_object.class.global_registry_entity_type_name]['id']
+    base_object_id = entity['entity'][base_object.class.global_registry_entity_type_name]['id']
 
-    entity = GlobalRegistry::Entity.find(id)['entity']
+    entity = GlobalRegistry::Entity.find(base_object_id)['entity']
 
-    update_column(
-      :global_registry_id,
-      entity[base_object.class.global_registry_entity_type_name]["#{relationship_name}:relationship"]['relationship_entity_id']
-    )
+    global_registry_id = Array.wrap(
+        entity[base_object.class.global_registry_entity_type_name]["#{relationship_name}:relationship"]
+    ).detect { |hash| hash['client_integration_id'] == id.to_s }['relationship_entity_id']
+
+    update_column(:global_registry_id, global_registry_id)
+
     update_in_global_registry
   end
 
