@@ -54,9 +54,13 @@ module GlobalRegistryMethods
     if parent_id.present?
       entity_attributes = {parent_type => entity_attributes}
       entity = GlobalRegistry::Entity.put(parent_id, {entity: entity_attributes})
-      global_registry_id = entity['entity'][parent_type][self.class.global_registry_entity_type_name].detect { |hash|
-        hash['client_integration_id'] == id.to_s
-      }['id']
+      begin
+        global_registry_id = entity['entity'][parent_type][self.class.global_registry_entity_type_name].detect { |hash|
+          hash['client_integration_id'] == id.to_s
+        }['id']
+      rescue NoMethodError
+        raise entity.inspect
+      end
     else
       entity = GlobalRegistry::Entity.post(entity: entity_attributes)
       global_registry_id = entity['entity'][self.class.global_registry_entity_type_name]['id']
@@ -73,7 +77,7 @@ module GlobalRegistryMethods
       if entity_type
         existing_fields = entity_type['fields'].collect {|f| f['name']}
       else
-        entity_type = GlobalRegistry::EntityType.post(entity_type: {name: global_registry_entity_type_name, field_type: 'entity'})['entity_type']
+        entity_type = GlobalRegistry::EntityType.post(entity_type: {name: global_registry_entity_type_name, parent_id: parent_id, field_type: 'entity'})['entity_type']
         existing_fields = []
       end
 
