@@ -72,7 +72,9 @@ module GlobalRegistryMethods
     def push_structure_to_global_registry(parent_id = nil)
       # Make sure all columns exist
       entity_type = Rails.cache.fetch(global_registry_entity_type_name, expires_in: 1.hour) do
-        GlobalRegistry::EntityType.get({'filters[name]' => global_registry_entity_type_name})['entity_types'].first
+        GlobalRegistry::EntityType.get(
+            {'filters[name]' => global_registry_entity_type_name, 'filters[parent_id]' => parent_id}
+        )['entity_types'].first
       end
       if entity_type
         existing_fields = entity_type['fields'].collect {|f| f['name']}
