@@ -15,6 +15,9 @@ module GlobalRegistryRelationshipMethods
     end
   end
 
+  # @param [String] relationship_name
+  # @param [String] related_name
+  # @param [Object] related_object
   def attributes_to_push(relationship_name = nil, related_name = nil, related_object = nil)
     if global_registry_id
       attributes_to_push = super
@@ -29,6 +32,8 @@ module GlobalRegistryRelationshipMethods
     end
   end
 
+  # @param [Object] base_object
+  # @param [String] relationship_name
   def create_in_global_registry(base_object, relationship_name)
     entity = GlobalRegistry::Entity.put(
       base_object.global_registry_id,
@@ -83,7 +88,7 @@ module GlobalRegistryRelationshipMethods
 
       existing_fields = relationship_type['fields'].collect {|f| f['name']}
 
-      (columns_to_push + [{name: 'client_integration_id'}]).each do |field|
+      (columns_to_push).each do |field|
         next if existing_fields.include?(field[:name])
 
         GlobalRegistry::RelationshipType.put(relationship_type['id'], relationship_type: {

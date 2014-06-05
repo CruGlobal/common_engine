@@ -1,7 +1,7 @@
-require 'global_registry_methods'
+require_dependency 'global_registry_relationship_methods'
 class Activity < ActiveRecord::Base
   include Sidekiq::Worker
-  include GlobalRegistryMethods
+  include GlobalRegistryRelationshipMethods
 
   self.table_name = "ministry_activity"
   self.primary_key = "ActivityID"
@@ -311,71 +311,28 @@ class Activity < ActiveRecord::Base
     Bookmark.get_activity_bookmark_for(user, self)
   end
 
-  def async_push_to_global_registry(parent = nil)
-    if target_area && team
-      target_area.async_push_to_global_registry unless target_area.global_registry_id.present?
-      team.async_push_to_global_registry unless team.global_registry_id.present?
-      super
-    end
+  def async_push_to_global_registry
+    return unless target_area && team
+
+    target_area.async_push_to_global_registry unless target_area.global_registry_id.present?
+    team.async_push_to_global_registry unless team.global_registry_id.present?
+    super
   end
 
   def attributes_to_push
     if global_registry_id
-      attributes_to_push = { client_integration_id: id }
-      attributes.collect {|k, v| attributes_to_push[k.underscore] = v}
-      attributes_to_push.select! {|k, v| v.present? && !self.class.skip_fields_for_gr.include?(k)}
+      super
     else
-      {
-        'activity:relationship' => {
-          client_integration_id: id,
-          target_area: target_area.global_registry_id
-        }
-      }
+      super('activity', 'target_area', target_area)
     end
   end
 
-  def create_in_global_registry(parent_id = nil)
-    entity = GlobalRegistry::Entity.put(
-      team.global_registry_id,
-      entity: {self.class.global_registry_entity_type_name => attributes_to_push, parent_id: parent_id}
-    )
-    id = entity['entity'][self.class.global_registry_entity_type_name]['id']
-
-    entity = GlobalRegistry::Entity.find(id)['entity']
-    update_column(:global_registry_id, entity[self.class.global_registry_entity_type_name]['activity:relationship']['relationship_entity_id'])
-    update_in_global_registry
+  def create_in_global_registry(base_object = nil, relationship_name = nil)
+    super(team, 'activity')
   end
 
   def self.push_structure_to_global_registry
-    # An activity is a join table between teams and target areas
-    team_entity_type = Rails.cache.fetch(:team_entity_type, expires_in: 1.hour) do
-      GlobalRegistry::EntityType.get({'filters[name]' => 'ministry'})['entity_types'].first
-    end
-    target_area_entity_type = Rails.cache.fetch(:target_area_entity_type, expires_in: 1.hour) do
-      GlobalRegistry::EntityType.get({'filters[name]' => 'target_area'})['entity_types'].first
-    end
-
-    ministry_target_area_relationship_type = Rails.cache.fetch(:ministry_target_area_relationship_type, expires_in: 1.hour) do
-      GlobalRegistry::RelationshipType.get({'filters[between]' => "#{team_entity_type['id']},#{target_area_entity_type['id']}"})['relationship_types'].first
-    end
-    unless ministry_target_area_relationship_type
-      GlobalRegistry::RelationshipType.post(relationship_type: {
-          entity_type1_id: target_area_entity_type['id'],
-          entity_type2_id: team_entity_type['id'],
-          relationship1: 'activity',
-          relationship2: 'activity',
-          fields: fields_for_gr
-      })
-    end
-  end
-
-  def self.fields_for_gr
-    [
-      { name: 'status' },
-      { name: 'strategy' },
-      { name: 'period_begin', field_type: 'date' },
-      { name: 'client_integration_id' }
-    ]
+    super(Team, TargetArea, 'activity', 'activity')
   end
 
   def self.skip_fields_for_gr
@@ -393,9 +350,5 @@ class Activity < ActiveRecord::Base
     if url.present? && !url.starts_with?("http://") && !url.starts_with?("https://")
       self.url = "http://#{url}"
     end
-  end
-
-  def self.global_registry_entity_type_name
-    'ministry'
   end
 end
