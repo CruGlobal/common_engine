@@ -98,7 +98,7 @@ class Team < ActiveRecord::Base
     TeamMember.where(TeamMember.table_name + ".personID = ?", person.personID).where(teamID: self.id).first
   end
 
-  def async_push_to_global_registry(parent_id = nil)
+  def async_push_to_global_registry(parent_id = nil, parent_type = nil)
     unless parent_id
       region_object = Region.find_by(abbrv: region)
       parent_id = region_object.global_registry_id
@@ -107,7 +107,7 @@ class Team < ActiveRecord::Base
     attributes_to_push['abbreviation'] = abbrv
     attributes_to_push['is_active'] = is_active?
 
-    super(parent_id)
+    super(parent_id, parent_type)
   end
 
   def self.columns_to_push

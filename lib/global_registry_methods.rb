@@ -46,7 +46,7 @@ module GlobalRegistryMethods
   end
 
   def update_in_global_registry(parent_id = nil, parent_type = nil)
-    if parent_id
+    if parent_type
       create_in_global_registry(parent_id, parent_type)
     else
       GlobalRegistry::Entity.put(global_registry_id, {entity: attributes_to_push})
@@ -55,7 +55,7 @@ module GlobalRegistryMethods
 
   def create_in_global_registry(parent_id = nil, parent_type = nil)
     entity_attributes = { self.class.global_registry_entity_type_name => attributes_to_push }
-    if parent_id.present?
+    if parent_type.present?
       entity_attributes = {parent_type => entity_attributes}
       GlobalRegistry::Entity.put(parent_id, {entity: entity_attributes})
     else
