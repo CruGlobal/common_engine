@@ -54,9 +54,16 @@ class Address < ActiveRecord::Base
   end
 
   def async_push_to_global_registry(parent_id = nil, parent_type = 'person')
+    return unless person
+
     person.async_push_to_global_registry unless person.global_registry_id.present?
     parent_id = person.global_registry_id unless parent_id
 
+    attributes_to_push['line1'] = address1
+    attributes_to_push['line2'] = address2
+    attributes_to_push['line3'] = address3
+    attributes_to_push['line4'] = address4
+    attributes_to_push['postal_code'] = zip
     super(parent_id, parent_type)
   end
 
@@ -72,7 +79,8 @@ class Address < ActiveRecord::Base
     @columns_to_push + [{ name: 'line1', type: 'string' },
                         { name: 'line2', type: 'string' },
                         { name: 'line3', type: 'string' },
-                        { name: 'line4', type: 'string' }]
+                        { name: 'line4', type: 'string' },
+                        { name: 'postal_code', type: 'string' }]
   end
 
   def self.skip_fields_for_gr
