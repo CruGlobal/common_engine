@@ -37,12 +37,9 @@ module GlobalRegistryRelationshipMethods
   def create_in_global_registry(base_object, relationship_name)
     entity = GlobalRegistry::Entity.put(
       base_object.global_registry_id,
-      entity: {base_object.class.global_registry_entity_type_name => attributes_to_push}
-    )
-
-    base_object_id = entity['entity'][base_object.class.global_registry_entity_type_name]['id']
-
-    entity = GlobalRegistry::Entity.find(base_object_id)['entity']
+      entity: {base_object.class.global_registry_entity_type_name => attributes_to_push},
+      full_response: true
+    )['entity']
 
     global_registry_id = Array.wrap(
         entity[base_object.class.global_registry_entity_type_name]["#{relationship_name}:relationship"]

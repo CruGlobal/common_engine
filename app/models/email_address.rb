@@ -26,6 +26,6 @@ class EmailAddress < ActiveRecord::Base
   end
 
   def self.skip_fields_for_gr
-    %w[id email created_at updated_at global_registry_id]
+    %w[id email created_at updated_at global_registry_id person_id]
   end
 end

@@ -19,6 +19,6 @@ class PhoneNumber < ActiveRecord::Base
   end
 
   def self.skip_fields_for_gr
-    %w[id txt_to_email carrier_id email_updated_at created_at updated_at global_registry_id]
+    %w[id txt_to_email carrier_id email_updated_at created_at updated_at global_registry_id person_id]
   end
 end
