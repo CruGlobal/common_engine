@@ -15,7 +15,7 @@ class HrSiApplication < ActiveRecord::Base
   before_create :create_apply
   before_save :stamp
 
-  YEAR = 2014
+  YEAR = 2015
 
   #set dateChanged and changedBy
   def stamp
