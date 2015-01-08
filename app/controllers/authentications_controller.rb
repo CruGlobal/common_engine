@@ -13,7 +13,7 @@ class AuthenticationsController < ApplicationController
   
   def create
     omniauth = request.env["omniauth.auth"]
-    unless omniauth['info']
+    unless omniauth && omniauth['info']
       redirect_to '/' and return
     end
     omniauth['info']['email'] ||= omniauth['extra']['raw_info']['email'] if omniauth['extra'] && omniauth['extra']['raw_info']
