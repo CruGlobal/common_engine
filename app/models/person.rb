@@ -5,10 +5,9 @@ class Person < ActiveRecord::Base
   include Sidekiq::Worker
   include GlobalRegistryMethods
 
-  auto_strip_attributes :firstName, :lastName, :preferredName, :accountNo, :title
+  auto_strip_attributes :first_name, :last_name, :preferred_name, :account_no, :title
 
   self.table_name = "ministry_person"
-  self.primary_key = "personID"
 
   # SP-298
   has_many                :sp_designation_numbers, dependent: :destroy
@@ -78,7 +77,7 @@ class Person < ActiveRecord::Base
   before_save :check_region, :stamp_changed
   before_create :stamp_created
 
-  scope :not_secure, -> { where("isSecure != 'T' or isSecure IS NULL") }
+  scope :not_secure, -> { where("\"isSecure\" != 'T' or \"isSecure\" IS NULL") }
 
   alias_attribute :account_no, :accountNo
   alias_attribute :preferred_name, :preferredName
@@ -96,20 +95,20 @@ class Person < ActiveRecord::Base
   end
 
   def create_emergency_address
-    Address.create(:fk_PersonID => self.id, :addressType => 'emergency1')
+    Address.create(:person_id => self.id, :address_type => 'emergency1')
   end
 
   def create_current_address
-    Address.create(:fk_PersonID => self.id, :addressType => 'current')
+    Address.create(:person_id => self.id, :address_type => 'current')
   end
 
   def create_permanent_address
-    Address.create(:fk_PersonID => self.id, :addressType => 'permanent')
+    Address.create(:person_id => self.id, :address_type => 'permanent')
   end
 
   def region(try_target_area = true)
     region = self[:region]
-    region ||= self.target_area.try(:region) if try_target_area
+    region ||= target_area['region'] if try_target_area && target_area
     region
   end
 
@@ -122,17 +121,15 @@ class Person < ActiveRecord::Base
   #end
 
   def target_area
-    if (self.school)
-      self.school
-    else
-      if (campus? && universityState?)
-        self.school = TargetArea.where(["name = ? AND state = ?", campus, universityState]).first
-      elsif (campus?)
-        self.school = TargetArea.where(["name = ?", campus]).first
-      else
-        self.school = nil
+    return school if school.present?
+
+    self.school =
+      case
+      when campus.present? && universityState.present?
+        TargetArea.find_by(name: campus, state: universityState)
+      when campus.present?
+        TargetArea.find_by(name: campus)
       end
-    end
   end
 
   def validate_blogfeed
@@ -180,11 +177,13 @@ class Person < ActiveRecord::Base
   end
 
   def name_with_nick
-    name = firstName.to_s
-    if preferredName.present? && preferredName.strip != firstName.strip
-      name += " (#{preferredName.strip}) "
+    name = []
+    name << first_name.to_s
+    if preferred_name.present? && preferred_name.strip != first_name.strip
+      name << "(#{preferred_name.strip})"
     end
-    name + ' ' + lastName.to_s
+    name << last_name.to_s
+    name.join(' ')
   end
 
   # "first_name middle_name last_name"
@@ -194,41 +193,14 @@ class Person < ActiveRecord::Base
     l + last_name.to_s
   end
 
-  # an alias for firstName using standard ruby/rails conventions
-  def first_name
-    firstName
-  end
-
-  def first_name=(f)
-    write_attribute("firstName", f)
-  end
-
-  # an alias for middleName using standard ruby/rails conventions
-  def middle_name
-    middleName
-  end
-
-  def middle_name=(m)
-    write_attribute("middleName", m)
-  end
-
-  # an alias for lastName using standard ruby/rails conventions
-  def last_name
-    lastName
-  end
-
-  def last_name=(l)
-    write_attribute("lastName", l)
-  end
-
-  #a little more than an alias.  Nickname is the preferredName if one is listed.  Otherwise it is first name
+  #a little more than an alias.  Nickname is the preferred_name if one is listed.  Otherwise it is first name
   def nickname
-    (preferredName and not preferredName.strip.empty?) ? preferredName : firstName
+    (preferred_name and not preferred_name.strip.empty?) ? preferred_name : first_name
   end
 
-  #nickname is an alias for preferredName
+  #nickname is an alias for preferred_name
   def nickname=(name)
-    write_attribute("preferredName", name)
+    write_attribute("preferred_name", name)
   end
 
   # an alias for yearInSchool
@@ -252,6 +224,8 @@ class Person < ActiveRecord::Base
 
   #set dateChanged and changedBy
   def stamp_changed
+    return unless changed?
+
     self.dateChanged = Time.now
     self.changedBy = ApplicationController.application_name
   end
@@ -316,6 +290,7 @@ class Person < ActiveRecord::Base
       EmailAddress.create!(:email => email, :person_id => self.id, :primary => 1)
     end
   end
+  alias_method :email=, :primary_email_address=
 
   # Sets a phone number in the phone_numbers table
   def set_phone_number(phone, location, primary=false, extension=nil)
@@ -349,7 +324,7 @@ class Person < ActiveRecord::Base
 
   # Find an exact match by email
   def self.find_exact(person, address)
-    # try by address first
+    # try by email address first
     person = Person.where("#{Address.table_name}.email = ?", address.email).includes(:current_address).references(:current_address).first
     # then try by username
     person ||= Person.where("#{User.table_name}.username = ?", address.email).includes(:user).references(:user).first
@@ -383,8 +358,8 @@ class Person < ActiveRecord::Base
   end
 
   def apply_omniauth(omniauth)
-    self.firstName ||= omniauth['first_name']
-    self.lastName ||= omniauth['last_name']
+    self.first_name ||= omniauth['first_name']
+    self.last_name ||= omniauth['last_name']
   end
 
   def check_region
@@ -396,9 +371,9 @@ class Person < ActiveRecord::Base
 
   def phone
     if current_address
-      return current_address.cellPhone if current_address.cellPhone.present?
-      return current_address.homePhone if current_address.homePhone.present?
-      return current_address.workPhone if current_address.workPhone.present?
+      return current_address.cell_phone if current_address.cell_phone.present?
+      return current_address.home_phone if current_address.home_phone.present?
+      return current_address.work_phone if current_address.work_phone.present?
     else
       ''
     end
@@ -451,20 +426,24 @@ class Person < ActiveRecord::Base
   end
 
   def self.skip_fields_for_gr
-    %w[person_id ministry strategy organization_tree_cache org_ids_cache siebel_contact_id account_no minor number_children is_child bio image occupation blogfeed cru_commons_invite cru_commons_last_login date_created date_changed created_by changed_by fk_ssm_user_id fk_staff_site_profile_id fk_spouse_id fk_child_of level_of_school staff_notes donor_number url primary_campus_involvement_id mentor_id last_attended fb_uid date_attributes_updated balance_daily sp_gcx_site birth_date global_registry_id]
+    %w[id ministry strategy organization_tree_cache org_ids_cache siebel_contact_id account_no minor number_children is_child bio image occupation blogfeed cru_commons_invite cru_commons_last_login date_created date_changed created_by changed_by fk_ssm_user_id fk_staff_site_profile_id fk_spouse_id fk_child_of level_of_school staff_notes donor_number url primary_campus_involvement_id mentor_id last_attended fb_uid date_attributes_updated balance_daily sp_gcx_site birth_date global_registry_id]
   end
 
   def self.columns_to_push
     super
-    @columns_to_push += [{name: 'account_number', type: :string},
-                         {name: 'username', type: :string},
-                         {name: 'birth_year', type: :integer},
-                         {name: 'birth_month', type: :integer},
-                         {name: 'birth_day', type: :integer}
-                        ]
-    @columns_to_push.each do |column|
-      column[:type] = 'boolean' if column[:name] == 'is_secure'
+    unless @extended_columns_to_push
+      @columns_to_push += [{name: 'account_number', type: :string},
+                           {name: 'username', type: :string},
+                           {name: 'birth_year', type: :integer},
+                           {name: 'birth_month', type: :integer},
+                           {name: 'birth_day', type: :integer}
+                          ]
+      @extended_columns_to_push = true
+      @columns_to_push.each do |column|
+        column[:type] = 'boolean' if column[:name] == 'is_secure'
+      end
     end
+    return @columns_to_push
   end
 
   def self.global_registry_entity_type_name
