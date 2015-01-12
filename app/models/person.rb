@@ -22,9 +22,9 @@ class Person < ActiveRecord::Base
   # Addresses
   has_many                :email_addresses, :foreign_key => "person_id", :class_name => '::EmailAddress', dependent: :destroy
   has_many                :phone_numbers, :foreign_key => "person_id", :class_name => '::PhoneNumber', dependent: :destroy
-  has_one                 :current_address, -> { where("addressType = 'current'") }, :class_name => '::Address'
-  has_one                 :permanent_address, -> { where("addressType = 'permanent'") }, :class_name => '::Address'
-  has_one                 :emergency_address1, -> { where("addressType = 'emergency1'") }, :class_name => '::Address'
+  has_one                 :current_address, -> { where("address_type = 'current'") }, :class_name => '::Address'
+  has_one                 :permanent_address, -> { where("address_type = 'permanent'") }, :class_name => '::Address'
+  has_one                 :emergency_address1, -> { where("address_type = 'emergency1'") }, :class_name => '::Address'
   has_many                :addresses, :foreign_key => "fk_PersonID", dependent: :destroy
 
   # Cru Commons
