@@ -15,10 +15,10 @@
     <% end %>
     <div style="<%= 'display:none' if @person.valid? %>">
       <%= fields_for @person do |pf| %>
-        <p><%= pf.label :firstName, 'First Name' %>
-        <%= pf.text_field :firstName %></p>
-        <p><%= pf.label :lastName, 'Last Name' %>
-        <%= pf.text_field :lastName %></p>
+        <p><%= pf.label :first_name, 'First Name' %>
+        <%= pf.text_field :first_name %></p>
+        <p><%= pf.label :last_name, 'Last Name' %>
+        <%= pf.text_field :last_name %></p>
       <% end %>
     </div>
 
