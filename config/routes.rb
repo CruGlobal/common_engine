@@ -6,11 +6,6 @@ Rails.application.routes.draw do
     get :send_password_email
     post :send_password_email
   end
-  resources :users do
-    collection do
-      get :reset_password
-    end
-  end
   match '/login' => "sessions#new", :as => :login, via: :get
   match '/logout' => "sessions#destroy", :as => :logout, via: [:get, :post, :delete]
 end
