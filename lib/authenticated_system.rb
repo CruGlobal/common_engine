@@ -129,8 +129,6 @@ module AuthenticatedSystem
     end
     def sign_in_and_redirect(user, return_to = nil)
       self.current_user = user
-      self.current_user.remember_me_for(1.year)
-      handle_remember_cookie! true
       session[:return_to] = return_to if return_to
       session[:return_to] = params[:return_to] if params[:return_to].present?
       flash[:notice] = "Logged in successfully"
