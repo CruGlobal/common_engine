@@ -25,7 +25,7 @@ class Person < ActiveRecord::Base
   has_one                 :current_address, -> { where("address_type = 'current'") }, :class_name => '::Address'
   has_one                 :permanent_address, -> { where("address_type = 'permanent'") }, :class_name => '::Address'
   has_one                 :emergency_address1, -> { where("address_type = 'emergency1'") }, :class_name => '::Address'
-  has_many                :addresses, :foreign_key => "fk_PersonID", dependent: :destroy
+  has_many                :addresses, dependent: :destroy
 
   # Cru Commons
   has_many                :personal_links
