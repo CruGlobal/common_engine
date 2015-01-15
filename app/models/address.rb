@@ -4,25 +4,16 @@ class Address < ActiveRecord::Base
   include Sidekiq::Worker
 
   self.table_name = "ministry_newaddress"
-	self.primary_key = "addressID"
 
-	validates_presence_of :addressType
+	validates_presence_of :address_type
 
-	belongs_to :person, :foreign_key => "fk_PersonID"
+	belongs_to :person
 
 	before_save :stamp
 
-  def updated_at() dateChanged end
-  def created_at() dateCreated end
-
-	def home_phone; homePhone; end
-	def cell_phone; cellPhone; end
-	def work_phone; workPhone; end
-
   #set dateChanged and changedBy
   def stamp
-    self.dateChanged = Time.now
-    self.changedBy = ApplicationController.application_name
+    self.changed_by = ApplicationController.application_name
   end
 
 	def display_html
@@ -38,8 +29,8 @@ class Address < ActiveRecord::Base
 	alias_method :to_s, :display_html
 
 	def phone_number
-    phone = (self.homePhone && !self.homePhone.empty?) ? self.homePhone : self.cellPhone
-    phone = (phone && !phone.empty?) ? phone : self.workPhone
+    phone = (self.home_phone && !self.home_phone.empty?) ? self.home_phone : self.cell_phone
+    phone = (phone && !phone.empty?) ? phone : self.work_phone
     phone
 	end
 
