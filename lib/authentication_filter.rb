@@ -7,11 +7,11 @@ class AuthenticationFilter
       if attributes
         cas_user = controller.session[:cas_user]
         guid = attributes["ssoGuid"]
-        user = User.find_by_globallyUniqueID(guid)
+        user = User.where('LOWER("globallyUniqueID") = ?', guid.downcase).first
         if user.nil?
           @logger.info("User not found for ssoGuid: " + guid)
           #check for existing, pre-gcx users.
-          user = User.find_by_username(cas_user)
+          user = User.where("LOWER(username) = ?", cas_user.downcase).first
           if user.nil?
             @logger.info("User not found for user_name: " + cas_user + "; creating new user")
             user = User.create(:username => cas_user, :createdOn => Time.now)
