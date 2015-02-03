@@ -1,12 +1,12 @@
 class CurrentAddress < Address
 
   def save(*)
-    self.addressType = "current"
+    self.address_type = "current"
     super
   end
 
   def save!(*)
-    self.addressType = "current"
+    self.address_type = "current"
     super
   end
 end
