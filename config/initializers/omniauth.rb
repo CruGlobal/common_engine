@@ -5,18 +5,16 @@ end
 if defined?(OmniAuth::Builder)
   Rails.application.config.middleware.use OmniAuth::Builder do
     if defined?(FACEBOOK)
-      provider :facebook, FACEBOOK[:api_key], FACEBOOK[:secret_key], {:scope => 'user_about_me,user_birthday,email,offline_access'}
+      provider :facebook, FACEBOOK[:api_key], FACEBOOK[:secret_key],
+               :scope => 'user_about_me,user_birthday,email,offline_access',
+               :client_options => {
+                   :site => 'https://graph.facebook.com/v2.0',
+                   :authorize_url => "https://www.facebook.com/v2.0/dialog/oauth"
+               }
     end
     #provider :google_apps, OpenID::Store::Filesystem.new('/tmp'), :domain => 'gmail.com'
     provider :CAS, :host => 'https://signin.ccci.org/cas', :name => 'relay'
-
   end
   OmniAuth.config.logger = Rails.logger
-  OmniAuth.config.full_host = lambda do |env|
-    scheme         = env['rack.url_scheme']
-    local_host     = env['HTTP_HOST']
-    forwarded_host = env['HTTP_X_FORWARDED_HOST']
-    forwarded_host.blank? ? "#{scheme}://#{local_host}" : "#{scheme}://#{forwarded_host}"
-  end
 end
 
