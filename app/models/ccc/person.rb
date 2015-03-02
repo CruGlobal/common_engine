@@ -51,9 +51,9 @@ class Ccc::Person < ActiveRecord::Base
     query = name.strip.split(' ')
     first, last = query[0].to_s + '%', query[1].to_s + '%'
     if last == '%'
-      conditions = ["preferredName like ? OR firstName like ? OR lastName like ?", first, first, first]
+      conditions = ["preferred_name like ? OR firstName like ? OR lastName like ?", first, first, first]
     else
-      conditions = ["(preferredName like ? OR firstName like ?) AND lastName like ?", first, first, last]
+      conditions = ["(preferred_name like ? OR firstName like ?) AND lastName like ?", first, first, last]
     end
     scope = scope.where(conditions)
     scope = scope.where('organizational_roles.organization_id IN(?)', organization_ids).includes(:organizational_roles) if organization_ids
