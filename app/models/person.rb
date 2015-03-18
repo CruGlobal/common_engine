@@ -1,4 +1,3 @@
-require_dependency 'global_registry_methods'
 require 'auto_strip_attributes'
 
 class Person < ActiveRecord::Base

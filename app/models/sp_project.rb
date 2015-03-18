@@ -2,7 +2,6 @@ begin
   require 'google_geocode'
 rescue LoadError
 end
-require_dependency 'global_registry_methods'
 require 'auto_strip_attributes'
 
 class SpProject < ActiveRecord::Base

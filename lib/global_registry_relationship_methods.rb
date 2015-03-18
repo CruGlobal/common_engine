@@ -1,4 +1,3 @@
-require_dependency 'global_registry_methods'
 require_dependency 'async'
 module GlobalRegistryRelationshipMethods
   extend ActiveSupport::Concern

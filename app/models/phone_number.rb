@@ -1,4 +1,3 @@
-require 'global_registry_methods'
 class PhoneNumber < ActiveRecord::Base
   include GlobalRegistryMethods
   include Sidekiq::Worker

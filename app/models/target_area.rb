@@ -1,5 +1,3 @@
-require_dependency 'global_registry_methods'
-
 class TargetArea < ActiveRecord::Base
   include Sidekiq::Worker
   include GlobalRegistryMethods

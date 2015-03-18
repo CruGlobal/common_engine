@@ -1,4 +1,3 @@
-require 'global_registry_methods'
 class Region < ActiveRecord::Base
   include Sidekiq::Worker
   include GlobalRegistryMethods

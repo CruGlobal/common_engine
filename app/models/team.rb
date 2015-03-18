@@ -1,4 +1,3 @@
-require 'global_registry_methods'
 class Team < ActiveRecord::Base
   include Sidekiq::Worker
   include GlobalRegistryMethods
