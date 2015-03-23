@@ -1,3 +1,4 @@
+require 'global_registry_methods'
 require_dependency 'global_registry_relationship_methods'
 class Activity < ActiveRecord::Base
   include Sidekiq::Worker
