@@ -16,7 +16,11 @@ class AuthenticationsController < ApplicationController
     unless omniauth && omniauth['info']
       redirect_to '/' and return
     end
-    omniauth['info']['email'] ||= omniauth['extra']['raw_info']['email'] if omniauth['extra'] && omniauth['extra']['raw_info']
+    if omniauth['extra'] && omniauth['extra']['raw_info']
+      omniauth['info']['email'] ||= omniauth['extra']['raw_info']['email']
+      omniauth['info']['first_name'] = omniauth['extra']['raw_info']['name'].to_s.split(' ').first
+      omniauth['info']['first_name'] = omniauth['extra']['raw_info']['name'].to_s.split(' ').last
+    end
     if omniauth
       authentication = Authentication.find_by_provider_and_uid(omniauth['provider'], omniauth['uid']) 
       Authentication.transaction do
